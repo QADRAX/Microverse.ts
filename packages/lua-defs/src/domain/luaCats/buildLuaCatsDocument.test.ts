@@ -30,8 +30,9 @@ describe('buildLuaCatsDocument', () => {
     const lua = buildLuaCatsDocument(manifest);
     expect(lua).toContain('---@class EchoBridge');
     expect(lua).toContain('EchoBridge = {}');
+    expect(lua).toContain('---@param self EchoBridge');
     expect(lua).toContain('---@param payload { msg: string }');
-    expect(lua).toContain('function EchoBridge.ping(payload) end');
+    expect(lua).toContain('function EchoBridge:ping(self, payload) end');
     expect(lua).toContain('---@class EngineGlobal');
     expect(lua).toContain('---@field Echo EchoBridge');
     expect(lua).toContain('Engine = {}');
@@ -53,7 +54,8 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).toContain('---@class Data');
     expect(lua).toContain('---@field id number');
     expect(lua).toContain('Data = {}');
-    expect(lua).toContain('function Data.reset() end');
+    expect(lua).toContain('---@param self Data');
+    expect(lua).toContain('function Data:reset(self) end');
   });
 
   it('emits aliases before bridge classes', () => {

@@ -17,12 +17,13 @@ function emitMethod(className: string, m: ManifestMethod): string {
   if (m.description !== undefined && m.description.length > 0) {
     lines.push(`---${escComment(m.description)}`);
   }
+  lines.push(`---@param self ${className}`);
   const ps = m.params ?? [];
   if (ps.length === 0) {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);
     }
-    lines.push(`function ${className}.${m.name}() end`);
+    lines.push(`function ${className}:${m.name}(self) end`);
     return lines.join('\n');
   }
   const recordInner = ps.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join(', ');
@@ -30,7 +31,7 @@ function emitMethod(className: string, m: ManifestMethod): string {
   if (m.returns !== undefined) {
     lines.push(`---@return ${m.returns}`);
   }
-  lines.push(`function ${className}.${m.name}(payload) end`);
+  lines.push(`function ${className}:${m.name}(self, payload) end`);
   return lines.join('\n');
 }
 

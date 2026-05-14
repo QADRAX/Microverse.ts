@@ -3,8 +3,12 @@ import {
   type CapabilityId,
   InMemoryCapabilityRegistry,
 } from '@luarizer/runtime-capabilities';
+import type { Result } from '@luarizer/shared';
+import type { z } from 'zod';
 import {
   createSandboxScript,
+  type ExecutionFailure,
+  type RunScriptResult,
   type Sandbox,
   type SandboxId,
   type SandboxRuntime,
@@ -12,18 +16,42 @@ import {
 } from '@luarizer/runtime-core';
 
 import { augmentHostWithCapabilityRegistry } from '../domain/capabilityRegistrySymbol.js';
-import { buildBridgeMergeEnvForHost, type HostSurface } from './defineHostSurface.js';
+import {
+  buildBridgeMergeEnvForHost,
+  type HostSurface,
+  type HostWorkflowHooksSpec,
+} from './defineHostSurface.js';
+import type { LuaGlobalHookName } from './luaGlobalHook.js';
+
+/**
+ * Tuple accepted by {@link HostScriptSession.invokeGlobalHookIfPresent} when the session is specialised with
+ * the same Zod map as {@link HostSurface} `workflowHooks` on the surface you pass in.
+ */
+export type WorkflowHookInvokeArgs<TH extends HostWorkflowHooksSpec> = {
+  [K in keyof TH & string]: readonly [hook: LuaGlobalHookName<K>, payload: Readonly<z.infer<TH[K]>>];
+}[keyof TH & string];
+
+type InvokeGlobalHookIfPresentFn<THooks extends HostWorkflowHooksSpec | undefined> = THooks extends HostWorkflowHooksSpec
+  ? (...args: WorkflowHookInvokeArgs<THooks>) => Promise<Result<RunScriptResult, ExecutionFailure>>
+  : (
+      globalName: string,
+      payload: Readonly<Record<string, string | number | boolean>>,
+    ) => Promise<Result<RunScriptResult, ExecutionFailure>>;
 
 /**
  * Options for {@link HostScriptSession}: one Wasm (or other) slot, a surface, host services, and a capability allowlist.
  *
- * @typeParam THost - Your engine context; must be compatible with the `THost` used in {@link defineHostSurface} / {@link fn}.
+ * @typeParam THost - Your engine context; must match the `THost` used in {@link defineHostSurfaceFor} (or {@link defineHostSurface}) / {@link fn}.
+ * @typeParam THooks - When the surface was built with workflow hooks, pass the same `THooks` so {@link HostScriptSession.invokeGlobalHookIfPresent} narrows to those payloads (match `surface`’s `workflowHooks` typing).
  */
-export type HostScriptSessionOptions<THost> = {
+export type HostScriptSessionOptions<
+  THost,
+  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+> = {
   /** Shared runtime (typically one Wasmoon VM for many slots). */
   readonly runtime: SandboxRuntime;
   /** Surface produced by {@link defineHostSurface}. */
-  readonly surface: HostSurface;
+  readonly surface: HostSurface<THooks>;
   /** Host services passed into bridge handlers (orders, clock, …). */
   readonly host: THost;
   /** Stable sandbox id for this script / workflow / entity. */
@@ -44,13 +72,17 @@ export type HostScriptSessionOptions<THost> = {
  * - Call {@link HostScriptSession.openSession} once before running chunks or invocations; {@link HostScriptSession.dispose} when the slot is torn down.
  *
  * @typeParam THost - Same host type as your surface handlers.
+ * @typeParam THooks - Align with {@link HostSurface} `workflowHooks` on the surface you pass in (or `undefined` when the surface has no workflow hooks).
  */
-export class HostScriptSession<THost> {
+export class HostScriptSession<
+  THost,
+  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+> {
   private sandbox: Sandbox | undefined;
 
   private readonly registry: InMemoryCapabilityRegistry;
 
-  constructor(private readonly opts: HostScriptSessionOptions<THost>) {
+  constructor(private readonly opts: HostScriptSessionOptions<THost, THooks>) {
     this.registry = new InMemoryCapabilityRegistry(createAllowlist([...opts.allowedCapabilities]));
   }
 
@@ -96,10 +128,14 @@ export class HostScriptSession<THost> {
    * Host → Lua: invokes `_ENV[globalName](literalTable)` when that entry is a function; otherwise no-op.
    * Prefer this over hand-built Lua chunks for workflow hooks (`onOrderPlaced`, …).
    *
+   * When the class is specialised with `THooks` (e.g. `HostScriptSession<Host, typeof workflowHooks>`),
+   * arguments are a hook name from that spec plus the inferred Zod payload. Otherwise `globalName` and a
+   * plain literal table are accepted.
+   *
    * @param globalName - Must be a safe Lua identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/`).
    * @param payload - Table fields: only string, finite number, or boolean (Lua literals).
    */
-  readonly invokeGlobalHookIfPresent = async (
+  readonly invokeGlobalHookIfPresent = (async (
     globalName: string,
     payload: Readonly<Record<string, string | number | boolean>>,
   ) => {
@@ -117,7 +153,7 @@ export class HostScriptSession<THost> {
       mergeEnv: this.mergeEnv(),
       timeout: this.opts.defaultTimeout,
     });
-  };
+  }) as InvokeGlobalHookIfPresentFn<THooks>;
 
   /**
    * Host → Lua: invokes `_ENV[tableName][methodName](literalTable)` where `literalTable` is built only from

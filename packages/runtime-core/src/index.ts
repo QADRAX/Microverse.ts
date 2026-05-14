@@ -11,7 +11,7 @@ export type {
 } from './domain/runtime/SandboxRuntime';
 export { createSandboxInstanceId, type SandboxInstanceId } from './domain/runtime/SandboxInstanceId';
 export { fixedTimeout, noTimeout, type TimeoutPolicy } from './domain/runtime/TimeoutPolicy';
-export { createSandboxId, type SandboxId } from './domain/sandbox/SandboxId';
+export { createLuaEnvSlotKey, createSandboxId, type SandboxId } from './domain/sandbox/SandboxId';
 /** Same branded string as {@link SandboxId}; use for multi-slot APIs in host code. */
 export type { SandboxId as SlotKey } from './domain/sandbox/SandboxId';
 export { createSandboxId as createSlotKey } from './domain/sandbox/SandboxId';

@@ -61,7 +61,7 @@ export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
 };
 
 /**
- * Erased method entry stored inside a {@link HostSurfaceSpec}. Produced by {@link fn}.
+ * Erased method entry stored inside a {@link HostSurfaceSpec}. Use {@link fn} for typed entries; assignability widens at the spec boundary.
  */
 export type AnyHostSurfaceMethod = {
   readonly capability: CapabilityId;
@@ -79,7 +79,19 @@ export type AnyHostSurfaceMethod = {
  * Tree shape accepted by {@link defineHostSurface}: top-level keys become Lua global bridge **tables**
  * (e.g. `orders`, `billing`); inner keys become **methods** on that table.
  */
-export type HostSurfaceSpec = Readonly<Record<string, Readonly<Record<string, AnyHostSurfaceMethod>>>>;
+export type HostSurfaceSpec = Readonly<
+  Record<string, Readonly<Record<string, AnyHostSurfaceMethod | HostSurfaceMethodEntry<any, any, any>>>>
+>;
+
+/**
+ * Surface spec where every `fn<THost, …>(…)` entry must use the same host type as your engine context
+ * (the `THost` you pass as `host` into {@link HostScriptSession}).
+ */
+export type HostSurfaceSpecForHost<THost> = Readonly<{
+  readonly [bridge: string]: Readonly<{
+    readonly [method: string]: HostSurfaceMethodEntry<THost, any, any>;
+  }>;
+}>;
 
 /**
  * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua global `onOrderPlaced`).
@@ -88,9 +100,9 @@ export type HostSurfaceSpec = Readonly<Record<string, Readonly<Record<string, An
 export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
 
 /**
- * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
+ * Bridge + manifest API shared by every {@link HostSurface} (with or without workflow hooks).
  */
-export type HostSurface = {
+export type HostSurfaceCore = {
   /**
    * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
    * The host must satisfy {@link WithLuarizerCapabilityRegistry} (see {@link HostScriptSession}).
@@ -115,8 +127,18 @@ export type HostSurface = {
   }) => LuarizerDefManifest;
 };
 
-/** Options passed to {@link HostSurface.toLuarizerDefManifest}. */
-export type LuarizerDefManifestGeneratorOpts = Parameters<HostSurface['toLuarizerDefManifest']>[0];
+/**
+ * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
+ *
+ * @typeParam THooks - When you pass `workflowHooks` to {@link defineHostSurface}, the returned surface includes
+ * `workflowHooks` so callers can type workflow events from the surface object alone.
+ */
+export type HostSurface<THooks extends HostWorkflowHooksSpec | undefined = undefined> = [undefined] extends [THooks]
+  ? HostSurfaceCore
+  : HostSurfaceCore & { readonly workflowHooks: THooks };
+
+/** Options passed to {@link HostSurfaceCore.toLuarizerDefManifest}. */
+export type LuarizerDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuarizerDefManifest']>[0];
 
 /**
  * Creates a {@link CapabilityId} from a namespaced string. Must contain a colon (`domain:action`),
@@ -132,8 +154,8 @@ export function cap(id: `${string}:${string}`): CapabilityId {
  * Wraps a typed {@link HostSurfaceMethodEntry} so it can live inside a {@link HostSurfaceSpec} object literal.
  * Preserves inference for `THost`, `TIn`, and `TOut` at the call site.
  */
-export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOut>): AnyHostSurfaceMethod {
-  return def as unknown as AnyHostSurfaceMethod;
+export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOut>): HostSurfaceMethodEntry<THost, TIn, TOut> {
+  return def;
 }
 
 /**
@@ -141,9 +163,10 @@ export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOu
  *
  * @remarks
  * - Each top-level key becomes one bridge name injected via `mergeEnv` (e.g. `orders`, `time`).
- * - Lua calls look like `orders.get({ orderId = "x" })` — one payload table per method.
+ * - Lua calls look like `orders:get({ orderId = "x" })` (or `orders.get({ ... })`) — one payload table per method;
+ *   bridges accept both forms (colon passes `self` as the first argument).
  * - Pair with {@link HostScriptSession} or {@link buildBridgeMergeEnvForHost} and an allowlisted registry.
- * - Optional **workflow hooks** (second argument): Zod payloads for `onOrderPlaced`, … — emitted into LuaCATS so `lua/workflows` stay typed.
+ * - Optional **workflow hooks** (second argument): Zod payloads for `onOrderPlaced`, … — emitted into LuaCATS so `lua/workflows` stay typed; the returned surface includes them as readonly `workflowHooks` on the surface object.
  *
  * @example
  * ```ts
@@ -159,14 +182,48 @@ export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOu
  * });
  * ```
  */
+export function defineHostSurface<const TSpec extends HostSurfaceSpec>(spec: TSpec): HostSurface<undefined>;
+export function defineHostSurface<
+  const TSpec extends HostSurfaceSpec,
+  const THooks extends HostWorkflowHooksSpec,
+>(spec: TSpec, workflowHooks: THooks): HostSurface<THooks>;
 export function defineHostSurface<const TSpec extends HostSurfaceSpec>(
   spec: TSpec,
   workflowHooks?: HostWorkflowHooksSpec,
-): HostSurface {
-  return {
+): HostSurface<undefined> | HostSurface<HostWorkflowHooksSpec> {
+  const core: HostSurfaceCore = {
     toBridgeDeclarations: () => toBridgeDeclarationsFromSpec(spec),
     toLuarizerDefManifest: (opts) => manifestFromSpec(spec, opts, workflowHooks),
   };
+  if (workflowHooks === undefined) {
+    return core as HostSurface<undefined>;
+  }
+  return { ...core, workflowHooks } as HostSurface<HostWorkflowHooksSpec>;
+}
+
+/**
+ * Same as {@link defineHostSurface}, but requires every bridge method to be typed with the same `THost`
+ * so `fn<THost, …>(…)` stays aligned with your engine object (for example `BusinessEngineHost`).
+ *
+ * @typeParam THooks - Inferred from `workflowHooks` when you pass it; omit (or leave defaulted) for a surface without workflow hooks.
+ *
+ * @remarks
+ * Avoid `defineHostSurfaceFor<YourHost>(spec, hooks)` with a **single** explicit type argument: TypeScript will
+ * fix `THooks` to its default (`undefined`) and reject the second value. Omit type arguments (host is inferred from
+ * each `fn<YourHost, …>`), or pass both: `defineHostSurfaceFor<YourHost, typeof hooks>(spec, hooks)`.
+ */
+export function defineHostSurfaceFor<
+  THost,
+  const THooks extends HostWorkflowHooksSpec | undefined = undefined,
+>(
+  spec: HostSurfaceSpecForHost<THost>,
+  workflowHooks?: THooks,
+): THooks extends HostWorkflowHooksSpec ? HostSurface<THooks> : HostSurface<undefined> {
+  return (
+    workflowHooks === undefined
+      ? defineHostSurface(spec as unknown as HostSurfaceSpec)
+      : defineHostSurface(spec as unknown as HostSurfaceSpec, workflowHooks)
+  ) as THooks extends HostWorkflowHooksSpec ? HostSurface<THooks> : HostSurface<undefined>;
 }
 
 function toBridgeDeclarationsFromSpec<TSpec extends HostSurfaceSpec>(
@@ -182,7 +239,8 @@ function toBridgeDeclarationsFromSpec<TSpec extends HostSurfaceSpec>(
         const api: Record<string, (payload: unknown) => unknown> = {};
         for (const methodName of Object.keys(methods)) {
           const entry = methods[methodName]!;
-          api[methodName] = (payload: unknown) => {
+          api[methodName] = (...args: unknown[]) => {
+            const payload = args.length >= 2 ? args[1] : args[0];
             const registry = host[LUARIZER_CAPABILITY_REGISTRY];
             if (!registry.isAllowed(entry.capability)) {
               throw new Error(`capability denied: ${String(entry.capability)}`);
@@ -402,12 +460,12 @@ function unwrapInputSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
  *
  * @param host - Your host context, already extended with {@link LUARIZER_CAPABILITY_REGISTRY}.
  * @param slotKey - Same slot key passed to `buildDeclarativeBridgeTable` (string form of `SandboxId` is fine).
- * @param surface - Result of {@link defineHostSurface}.
+ * @param surface - Result of {@link defineHostSurface} (implements {@link HostSurfaceCore}).
  */
 export function buildBridgeMergeEnvForHost<THost>(
   host: THost & WithLuarizerCapabilityRegistry,
   slotKey: string,
-  surface: HostSurface,
+  surface: HostSurfaceCore,
 ): Readonly<Record<string, unknown>> {
   return buildDeclarativeBridgeTable(host, slotKey, [...surface.toBridgeDeclarations()]);
 }

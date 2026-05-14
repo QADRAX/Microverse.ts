@@ -14,23 +14,26 @@
 ---@class orders
 orders = {}
 ---Load order by id
+---@param self orders
 ---@param payload { orderId: OrderId }
 ---@return OrderDto|nil
-function orders.get(payload) end
+function orders:get(self, payload) end
 
 ---@class billing
 billing = {}
 ---Record a charge against an order
+---@param self billing
 ---@param payload { orderId: OrderId, amountCents: integer }
 ---@return ChargeResult
-function billing.charge(payload) end
+function billing:charge(self, payload) end
 
 ---@class notifications
 notifications = {}
 ---Send a notification (email, slack, …)
+---@param self notifications
 ---@param payload { channel: string, message: string }
 ---@return nil
-function notifications.send(payload) end
+function notifications:send(self, payload) end
 
 ---Workflow hook for InventoryLow events (invoked from host as onInventoryLow).
 ---@param evt { sku: string, unitsLeft: number }

@@ -6,4 +6,8 @@ describe('Luarizer namespace', () => {
   it('exposes createWasmRuntime', () => {
     expect(typeof Luarizer.createWasmRuntime).toBe('function');
   });
+
+  it('exposes createHostWorkflowHub', () => {
+    expect(typeof Luarizer.createHostWorkflowHub).toBe('function');
+  });
 });

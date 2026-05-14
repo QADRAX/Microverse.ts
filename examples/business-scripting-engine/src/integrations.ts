@@ -45,6 +45,10 @@ export function createNotificationService() {
   };
 }
 
+/**
+ * Host services object passed into {@link BusinessScriptingEngine} and into every `fn<BusinessEngineHost, …>` handler
+ * in {@link businessSurface.js}. Keep this type aligned with the surface so `ctx.host` stays strongly typed.
+ */
 export type BusinessEngineHost = {
   readonly orders: ReturnType<typeof createInMemoryOrders>;
   readonly billing: ReturnType<typeof createBillingService>;

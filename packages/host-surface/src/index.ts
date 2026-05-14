@@ -8,16 +8,23 @@ export {
   buildBridgeMergeEnvForHost,
   cap,
   defineHostSurface,
+  defineHostSurfaceFor,
   fn,
   type AnyHostSurfaceMethod,
   type HostFnContext,
   type HostSurface,
+  type HostSurfaceCore,
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
+  type HostSurfaceSpecForHost,
   type HostWorkflowHooksSpec,
   type LuarizerDefManifestGeneratorOpts,
 } from './application/defineHostSurface.js';
-export { HostScriptSession, type HostScriptSessionOptions } from './application/hostScriptSession.js';
+export {
+  HostScriptSession,
+  type HostScriptSessionOptions,
+  type WorkflowHookInvokeArgs,
+} from './application/hostScriptSession.js';
 export { luaGlobalHookName, type LuaGlobalHookName } from './application/luaGlobalHook.js';
 export { zodToLuaTypeRef } from './application/zodToLuaTypeRef.js';
 export {

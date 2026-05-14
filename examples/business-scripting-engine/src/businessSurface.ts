@@ -1,4 +1,4 @@
-import { cap, defineHostSurface, fn } from '@luarizer/luarizer';
+import { cap, defineHostSurfaceFor, fn } from '@luarizer/luarizer';
 import { z } from 'zod';
 
 import type { BusinessEngineHost, OrderRecord } from './integrations.js';
@@ -32,7 +32,7 @@ export const businessWorkflowHooks = {
  *
  * Default-exported for `luarizer generate-defs --surface ...` (see package.json).
  */
-export default defineHostSurface(
+export default defineHostSurfaceFor(
   {
     orders: {
       get: fn<BusinessEngineHost, { orderId: string }, OrderRecord | undefined>({

@@ -26,7 +26,8 @@
     "@luarizer/runtime-lua": "workspace:*",
     "@luarizer/runtime-wasm": "workspace:*",
     "@luarizer/runtime-zod": "workspace:*",
-    "@luarizer/shared": "workspace:*"
+    "@luarizer/shared": "workspace:*",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -1,5 +1,7 @@
 import { createWasmSandboxRuntime } from '@luarizer/runtime-wasm';
 
+import { createHostWorkflowHub } from './hostWorkflowHub.js';
+
 /**
  * Small **namespace** of factory helpers for hosts that prefer `Luarizer.*` instead of deep imports.
  *
@@ -12,4 +14,8 @@ export const Luarizer = {
    * Creates a {@link SandboxRuntime} backed by **one** Wasmoon Lua VM; call `createSandbox` per slot / script.
    */
   createWasmRuntime: createWasmSandboxRuntime,
+  /**
+   * Same as {@link createHostWorkflowHub} — one shared VM, typed workflow sessions, no manual `Map`/`slotKey` wiring.
+   */
+  createHostWorkflowHub,
 } as const;

@@ -9,8 +9,8 @@ import type { TimeoutPolicy } from './TimeoutPolicy';
 export type CreateSandboxOptions = {
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   /**
-   * Stable slot key for this script inside the **same** {@link SandboxRuntime} / Wasmoon VM.
-   * When omitted, a random id is generated (still shares the VM with other slots from this runtime).
+   * Stable **Lua environment slot** id inside the shared {@link SandboxRuntime} / Wasmoon VM (one `_ENV` per id).
+   * Build with {@link createLuaEnvSlotKey} or {@link createSandboxId}. When omitted, a random id is generated.
    */
   readonly slotKey?: SandboxId | undefined;
 };
