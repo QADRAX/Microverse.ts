@@ -22,7 +22,7 @@ describe('WasmoonRuntimeAdapter', () => {
     const adapter = new WasmoonRuntimeAdapter();
     const result = await adapter.execute(
       { sandboxId: createSandboxId('s1'), cancellation: neverCancelledToken },
-      createSandboxScript('return 1'),
+      { script: createSandboxScript('return 1') },
     );
     expect(result._tag).toBe('ok');
   });
@@ -33,11 +33,11 @@ describe('WasmoonRuntimeAdapter', () => {
     const adapter = new WasmoonRuntimeAdapter();
     await adapter.execute(
       { sandboxId: createSandboxId('a'), cancellation: neverCancelledToken },
-      createSandboxScript('1'),
+      { script: createSandboxScript('1') },
     );
     await adapter.execute(
       { sandboxId: createSandboxId('b'), cancellation: neverCancelledToken },
-      createSandboxScript('2'),
+      { script: createSandboxScript('2') },
     );
     expect(createEngineMock).toHaveBeenCalledTimes(1);
   });

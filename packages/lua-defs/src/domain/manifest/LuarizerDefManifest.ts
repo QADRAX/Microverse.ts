@@ -22,9 +22,17 @@ export type ManifestMethod = {
   readonly returns?: LuaTypeRef | undefined;
 };
 
+export type ManifestClassField = {
+  readonly name: string;
+  readonly luaType: LuaTypeRef;
+  readonly description?: string | undefined;
+};
+
 export type ManifestClass = {
   readonly name: string;
   readonly description?: string | undefined;
+  /** Campos de la tabla bridge (además de métodos). Opcional. */
+  readonly fields?: readonly ManifestClassField[] | undefined;
   readonly methods?: readonly ManifestMethod[] | undefined;
 };
 

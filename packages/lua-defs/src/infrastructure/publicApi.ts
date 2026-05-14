@@ -7,6 +7,7 @@ export type {
   LuaPrimitiveType,
   LuaTypeRef,
   ManifestClass,
+  ManifestClassField,
   ManifestGlobal,
   ManifestGlobalField,
   ManifestMethod,

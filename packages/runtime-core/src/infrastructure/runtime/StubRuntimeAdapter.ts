@@ -4,13 +4,13 @@ import type { RuntimeAdapter } from '../../domain/runtime/RuntimeAdapter';
 import type { ExecutionContext } from '../../domain/runtime/ExecutionContext';
 import type { ExecutionFailure } from '../../domain/runtime/ExecutionFailure';
 import type { RunScriptResult } from '../../domain/runtime/RunScriptResult';
-import type { SandboxScript } from '../../domain/sandbox/SandboxScript';
+import type { RunScriptInput } from '../../domain/runtime/RunScriptInput';
 
 export class StubRuntimeAdapter implements RuntimeAdapter {
   readonly execute = async (
     _ctx: ExecutionContext,
-    script: SandboxScript,
+    input: RunScriptInput,
   ): Promise<Result<RunScriptResult, ExecutionFailure>> => {
-    return ok({ output: `stub:${String(script)}` });
+    return ok({ output: `stub:${String(input.script)}` });
   };
 }

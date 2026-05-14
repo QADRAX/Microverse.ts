@@ -1,8 +1,8 @@
 # `@luarizer/lua-defs`
 
-Biblioteca TypeScript para **generar ficheros `.d.lua`** (anotaciones [LuaCATS](https://luals.github.io/wiki/annotations/)) a partir de un **manifiesto JSON** (`LuarizerDefManifest`), sin pasar por el binario `luarizer`.
+Biblioteca TypeScript para **generar ficheros `.d.lua`** (anotaciones [LuaCATS](https://luals.github.io/wiki/annotations/)) a partir de un **manifiesto** (`LuarizerDefManifest`), sin pasar por el binario `luarizer`.
 
-Úsala cuando quieras integrar la generación en un script de build, un plugin de Vite/Rollup, o cualquier herramienta Node que ya tenga TypeScript.
+Úsala cuando quieras integrar la generación en un script de build, un plugin de Vite/Rollup, o cualquier herramienta Node que ya tenga TypeScript. Para construir el manifiesto desde TypeScript (Zod + capabilities), usa [`@luarizer/host-surface`](../host-surface/README.md).
 
 ## Instalación
 

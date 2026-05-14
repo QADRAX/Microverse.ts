@@ -48,6 +48,7 @@
       "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/globalField" } },
         "methods": { "type": "array", "items": { "$ref": "#/$defs/method" } }
       }
     },

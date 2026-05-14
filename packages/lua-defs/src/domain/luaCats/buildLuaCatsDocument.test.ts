@@ -34,4 +34,22 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).toContain('---@field Echo EchoBridge');
     expect(lua).toContain('Engine = {}');
   });
+
+  it('emits class fields before methods', () => {
+    const manifest: LuarizerDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      classes: [
+        {
+          name: 'Data',
+          fields: [{ name: 'id', luaType: 'number' }],
+          methods: [{ name: 'reset', params: [], returns: 'nil' }],
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    expect(lua).toContain('---@class Data');
+    expect(lua).toContain('---@field id number');
+    expect(lua).toContain('function Data:reset() end');
+  });
 });

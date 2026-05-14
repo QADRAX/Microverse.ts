@@ -1,6 +1,7 @@
 /**
  * **@luarizer/luarizer** — single dependency surface for consuming apps (re-exports + `Luarizer` namespace).
  */
+export * from '@luarizer/host-surface';
 export * from '@luarizer/shared';
 export * from '@luarizer/runtime-core';
 export * from '@luarizer/runtime-lua';

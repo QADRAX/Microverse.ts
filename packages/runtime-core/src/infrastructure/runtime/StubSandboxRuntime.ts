@@ -59,11 +59,8 @@ function createStubSandbox(input: {
     run: async (runInput) => {
       const inputMerged: RunScriptInput =
         runInput.timeout !== undefined || input.options.defaultTimeout !== undefined
-          ? {
-              script: runInput.script,
-              timeout: runInput.timeout ?? input.options.defaultTimeout,
-            }
-          : { script: runInput.script };
+          ? { ...runInput, timeout: runInput.timeout ?? input.options.defaultTimeout }
+          : { ...runInput };
       return executeScript([input.deps.adapter, input.deps.logger], ctx, inputMerged);
     },
     dispose: async () => {

@@ -23,7 +23,7 @@ export const executeScript: AsyncUseCase<
     return err({ _tag: 'Cancelled' });
   }
   logger.info('executeScript:start');
-  const result = await adapter.execute(ctx, input.script);
+  const result = await adapter.execute(ctx, input);
   logger.info('executeScript:end');
   return result;
 };

@@ -1,10 +1,10 @@
 {
-  "name": "@luarizer/luarizer",
+  "name": "@luarizer/host-surface",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
-  "description": "Single entry re-export and small facades for apps that depend on Luarizer via one package.",
+  "description": "Declarative host surface (Zod + capabilities) → bridge tables and LuarizerDefManifest for .d.lua.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,14 +19,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/host-surface": "workspace:*",
+    "@luarizer/lua-defs": "workspace:*",
     "@luarizer/runtime-bridge": "workspace:*",
     "@luarizer/runtime-capabilities": "workspace:*",
     "@luarizer/runtime-core": "workspace:*",
-    "@luarizer/runtime-lua": "workspace:*",
-    "@luarizer/runtime-wasm": "workspace:*",
     "@luarizer/runtime-zod": "workspace:*",
-    "@luarizer/shared": "workspace:*"
+    "@luarizer/shared": "workspace:*",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

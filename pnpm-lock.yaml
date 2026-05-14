@@ -61,6 +61,67 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
 
+  examples/consumer-declarative-bridge:
+    dependencies:
+      '@luarizer/luarizer':
+        specifier: workspace:*
+        version: link:../../packages/luarizer
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
+
+  examples/consumer-duckstyle:
+    dependencies:
+      '@luarizer/luarizer':
+        specifier: workspace:*
+        version: link:../../packages/luarizer
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
+
+  examples/consumer-minimal:
+    dependencies:
+      '@luarizer/luarizer':
+        specifier: workspace:*
+        version: link:../../packages/luarizer
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
+
+  examples/host-surface-demo:
+    dependencies:
+      '@luarizer/host-surface':
+        specifier: workspace:*
+        version: link:../../packages/host-surface
+      '@luarizer/lua-defs':
+        specifier: workspace:*
+        version: link:../../packages/lua-defs
+      '@luarizer/luarizer':
+        specifier: workspace:*
+        version: link:../../packages/luarizer
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
+
   packages/cli:
     dependencies:
       '@luarizer/lua-defs':
@@ -74,15 +135,39 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  packages/integration-examples:
+  packages/host-surface:
     dependencies:
-      '@luarizer/luarizer':
+      '@luarizer/lua-defs':
         specifier: workspace:*
-        version: link:../luarizer
+        version: link:../lua-defs
+      '@luarizer/runtime-bridge':
+        specifier: workspace:*
+        version: link:../runtime-bridge
+      '@luarizer/runtime-capabilities':
+        specifier: workspace:*
+        version: link:../runtime-capabilities
+      '@luarizer/runtime-core':
+        specifier: workspace:*
+        version: link:../runtime-core
+      '@luarizer/runtime-zod':
+        specifier: workspace:*
+        version: link:../runtime-zod
+      '@luarizer/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
     devDependencies:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vite:
+        specifier: ^8.0.13
+        version: 8.0.13(@types/node@22.19.19)(esbuild@0.27.7)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@22.19.19)(rollup@4.60.3)(typescript@5.9.3)(vite@8.0.13(@types/node@22.19.19)(esbuild@0.27.7))
       vitest:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
@@ -105,6 +190,9 @@ importers:
 
   packages/luarizer:
     dependencies:
+      '@luarizer/host-surface':
+        specifier: workspace:*
+        version: link:../host-surface
       '@luarizer/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge

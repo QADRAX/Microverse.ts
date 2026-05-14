@@ -5,9 +5,9 @@ import type {
   ExecutionContext,
   ExecutionFailure,
   RuntimeAdapter,
+  RunScriptInput,
   RunScriptResult,
   SandboxId,
-  SandboxScript,
 } from '@luarizer/runtime-core';
 
 import { LUARIZER_SLOT_VM_BOOTSTRAP_LUA } from './luarizerSlotVmBootstrapLua';
@@ -23,7 +23,7 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
   private getEngine = (): Promise<WasmoonLuaEngine> => {
     if (this.engineInit === undefined) {
       this.engineInit = (async () => {
-        const lua = await this.factory.createEngine();
+        const lua = await this.factory.createEngine({ injectObjects: true });
         await lua.doString(LUARIZER_SLOT_VM_BOOTSTRAP_LUA);
         return lua;
       })();
@@ -33,11 +33,26 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
 
   readonly execute = async (
     ctx: ExecutionContext,
-    script: SandboxScript,
+    input: RunScriptInput,
   ): Promise<Result<RunScriptResult, ExecutionFailure>> => {
     const lua = await this.getEngine();
     const slotLit = toLuaLongStringLiteral(String(ctx.sandboxId));
-    const srcLit = toLuaLongStringLiteral(String(script));
+    const merge = input.mergeEnv;
+    if (merge !== undefined && Object.keys(merge).length > 0) {
+      for (const name of Object.keys(merge)) {
+        if (!Object.prototype.hasOwnProperty.call(merge, name)) {
+          continue;
+        }
+        const tmp = `__luarizer_one_${randomLuarizerToken()}`;
+        lua.global.set(tmp, merge[name]);
+        const nameLit = toLuaLongStringLiteral(name);
+        const tmpLit = toLuaLongStringLiteral(tmp);
+        await lua.doString(
+          `__luarizer_put_bridge_from_global(${slotLit}, ${nameLit}, ${tmpLit})`,
+        );
+      }
+    }
+    const srcLit = toLuaLongStringLiteral(String(input.script));
     const chunk = `__luarizer_execute_in_slot(${slotLit}, ${srcLit})`;
     try {
       await lua.doString(chunk);
@@ -65,4 +80,12 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
       // ignore
     }
   };
+}
+
+function randomLuarizerToken(): string {
+  const g = globalThis as typeof globalThis & { crypto?: { randomUUID?: () => string } };
+  if (g.crypto?.randomUUID) {
+    return g.crypto.randomUUID();
+  }
+  return Math.random().toString(16).slice(2);
 }

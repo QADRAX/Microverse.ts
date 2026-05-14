@@ -15,6 +15,13 @@ local function __luarizer_ensure_env(slot_key)
   return e
 end
 
+function __luarizer_put_bridge_from_global(slot_key, field_name, global_tmp_key)
+  local e = __luarizer_ensure_env(slot_key)
+  local v = _G[global_tmp_key]
+  rawset(e, field_name, v)
+  _G[global_tmp_key] = nil
+end
+
 function __luarizer_execute_in_slot(slot_key, source)
   local env = __luarizer_ensure_env(slot_key)
   local f, err = load(source, "@" .. tostring(slot_key), "t", env)

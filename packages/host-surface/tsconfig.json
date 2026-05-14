@@ -1,0 +1,11 @@
+{
+  "extends": "../../tooling/typescript/library.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "paths": {
+      "@luarizer/host-surface/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

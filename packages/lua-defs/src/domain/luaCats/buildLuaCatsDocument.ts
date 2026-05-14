@@ -35,6 +35,10 @@ function emitClass(c: ManifestClass): string {
     parts.push(`---${escComment(c.description)}`);
   }
   parts.push(`---@class ${c.name}`);
+  for (const f of c.fields ?? []) {
+    const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
+    parts.push(`---@field ${f.name} ${f.luaType}${d}`);
+  }
   parts.push(`local ${c.name} = {}`);
   for (const m of c.methods ?? []) {
     parts.push(emitMethod(c.name, m));
