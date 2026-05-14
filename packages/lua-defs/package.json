@@ -1,0 +1,28 @@
+{
+  "name": "@luarizer/lua-defs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Programmatic LuaCATS (.d.lua) generation from a Luarizer manifest (no CLI).",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "schemas", "fixtures"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@luarizer/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

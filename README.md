@@ -23,8 +23,30 @@ Monorepo TypeScript (pnpm + Turborepo + Vite 8) para un ecosistema de **sandbox 
 | `@luarizer/runtime-bridge` | Tablas bridge, `BridgeCoordinator`, **composición declarativa** (`buildDeclarativeBridgeTable`) |
 | `@luarizer/runtime-capabilities` | Allowlists / policies |
 | `@luarizer/runtime-zod` | Validación opcional con Zod |
+| **`@luarizer/luarizer`** | **Fachada publicada**: un solo `dependencies` en apps; re-exporta runtime + `Luarizer.createWasmRuntime()` |
+| **`@luarizer/integration-examples`** | **Solo privado en el monorepo**: ejemplos y tests que importan únicamente `@luarizer/luarizer` (consumidor final) |
+| **`@luarizer/lua-defs`** | Generación programática de `.d.lua` (LuaCATS) desde el manifiesto JSON (`generateDefs`, tipos) |
+| **`@luarizer/cli`** | CLI **`luarizer`** (`generate-defs`): mismo resultado que `lua-defs`, orientado a **scripts de shell** en build time |
 
 Las capas siguen `domain` / `application` / `infrastructure` (`presentation` solo en apps).
+
+## Definiciones Lua para el IDE (`.d.lua`)
+
+En el proyecto del consumidor, añade un script de build que ejecute `luarizer generate-defs` o importe `generateDefs` desde `@luarizer/lua-defs`, con un manifiesto JSON alineado con tus bridges inyectados. Guía: [docs/cli-lua-definitions.md](docs/cli-lua-definitions.md), [packages/lua-defs/README.md](packages/lua-defs/README.md) y [packages/cli/README.md](packages/cli/README.md).
+
+## Consumo como dependencia única
+
+En el `package.json` de tu app (fuera del monorepo, cuando publiques los paquetes):
+
+```json
+"dependencies": {
+  "@luarizer/luarizer": "workspace:*"
+}
+```
+
+Importa desde `@luarizer/luarizer` (API agregada). El paquete `@luarizer/integration-examples` en este repo actúa como **contrato de consumo**: sus módulos `*.example.ts` y tests **no** importan `@luarizer/runtime-*` directamente.
+
+Checklist frente a `@duckengine/scripting-lua`: [docs/scripting-lua-parity.md](docs/scripting-lua-parity.md).
 
 ## Un VM, muchos slots (modelo nativo)
 
@@ -42,9 +64,11 @@ Si necesitas **procesos Lua totalmente separados** (otro mundo, otro worker, otr
 
 ## Bridges declarativos
 
-Para construir tablas `nombre → API` que luego inyectas en Lua (sin acoplar al motor), usa `buildDeclarativeBridgeTable` desde `@luarizer/runtime-bridge` junto con `DeclarativeBridgeDeclaration` (patrón similar a “una declaración por bridge + factory”).
+Para construir tablas `nombre → API` que luego inyectas en Lua (sin acoplar al motor), usa `buildDeclarativeBridgeTable` y `DeclarativeBridgeDeclaration` (desde `@luarizer/luarizer` o `@luarizer/runtime-bridge`).
 
 ## Documentación adicional
 
-- [docs/optional-shared-vm-lua-abi.md](docs/optional-shared-vm-lua-abi.md) — bootstrap actual y extensión futura (hooks, props).
+- [docs/cli-lua-definitions.md](docs/cli-lua-definitions.md) — generación de `.d.lua` (LuaCATS) con `@luarizer/cli` o `@luarizer/lua-defs` en build time.
+- [docs/optional-shared-vm-lua-abi.md](docs/optional-shared-vm-lua-abi.md) — bootstrap Lua actual (`__luarizer_*`) y extensión futura (hooks, props).
+- [docs/duckstyle-emulation-vs-scripting-lua.md](docs/duckstyle-emulation-vs-scripting-lua.md) — análisis Duck `core-v2` + `scripting-lua` vs Luarizer; emulación en `integration-examples`.
 - [docs/shared-vm-roadmap.md](docs/shared-vm-roadmap.md) — mejoras opcionales encima del modelo multi-slot nativo.

@@ -1,0 +1,36 @@
+{
+  "name": "@luarizer/luarizer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Single entry re-export and small facades for apps that depend on Luarizer via one package.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@luarizer/runtime-bridge": "workspace:*",
+    "@luarizer/runtime-capabilities": "workspace:*",
+    "@luarizer/runtime-core": "workspace:*",
+    "@luarizer/runtime-lua": "workspace:*",
+    "@luarizer/runtime-wasm": "workspace:*",
+    "@luarizer/runtime-zod": "workspace:*",
+    "@luarizer/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "^3.1.4"
+  }
+}

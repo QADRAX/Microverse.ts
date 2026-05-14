@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luarizer.local/schemas/luarizer-def-manifest.json",
+  "title": "LuarizerDefManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "output"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "output": { "type": "string", "minLength": 1 },
+    "headerNote": { "type": "string" },
+    "classes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/class" }
+    },
+    "globals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/global" }
+    }
+  },
+  "$defs": {
+    "param": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "luaType"],
+      "properties": {
+        "name": { "type": "string" },
+        "luaType": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/param" } },
+        "returns": { "type": "string" }
+      }
+    },
+    "class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "methods": { "type": "array", "items": { "$ref": "#/$defs/method" } }
+      }
+    },
+    "globalField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "luaType"],
+      "properties": {
+        "name": { "type": "string" },
+        "luaType": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "fields"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/globalField" }, "minItems": 1 }
+      }
+    }
+  }
+}

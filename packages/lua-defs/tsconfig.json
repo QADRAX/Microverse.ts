@@ -1,0 +1,14 @@
+{
+  "extends": "../../tooling/typescript/library.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "paths": {
+      "@luarizer/lua-defs/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

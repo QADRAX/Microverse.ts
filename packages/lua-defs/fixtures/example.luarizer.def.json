@@ -1,0 +1,27 @@
+{
+  "$schema": "../schemas/luarizer-def-manifest.schema.json",
+  "schemaVersion": 1,
+  "output": "generated/example.sandbox.d.lua",
+  "headerNote": "Example manifest for docs / tests.",
+  "classes": [
+    {
+      "name": "EchoBridge",
+      "description": "Demo bridge injected as Engine.Echo",
+      "methods": [
+        {
+          "name": "ping",
+          "description": "Returns a string for the slot",
+          "params": [{ "name": "msg", "luaType": "string" }],
+          "returns": "string"
+        }
+      ]
+    }
+  ],
+  "globals": [
+    {
+      "name": "Engine",
+      "description": "Host-injected system APIs (Duck-style)",
+      "fields": [{ "name": "Echo", "luaType": "EchoBridge", "description": "Declarative bridge table" }]
+    }
+  ]
+}
