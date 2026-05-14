@@ -4,7 +4,14 @@ import { z } from 'zod';
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 
 /**
- * Best-effort LuaCATS type string from a Zod schema. Use `lua` overrides on `fn()` when this is too coarse.
+ * Maps a Zod schema to a **best-effort** LuaCATS type reference string for manifest emission.
+ *
+ * @remarks
+ * Complex or nominal Lua types (e.g. `EntityId`) are not inferred reliably from Zod alone.
+ * Use the `lua.paramTypes` / `lua.returns` fields on {@link fn} when you need precise IDE typings.
+ *
+ * @param schema - Any Zod schema (including wrappers like `optional`, `nullable`, `effects`).
+ * @returns A LuaCATS-friendly type string such as `string`, `number`, `table`, `unknown`, or unions with `|nil`.
  */
 export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
   if (schema instanceof z.ZodOptional) {

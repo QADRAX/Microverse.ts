@@ -16,24 +16,49 @@ import {
 } from '../domain/capabilityRegistrySymbol.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
+/**
+ * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
+ *
+ * @typeParam THost - Host services / world object you declare for `fn` handlers.
+ */
 export type HostFnContext<THost> = {
   readonly host: THost;
+  /** Stable slot identifier for this sandbox (same convention as `DeclarativeBridgeDeclaration`). */
   readonly slotKey: string;
 };
 
-/** Typed entry for use with {@link fn}; stored in the surface as {@link AnyHostSurfaceMethod}. */
+/**
+ * Strongly typed description of one bridge method. Pass this object to {@link fn} so TypeScript
+ * checks `handler` against `input` / `output` schemas.
+ *
+ * @typeParam THost - Host type available as `ctx.host` inside `handler`.
+ * @typeParam TIn - Payload type after Zod `input` parsing (Lua calls the bridge with one table argument).
+ * @typeParam TOut - Return type validated by Zod `output` before crossing back to Lua.
+ */
 export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
+  /** Capability required to invoke this method; checked against the session registry before the handler runs. */
   readonly capability: CapabilityId;
+  /** Zod schema for the single payload object from Lua (e.g. `z.object({ id: z.string() })`). */
   readonly input: z.ZodType<TIn>;
+  /** Zod schema for the value returned to Lua. */
   readonly output: z.ZodType<TOut>;
+  /** Synchronous host logic. Keep side effects on `ctx.host` services only. */
   readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut;
+  /** Optional description emitted into the LuaCATS manifest. */
   readonly description?: string | undefined;
+  /**
+   * Optional LuaCATS overrides for manifest emission when {@link zodToLuaTypeRef} is too generic.
+   * `paramTypes` keys must match `input` object keys (or `value` for non-object inputs).
+   */
   readonly lua?: {
     readonly paramTypes?: Partial<Record<string, string>> | undefined;
     readonly returns?: string | undefined;
   };
 };
 
+/**
+ * Erased method entry stored inside a {@link HostSurfaceSpec}. Produced by {@link fn}.
+ */
 export type AnyHostSurfaceMethod = {
   readonly capability: CapabilityId;
   readonly input: z.ZodTypeAny;
@@ -46,26 +71,75 @@ export type AnyHostSurfaceMethod = {
   };
 };
 
+/**
+ * Tree shape accepted by {@link defineHostSurface}: top-level keys become Lua global bridge **tables**
+ * (e.g. `orders`, `billing`); inner keys become **methods** on that table.
+ */
 export type HostSurfaceSpec = Readonly<Record<string, Readonly<Record<string, AnyHostSurfaceMethod>>>>;
 
+/**
+ * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
+ */
 export type HostSurface = {
+  /**
+   * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
+   * The host must satisfy {@link WithLuarizerCapabilityRegistry} (see {@link HostScriptSession}).
+   */
   readonly toBridgeDeclarations: () => ReadonlyArray<
     DeclarativeBridgeDeclaration<WithLuarizerCapabilityRegistry, string>
   >;
+  /**
+   * Builds a `LuarizerDefManifest` for `@luarizer/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
+   *
+   * @param opts.output - Default `.d.lua` output path recorded in the manifest.
+   * @param opts.headerNote - Optional banner comment in the generated file.
+   */
   readonly toLuarizerDefManifest: (opts: {
     readonly output: string;
     readonly headerNote?: string | undefined;
   }) => LuarizerDefManifest;
 };
 
+/**
+ * Creates a {@link CapabilityId} from a namespaced string. Must contain a colon (`domain:action`),
+ * matching {@link createCapabilityId} rules.
+ *
+ * @param id - Branded capability string, e.g. `` `orders:read` ``.
+ */
 export function cap(id: `${string}:${string}`): CapabilityId {
   return createCapabilityId(id);
 }
 
+/**
+ * Wraps a typed {@link HostSurfaceMethodEntry} so it can live inside a {@link HostSurfaceSpec} object literal.
+ * Preserves inference for `THost`, `TIn`, and `TOut` at the call site.
+ */
 export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOut>): AnyHostSurfaceMethod {
   return def as unknown as AnyHostSurfaceMethod;
 }
 
+/**
+ * Declares a **host surface**: nested bridge tables for Lua, each method gated by a capability and Zod schemas.
+ *
+ * @remarks
+ * - Each top-level key becomes one bridge name injected via `mergeEnv` (e.g. `orders`, `time`).
+ * - Lua calls look like `orders.get({ orderId = "x" })` — one payload table per method.
+ * - Pair with {@link HostScriptSession} or {@link buildBridgeMergeEnvForHost} and an allowlisted registry.
+ *
+ * @example
+ * ```ts
+ * const surface = defineHostSurface({
+ *   time: {
+ *     delta: fn<MyHost, Record<string, never>, number>({
+ *       capability: cap('engine:time'),
+ *       input: z.object({}),
+ *       output: z.number(),
+ *       handler: ({ host }) => host.clock.dt,
+ *     }),
+ *   },
+ * });
+ * ```
+ */
 export function defineHostSurface<const TSpec extends HostSurfaceSpec>(spec: TSpec): HostSurface {
   return {
     toBridgeDeclarations: () => toBridgeDeclarationsFromSpec(spec),
@@ -168,7 +242,11 @@ function unwrapInputSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
 }
 
 /**
- * Build mergeEnv-ready bridge tables using a surface and a host augmented with {@link LUARIZER_CAPABILITY_REGISTRY}.
+ * Builds a frozen `mergeEnv` table: bridge name → API object, ready for `Sandbox.run({ mergeEnv })`.
+ *
+ * @param host - Your host context, already extended with {@link LUARIZER_CAPABILITY_REGISTRY}.
+ * @param slotKey - Same slot key passed to `buildDeclarativeBridgeTable` (string form of `SandboxId` is fine).
+ * @param surface - Result of {@link defineHostSurface}.
  */
 export function buildBridgeMergeEnvForHost<THost>(
   host: THost & WithLuarizerCapabilityRegistry,

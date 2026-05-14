@@ -61,53 +61,8 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
 
-  examples/consumer-declarative-bridge:
+  examples/business-scripting-engine:
     dependencies:
-      '@luarizer/luarizer':
-        specifier: workspace:*
-        version: link:../../packages/luarizer
-    devDependencies:
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
-
-  examples/consumer-duckstyle:
-    dependencies:
-      '@luarizer/luarizer':
-        specifier: workspace:*
-        version: link:../../packages/luarizer
-    devDependencies:
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
-
-  examples/consumer-minimal:
-    dependencies:
-      '@luarizer/luarizer':
-        specifier: workspace:*
-        version: link:../../packages/luarizer
-    devDependencies:
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.19)(esbuild@0.27.7)
-
-  examples/host-surface-demo:
-    dependencies:
-      '@luarizer/host-surface':
-        specifier: workspace:*
-        version: link:../../packages/host-surface
-      '@luarizer/lua-defs':
-        specifier: workspace:*
-        version: link:../../packages/lua-defs
       '@luarizer/luarizer':
         specifier: workspace:*
         version: link:../../packages/luarizer

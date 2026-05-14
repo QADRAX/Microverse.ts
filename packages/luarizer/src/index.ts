@@ -1,5 +1,8 @@
 /**
- * **@luarizer/luarizer** — single dependency surface for consuming apps (re-exports + `Luarizer` namespace).
+ * **@luarizer/luarizer** — single entry for consuming applications.
+ *
+ * Re-exports runtime, bridges, capabilities, Zod helpers, shared types, and **{@link defineHostSurface}**
+ * from `@luarizer/host-surface`. Prefer importing from this package so apps depend on one workspace / npm name.
  */
 export * from '@luarizer/host-surface';
 export * from '@luarizer/shared';

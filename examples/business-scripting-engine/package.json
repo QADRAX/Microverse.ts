@@ -1,16 +1,15 @@
 {
-  "name": "@luarizer-examples/host-surface-demo",
+  "name": "@luarizer-examples/business-scripting-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "description": "Illustrative business rules engine: mock domain APIs, domain events, and per-workflow Lua via host-surface.",
   "scripts": {
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/host-surface": "workspace:*",
-    "@luarizer/lua-defs": "workspace:*",
     "@luarizer/luarizer": "workspace:*",
     "zod": "^3.24.0"
   },

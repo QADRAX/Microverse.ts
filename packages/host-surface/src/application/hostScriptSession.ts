@@ -14,17 +14,34 @@ import {
 import { augmentHostWithCapabilityRegistry } from '../domain/capabilityRegistrySymbol.js';
 import { buildBridgeMergeEnvForHost, type HostSurface } from './defineHostSurface.js';
 
+/**
+ * Options for {@link HostScriptSession}: one Wasm (or other) slot, a surface, host services, and a capability allowlist.
+ *
+ * @typeParam THost - Your engine context; must be compatible with the `THost` used in {@link defineHostSurface} / {@link fn}.
+ */
 export type HostScriptSessionOptions<THost> = {
+  /** Shared runtime (typically one Wasmoon VM for many slots). */
   readonly runtime: SandboxRuntime;
+  /** Surface produced by {@link defineHostSurface}. */
   readonly surface: HostSurface;
+  /** Host services passed into bridge handlers (orders, clock, …). */
   readonly host: THost;
+  /** Stable sandbox id for this script / workflow / entity. */
   readonly slotKey: SandboxId;
+  /** Exact capability ids this session may invoke on any bridge method. */
   readonly allowedCapabilities: readonly CapabilityId[];
+  /** Optional default timeout forwarded to {@link Sandbox.run}. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
 };
 
 /**
- * One slot + capability allowlist + surface bridges. Call {@link HostScriptSession.openSession} before run/call.
+ * Binds one **Lua slot** to a {@link HostSurface}: capability allowlist, Zod validation, and `mergeEnv` wiring.
+ *
+ * @remarks
+ * Call {@link HostScriptSession.openSession} once before {@link HostScriptSession.runChunk} or {@link HostScriptSession.call}.
+ * Dispose when the workflow or entity is torn down.
+ *
+ * @typeParam THost - Same host type as your surface handlers.
  */
 export class HostScriptSession<THost> {
   private sandbox: Sandbox | undefined;
@@ -35,10 +52,16 @@ export class HostScriptSession<THost> {
     this.registry = new InMemoryCapabilityRegistry(createAllowlist([...opts.allowedCapabilities]));
   }
 
+  /**
+   * Allocates the underlying {@link Sandbox} for this `slotKey` on the shared runtime.
+   */
   readonly openSession = async (): Promise<void> => {
     this.sandbox = await this.opts.runtime.createSandbox({ slotKey: this.opts.slotKey });
   };
 
+  /**
+   * Exposes the in-memory registry (e.g. to mutate allowlists in advanced tests).
+   */
   readonly getCapabilityRegistry = (): InMemoryCapabilityRegistry => this.registry;
 
   private requireSandbox(): Sandbox {
@@ -53,6 +76,11 @@ export class HostScriptSession<THost> {
     return buildBridgeMergeEnvForHost(host, String(this.opts.slotKey), this.opts.surface);
   }
 
+  /**
+   * Executes Lua source in the slot environment with surface bridges on `_ENV`.
+   *
+   * @param source - Full Lua chunk (compiled with `load(..., "t", env)` in the Wasm adapter).
+   */
   readonly runChunk = async (source: string) => {
     const sb = this.requireSandbox();
     return sb.run({
@@ -63,7 +91,12 @@ export class HostScriptSession<THost> {
   };
 
   /**
-   * Invokes `_ENV[tableName][methodName](luaTable)` where `luaTable` is built from string/number/boolean fields only.
+   * Invokes `_ENV[tableName][methodName](literalTable)` where `literalTable` is built only from
+   * string, finite number, or boolean fields in `payload`.
+   *
+   * @param tableName - Global table name in the slot env.
+   * @param methodName - Function field on that table.
+   * @param payload - Plain serializable fields for the Lua table literal.
    */
   readonly call = async (tableName: string, methodName: string, payload: Record<string, unknown>) => {
     const sb = this.requireSandbox();
@@ -82,6 +115,9 @@ export class HostScriptSession<THost> {
     });
   };
 
+  /**
+   * Releases the slot in the runtime adapter and clears the session handle.
+   */
   readonly dispose = async (): Promise<void> => {
     if (this.sandbox !== undefined) {
       await this.sandbox.dispose();

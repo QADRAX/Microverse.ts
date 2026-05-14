@@ -1,3 +1,9 @@
+/**
+ * Declarative **host surface** for Lua sandboxes: Zod-validated bridge methods, capability checks,
+ * `LuarizerDefManifest` generation for `.d.lua`, and {@link HostScriptSession} helpers.
+ *
+ * @packageDocumentation
+ */
 export {
   buildBridgeMergeEnvForHost,
   cap,
