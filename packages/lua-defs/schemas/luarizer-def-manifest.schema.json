@@ -21,6 +21,10 @@
     "globals": {
       "type": "array",
       "items": { "$ref": "#/$defs/global" }
+    },
+    "luaHooks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/luaHook" }
     }
   },
   "$defs": {
@@ -83,6 +87,17 @@
         "name": { "type": "string" },
         "description": { "type": "string" },
         "fields": { "type": "array", "items": { "$ref": "#/$defs/globalField" }, "minItems": 1 }
+      }
+    },
+    "luaHook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "paramName", "payloadLuaType"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "paramName": { "type": "string", "minLength": 1 },
+        "payloadLuaType": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
       }
     }
   }

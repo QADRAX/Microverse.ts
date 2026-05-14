@@ -13,15 +13,13 @@ exports[`defineHostSurface > builds LuarizerDefManifest for lua-defs snapshot 1`
 ---@class time
 time = {}
 ---Frame delta seconds
----@param self time
 ---@return number
-function time:delta() end
+function time.delta() end
 
 ---@class ecs
 ecs = {}
----@param self ecs
----@param id EntityId
+---@param payload { id: EntityId }
 ---@return string|nil
-function ecs:getName(id) end
+function ecs.getName(payload) end
 "
 `;

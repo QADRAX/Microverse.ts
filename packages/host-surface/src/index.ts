@@ -14,6 +14,7 @@ export {
   type HostSurface,
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
+  type HostWorkflowHooksSpec,
   type LuarizerDefManifestGeneratorOpts,
 } from './application/defineHostSurface.js';
 export { HostScriptSession, type HostScriptSessionOptions } from './application/hostScriptSession.js';

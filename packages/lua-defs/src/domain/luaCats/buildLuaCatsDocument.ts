@@ -3,6 +3,7 @@ import type {
   ManifestAlias,
   ManifestClass,
   ManifestGlobal,
+  ManifestLuaHook,
   ManifestMethod,
   ManifestParam,
 } from '../manifest/LuarizerDefManifest.js';
@@ -16,16 +17,30 @@ function emitMethod(className: string, m: ManifestMethod): string {
   if (m.description !== undefined && m.description.length > 0) {
     lines.push(`---${escComment(m.description)}`);
   }
-  lines.push(`---@param self ${className}`);
   const ps = m.params ?? [];
-  for (const p of ps) {
-    const desc = p.description !== undefined && p.description.length > 0 ? ` ${escComment(p.description)}` : '';
-    lines.push(`---@param ${p.name} ${p.luaType}${desc}`);
+  if (ps.length === 0) {
+    if (m.returns !== undefined) {
+      lines.push(`---@return ${m.returns}`);
+    }
+    lines.push(`function ${className}.${m.name}() end`);
+    return lines.join('\n');
   }
+  const recordInner = ps.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join(', ');
+  lines.push(`---@param payload { ${recordInner} }`);
   if (m.returns !== undefined) {
     lines.push(`---@return ${m.returns}`);
   }
-  lines.push(`function ${className}:${m.name}(${ps.map((p: ManifestParam) => p.name).join(', ')}) end`);
+  lines.push(`function ${className}.${m.name}(payload) end`);
+  return lines.join('\n');
+}
+
+function emitLuaHook(h: ManifestLuaHook): string {
+  const lines: string[] = [];
+  if (h.description !== undefined && h.description.length > 0) {
+    lines.push(`---${escComment(h.description)}`);
+  }
+  lines.push(`---@param ${h.paramName} ${h.payloadLuaType}`);
+  lines.push(`function ${h.name}(${h.paramName}) end`);
   return lines.join('\n');
 }
 
@@ -88,6 +103,10 @@ export function buildLuaCatsDocument(manifest: LuarizerDefManifest): string {
 
   for (const c of manifest.classes ?? []) {
     out.push(emitClass(c));
+  }
+  for (const h of manifest.luaHooks ?? []) {
+    out.push('');
+    out.push(emitLuaHook(h));
   }
   for (const g of manifest.globals ?? []) {
     out.push(emitGlobal(g));

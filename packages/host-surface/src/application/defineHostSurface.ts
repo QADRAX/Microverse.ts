@@ -2,6 +2,7 @@ import type {
   LuarizerDefManifest,
   ManifestAlias,
   ManifestClass,
+  ManifestLuaHook,
   ManifestMethod,
   ManifestParam,
 } from '@luarizer/lua-defs';
@@ -16,6 +17,7 @@ import {
   type WithLuarizerCapabilityRegistry,
 } from '../domain/capabilityRegistrySymbol.js';
 import { isLuaTypeAtom } from './luaTypeAtoms.js';
+import { luaGlobalHookName } from './luaGlobalHook.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
 /**
@@ -80,6 +82,12 @@ export type AnyHostSurfaceMethod = {
 export type HostSurfaceSpec = Readonly<Record<string, Readonly<Record<string, AnyHostSurfaceMethod>>>>;
 
 /**
+ * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua global `onOrderPlaced`).
+ * Passed as the second argument to {@link defineHostSurface} to emit workflow hook typings into `.d.lua`.
+ */
+export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
+
+/**
  * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
  */
 export type HostSurface = {
@@ -135,6 +143,7 @@ export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOu
  * - Each top-level key becomes one bridge name injected via `mergeEnv` (e.g. `orders`, `time`).
  * - Lua calls look like `orders.get({ orderId = "x" })` — one payload table per method.
  * - Pair with {@link HostScriptSession} or {@link buildBridgeMergeEnvForHost} and an allowlisted registry.
+ * - Optional **workflow hooks** (second argument): Zod payloads for `onOrderPlaced`, … — emitted into LuaCATS so `lua/workflows` stay typed.
  *
  * @example
  * ```ts
@@ -150,10 +159,13 @@ export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOu
  * });
  * ```
  */
-export function defineHostSurface<const TSpec extends HostSurfaceSpec>(spec: TSpec): HostSurface {
+export function defineHostSurface<const TSpec extends HostSurfaceSpec>(
+  spec: TSpec,
+  workflowHooks?: HostWorkflowHooksSpec,
+): HostSurface {
   return {
     toBridgeDeclarations: () => toBridgeDeclarationsFromSpec(spec),
-    toLuarizerDefManifest: (opts) => manifestFromSpec(spec, opts),
+    toLuarizerDefManifest: (opts) => manifestFromSpec(spec, opts, workflowHooks),
   };
 }
 
@@ -300,6 +312,7 @@ function manifestFromSpec<TSpec extends HostSurfaceSpec>(
     readonly headerNote?: string | undefined;
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   },
+  workflowHooks?: HostWorkflowHooksSpec,
 ): LuarizerDefManifest {
   const classes: ManifestClass[] = [];
   for (const bridgeName of Object.keys(spec)) {
@@ -327,12 +340,33 @@ function manifestFromSpec<TSpec extends HostSurfaceSpec>(
     }
   }
   const aliases = merged.size === 0 ? undefined : [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, definition]) => ({ name, definition }));
+
+  const luaHooks: ManifestLuaHook[] | undefined =
+    workflowHooks === undefined
+      ? undefined
+      : (Object.keys(workflowHooks) as string[])
+          .sort((a, b) => a.localeCompare(b))
+          .map((kind) => {
+            const schema = workflowHooks[kind];
+            if (!(schema instanceof z.ZodObject)) {
+              throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+            }
+            const hookName = luaGlobalHookName(kind);
+            return {
+              name: hookName,
+              paramName: 'evt',
+              payloadLuaType: zodToLuaTypeRef(schema),
+              description: `Workflow hook for ${kind} events (invoked from host as ${hookName}).`,
+            };
+          });
+
   return {
     schemaVersion: 1,
     output: opts.output,
     headerNote: opts.headerNote,
     aliases,
     classes,
+    luaHooks,
   };
 }
 

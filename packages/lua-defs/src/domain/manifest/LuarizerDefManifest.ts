@@ -48,6 +48,14 @@ export type ManifestGlobal = {
   readonly fields: readonly ManifestGlobalField[];
 };
 
+/** Optional global workflow hooks: `onOrderPlaced(evt)`, … (LuaCATS stubs for `lua/workflows`). */
+export type ManifestLuaHook = {
+  readonly name: string;
+  readonly paramName: string;
+  readonly payloadLuaType: string;
+  readonly description?: string | undefined;
+};
+
 /** LuaCATS `---@alias Name definition` (e.g. bridge param types referenced in `luaType`). */
 export type ManifestAlias = {
   readonly name: string;
@@ -63,4 +71,6 @@ export type LuarizerDefManifest = {
   readonly aliases?: readonly ManifestAlias[] | undefined;
   readonly classes?: readonly ManifestClass[] | undefined;
   readonly globals?: readonly ManifestGlobal[] | undefined;
+  /** Global `function onX(evt) end` stubs (workflow Lua); param types from Zod at build time. */
+  readonly luaHooks?: readonly ManifestLuaHook[] | undefined;
 };

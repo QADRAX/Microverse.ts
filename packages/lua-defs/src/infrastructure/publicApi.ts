@@ -11,6 +11,7 @@ export type {
   ManifestClassField,
   ManifestGlobal,
   ManifestGlobalField,
+  ManifestLuaHook,
   ManifestMethod,
   ManifestParam,
 } from '../domain/manifest/LuarizerDefManifest.js';
