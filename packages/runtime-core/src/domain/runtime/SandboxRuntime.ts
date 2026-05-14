@@ -8,6 +8,11 @@ import type { TimeoutPolicy } from './TimeoutPolicy';
 
 export type CreateSandboxOptions = {
   readonly defaultTimeout?: TimeoutPolicy | undefined;
+  /**
+   * Stable slot key for this script inside the **same** {@link SandboxRuntime} / Wasmoon VM.
+   * When omitted, a random id is generated (still shares the VM with other slots from this runtime).
+   */
+  readonly slotKey?: SandboxId | undefined;
 };
 
 export type Sandbox = {
@@ -16,6 +21,10 @@ export type Sandbox = {
   readonly dispose: () => Promise<void>;
 };
 
+/**
+ * One runtime owns **one** Wasmoon/Lua VM (when using `@luarizer/runtime-wasm`).
+ * Call {@link SandboxRuntime.createSandbox} multiple times to register **many slots** in that VM.
+ */
 export type SandboxRuntime = {
   readonly createSandbox: (options: CreateSandboxOptions) => Promise<Sandbox>;
 };

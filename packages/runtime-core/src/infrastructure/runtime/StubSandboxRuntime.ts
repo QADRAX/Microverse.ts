@@ -12,11 +12,27 @@ export type StubSandboxRuntimeDeps = {
 };
 
 export class StubSandboxRuntime implements SandboxRuntime {
+  private readonly usedSlotKeys = new Set<string>();
+
   constructor(private readonly deps: StubSandboxRuntimeDeps) {}
 
   readonly createSandbox = async (options: CreateSandboxOptions): Promise<Sandbox> => {
-    const id = createSandboxId(createRandomId());
-    return createStubSandbox({ id, deps: this.deps, options });
+    const id =
+      options.slotKey !== undefined ? options.slotKey : createSandboxId(createRandomId());
+    if (options.slotKey !== undefined) {
+      const k = String(options.slotKey);
+      if (this.usedSlotKeys.has(k)) {
+        throw new Error(`duplicate slotKey: ${k}`);
+      }
+      this.usedSlotKeys.add(k);
+    }
+    return createStubSandbox({
+      id,
+      deps: this.deps,
+      options,
+      explicitSlotKey: options.slotKey !== undefined,
+      usedSlotKeys: this.usedSlotKeys,
+    });
   };
 }
 
@@ -34,6 +50,8 @@ function createStubSandbox(input: {
   readonly id: SandboxId;
   readonly deps: StubSandboxRuntimeDeps;
   readonly options: CreateSandboxOptions;
+  readonly explicitSlotKey: boolean;
+  readonly usedSlotKeys: Set<string>;
 }): Sandbox {
   const ctx = { sandboxId: input.id, cancellation: neverCancelledToken };
   return {
@@ -48,7 +66,12 @@ function createStubSandbox(input: {
           : { script: runInput.script };
       return executeScript([input.deps.adapter, input.deps.logger], ctx, inputMerged);
     },
-    dispose: async () => {},
+    dispose: async () => {
+      await input.deps.adapter.disposeSandbox?.(input.id);
+      if (input.explicitSlotKey) {
+        input.usedSlotKeys.delete(String(input.id));
+      }
+    },
   };
 }
 

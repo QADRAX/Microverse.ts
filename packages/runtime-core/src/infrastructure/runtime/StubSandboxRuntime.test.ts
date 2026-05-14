@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createSandboxId } from '../../domain/sandbox/SandboxId';
 import { createSandboxScript } from '../../domain/sandbox/SandboxScript';
 import { ConsoleLogger } from '../logging/ConsoleLogger';
 import { StubRuntimeAdapter } from './StubRuntimeAdapter';
@@ -17,5 +18,15 @@ describe('StubSandboxRuntime', () => {
     if (result._tag === 'ok') {
       expect(result.value.output).toContain('stub:');
     }
+  });
+
+  it('rejects duplicate slotKey in the same runtime', async () => {
+    const runtime = createStubSandboxRuntime({
+      adapter: new StubRuntimeAdapter(),
+      logger: new ConsoleLogger(),
+    });
+    const k = createSandboxId('same-slot');
+    await runtime.createSandbox({ slotKey: k });
+    await expect(runtime.createSandbox({ slotKey: k })).rejects.toThrow(/duplicate slotKey/);
   });
 });
