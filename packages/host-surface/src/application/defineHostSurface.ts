@@ -1,5 +1,6 @@
 import type {
   LuarizerDefManifest,
+  ManifestAlias,
   ManifestClass,
   ManifestMethod,
   ManifestParam,
@@ -14,6 +15,7 @@ import {
   LUARIZER_CAPABILITY_REGISTRY,
   type WithLuarizerCapabilityRegistry,
 } from '../domain/capabilityRegistrySymbol.js';
+import { isLuaTypeAtom } from './luaTypeAtoms.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
 /**
@@ -93,12 +95,20 @@ export type HostSurface = {
    *
    * @param opts.output - Default `.d.lua` output path recorded in the manifest.
    * @param opts.headerNote - Optional banner comment in the generated file.
+   * @param opts.luaTypeAliases - Optional overrides / extra `---@alias` entries; by default aliases are inferred from Zod + `fn(..., lua)`.
    */
   readonly toLuarizerDefManifest: (opts: {
     readonly output: string;
     readonly headerNote?: string | undefined;
+    /**
+     * Optional extra `---@alias` entries, or overrides for inferred aliases (same key replaces inferred).
+     */
+    readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   }) => LuarizerDefManifest;
 };
+
+/** Options passed to {@link HostSurface.toLuarizerDefManifest}. */
+export type LuarizerDefManifestGeneratorOpts = Parameters<HostSurface['toLuarizerDefManifest']>[0];
 
 /**
  * Creates a {@link CapabilityId} from a namespaced string. Must contain a colon (`domain:action`),
@@ -184,9 +194,112 @@ function toBridgeDeclarationsFromSpec<TSpec extends HostSurfaceSpec>(
   return out;
 }
 
+function nominalTokensFromLuaReturnString(retLua: string): readonly string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const segment of retLua.split('|')) {
+    const s = segment.trim();
+    if (!/^[A-Za-z_]\w*$/.test(s)) {
+      continue;
+    }
+    if (isLuaTypeAtom(s)) {
+      continue;
+    }
+    if (seen.has(s)) {
+      continue;
+    }
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function unwrapOutputBaseForAlias(schema: z.ZodTypeAny): z.ZodTypeAny {
+  let cur: z.ZodTypeAny = schema;
+  for (;;) {
+    if (cur instanceof z.ZodOptional || cur instanceof z.ZodNullable) {
+      cur = cur.unwrap();
+      continue;
+    }
+    if (cur instanceof z.ZodDefault) {
+      cur = cur.removeDefault();
+      continue;
+    }
+    if (cur instanceof z.ZodReadonly) {
+      cur = cur.unwrap();
+      continue;
+    }
+    if (cur instanceof z.ZodEffects) {
+      cur = cur.innerType();
+      continue;
+    }
+    if (cur instanceof z.ZodPipeline) {
+      cur = cur._def.out as z.ZodTypeAny;
+      continue;
+    }
+    break;
+  }
+  return cur;
+}
+
+function inferLuaTypeAliasesFromHostSpec(spec: HostSurfaceSpec): readonly ManifestAlias[] {
+  const byName = new Map<string, string>();
+
+  for (const bridgeName of Object.keys(spec)) {
+    const methods = spec[bridgeName]!;
+    for (const methodName of Object.keys(methods)) {
+      const entry = methods[methodName]!;
+
+      const luaParams = entry.lua?.paramTypes;
+      if (luaParams !== undefined) {
+        const baseInput = unwrapInputSchema(entry.input);
+        if (baseInput instanceof z.ZodObject) {
+          const shape = baseInput.shape as Record<string, z.ZodTypeAny>;
+          for (const key of Object.keys(luaParams)) {
+            const L = luaParams[key as keyof typeof luaParams];
+            if (L === undefined || typeof L !== 'string') {
+              continue;
+            }
+            if (!/^[A-Za-z_]\w*$/.test(L) || isLuaTypeAtom(L)) {
+              continue;
+            }
+            const field = shape[key];
+            if (field === undefined) {
+              continue;
+            }
+            const def = zodToLuaTypeRef(field);
+            if (L !== def) {
+              byName.set(L, def);
+            }
+          }
+        }
+      }
+
+      const retLua = entry.lua?.returns;
+      if (typeof retLua === 'string' && retLua.length > 0) {
+        for (const T of nominalTokensFromLuaReturnString(retLua)) {
+          const baseOut = unwrapOutputBaseForAlias(entry.output);
+          const def = zodToLuaTypeRef(baseOut);
+          if (T !== def) {
+            byName.set(T, def);
+          }
+        }
+      }
+    }
+  }
+
+  return [...byName.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, definition]) => ({ name, definition }));
+}
+
 function manifestFromSpec<TSpec extends HostSurfaceSpec>(
   spec: TSpec,
-  opts: { readonly output: string; readonly headerNote?: string | undefined },
+  opts: {
+    readonly output: string;
+    readonly headerNote?: string | undefined;
+    readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
+  },
 ): LuarizerDefManifest {
   const classes: ManifestClass[] = [];
   for (const bridgeName of Object.keys(spec)) {
@@ -206,10 +319,19 @@ function manifestFromSpec<TSpec extends HostSurfaceSpec>(
       methods: manifestMethods,
     });
   }
+  const inferred = inferLuaTypeAliasesFromHostSpec(spec);
+  const merged = new Map<string, string>(inferred.map((a) => [a.name, a.definition]));
+  if (opts.luaTypeAliases !== undefined) {
+    for (const [k, v] of Object.entries(opts.luaTypeAliases)) {
+      merged.set(k, v);
+    }
+  }
+  const aliases = merged.size === 0 ? undefined : [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, definition]) => ({ name, definition }));
   return {
     schemaVersion: 1,
     output: opts.output,
     headerNote: opts.headerNote,
+    aliases,
     classes,
   };
 }

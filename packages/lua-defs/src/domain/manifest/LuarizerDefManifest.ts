@@ -48,11 +48,19 @@ export type ManifestGlobal = {
   readonly fields: readonly ManifestGlobalField[];
 };
 
+/** LuaCATS `---@alias Name definition` (e.g. bridge param types referenced in `luaType`). */
+export type ManifestAlias = {
+  readonly name: string;
+  /** Right-hand side of `@alias`, e.g. `string` or `{ id: string }`. */
+  readonly definition: string;
+};
+
 export type LuarizerDefManifest = {
   readonly schemaVersion: 1;
   /** Ruta de salida relativa a `cwd` (o absoluta). */
   readonly output: string;
   readonly headerNote?: string | undefined;
+  readonly aliases?: readonly ManifestAlias[] | undefined;
   readonly classes?: readonly ManifestClass[] | undefined;
   readonly globals?: readonly ManifestGlobal[] | undefined;
 };

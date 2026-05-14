@@ -1,34 +1,24 @@
 import { cap } from '@luarizer/luarizer';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
 import { createDefaultBusinessHost } from './integrations.js';
+import { readWorkflowLua } from './loadWorkflowScript.js';
 
-const WORKFLOW_LUA = `
-function onOrderPlaced(evt)
-  local o = orders.get({ orderId = evt.orderId })
-  if o and o.totalCents >= 1000 then
-    local amt = math.min(evt.amountCents, 1500)
-    billing.charge({ orderId = evt.orderId, amountCents = amt })
-    notifications.send({ channel = "audit", message = "charged for " .. evt.orderId })
-  end
-end
+const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const generatedDefsPath = join(packageRoot, 'generated', 'businessSurface.d.lua');
 
-function onInventoryLow(evt)
-  if evt.unitsLeft <= 2 then
-    notifications.send({ channel = "ops", message = "low stock " .. evt.sku })
-  end
-end
-`.trim();
-
-describe('BusinessScriptingEngine (illustrative)', () => {
-  it('runs Lua rules on domain events with API bridges and capabilities', async () => {
+describe('BusinessScriptingEngine (Lua files under lua/)', () => {
+  it('loads promotions.lua and reacts to domain events', async () => {
     const host = createDefaultBusinessHost([
       { id: 'o-1', customerId: 'c-1', totalCents: 2000 },
     ]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerWorkflow('promotions', WORKFLOW_LUA, [
+    await engine.registerWorkflow('promotions', readWorkflowLua('workflows/promotions.lua'), [
       cap('orders:read'),
       cap('billing:charge'),
       cap('notifications:send'),
@@ -56,17 +46,37 @@ describe('BusinessScriptingEngine (illustrative)', () => {
     await engine.dispose();
   });
 
-  it('denies billing when capability is missing', async () => {
+  it('loads order_echo.lua for a focused notification assertion', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-echo', customerId: 'c-x', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+
+    await engine.registerWorkflow('echo', readWorkflowLua('workflows/order_echo.lua'), [
+      cap('notifications:send'),
+    ]);
+
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-echo',
+      amountCents: 42,
+      customerId: 'c-x',
+    });
+
+    expect(
+      host.notifications.getSent().some(
+        (m) => m.channel === 'echo' && m.message.includes('o-echo') && m.message.includes('42'),
+      ),
+    ).toBe(true);
+
+    await engine.dispose();
+  });
+
+  it('denies billing when capability is missing (billing_denied.lua)', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-2', customerId: 'c-2', totalCents: 5000 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    const luaNoBilling = `
-function onOrderPlaced(evt)
-  billing.charge({ orderId = evt.orderId, amountCents = 1 })
-end
-`.trim();
-
-    await engine.registerWorkflow('no-billing-cap', luaNoBilling, [cap('orders:read')]);
+    await engine.registerWorkflow('no-billing-cap', readWorkflowLua('workflows/billing_denied.lua'), [
+      cap('orders:read'),
+    ]);
 
     await expect(
       engine.dispatch({
@@ -78,5 +88,16 @@ end
     ).rejects.toThrow(/capability denied/);
 
     await engine.dispose();
+  });
+});
+
+describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
+  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods', () => {
+    const doc = readFileSync(generatedDefsPath, 'utf8');
+    expect(doc).toContain('function orders:get');
+    expect(doc).toContain('function billing:charge');
+    expect(doc).toContain('function notifications:send');
+    expect(doc).toContain('---@alias OrderId string');
+    expect(doc).toContain('orders = {}');
   });
 });

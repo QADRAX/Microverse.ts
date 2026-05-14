@@ -38,8 +38,10 @@ export type HostScriptSessionOptions<THost> = {
  * Binds one **Lua slot** to a {@link HostSurface}: capability allowlist, Zod validation, and `mergeEnv` wiring.
  *
  * @remarks
- * Call {@link HostScriptSession.openSession} once before {@link HostScriptSession.runChunk} or {@link HostScriptSession.call}.
- * Dispose when the workflow or entity is torn down.
+ * - **Lua → host (bridges):** tables/methods from {@link defineHostSurface} on `_ENV` call into TypeScript with Zod validation.
+ * - **Host → Lua (globals):** use {@link HostScriptSession.invokeGlobalHookIfPresent} for optional top-level hooks
+ *   (e.g. `onOrderPlaced`). For calls on a global table, use {@link HostScriptSession.call}.
+ * - Call {@link HostScriptSession.openSession} once before running chunks or invocations; {@link HostScriptSession.dispose} when the slot is torn down.
  *
  * @typeParam THost - Same host type as your surface handlers.
  */
@@ -91,7 +93,34 @@ export class HostScriptSession<THost> {
   };
 
   /**
-   * Invokes `_ENV[tableName][methodName](literalTable)` where `literalTable` is built only from
+   * Host → Lua: invokes `_ENV[globalName](literalTable)` when that entry is a function; otherwise no-op.
+   * Prefer this over hand-built Lua chunks for workflow hooks (`onOrderPlaced`, …).
+   *
+   * @param globalName - Must be a safe Lua identifier (`/^[A-Za-z_][A-Za-z0-9_]*$/`).
+   * @param payload - Table fields: only string, finite number, or boolean (Lua literals).
+   */
+  readonly invokeGlobalHookIfPresent = async (
+    globalName: string,
+    payload: Readonly<Record<string, string | number | boolean>>,
+  ) => {
+    assertSafeLuaGlobalName(globalName);
+    const sb = this.requireSandbox();
+    const tbl = luaTableLiteralFromPlainRecord(payload);
+    const src = [
+      `local f = rawget(_ENV, ${JSON.stringify(globalName)})`,
+      `if type(f) == "function" then`,
+      `  f(${tbl})`,
+      `end`,
+    ].join('\n');
+    return sb.run({
+      script: createSandboxScript(src),
+      mergeEnv: this.mergeEnv(),
+      timeout: this.opts.defaultTimeout,
+    });
+  };
+
+  /**
+   * Host → Lua: invokes `_ENV[tableName][methodName](literalTable)` where `literalTable` is built only from
    * string, finite number, or boolean fields in `payload`.
    *
    * @param tableName - Global table name in the slot env.
@@ -100,7 +129,7 @@ export class HostScriptSession<THost> {
    */
   readonly call = async (tableName: string, methodName: string, payload: Record<string, unknown>) => {
     const sb = this.requireSandbox();
-    const tbl = recordToLuaTableLiteral(payload);
+    const tbl = luaTableLiteralFromUnknownRecord(payload);
     const src = [
       `local t = _ENV[${JSON.stringify(tableName)}]`,
       `local f = type(t) == "table" and t[${JSON.stringify(methodName)}] or nil`,
@@ -126,7 +155,29 @@ export class HostScriptSession<THost> {
   };
 }
 
-function recordToLuaTableLiteral(o: Record<string, unknown>): string {
+function assertSafeLuaGlobalName(name: string): void {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+    throw new Error(`unsafe Lua global name: ${name}`);
+  }
+}
+
+function luaTableLiteralFromPlainRecord(o: Readonly<Record<string, string | number | boolean>>): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(o)) {
+    if (typeof v === 'string') {
+      parts.push(`${k} = ${JSON.stringify(v)}`);
+    } else if (typeof v === 'number' && Number.isFinite(v)) {
+      parts.push(`${k} = ${v}`);
+    } else if (typeof v === 'boolean') {
+      parts.push(`${k} = ${v ? 'true' : 'false'}`);
+    } else {
+      throw new Error(`HostScriptSession: unsupported value type for key ${k}`);
+    }
+  }
+  return `{ ${parts.join(', ')} }`;
+}
+
+function luaTableLiteralFromUnknownRecord(o: Record<string, unknown>): string {
   const parts: string[] = [];
   for (const [k, v] of Object.entries(o)) {
     if (typeof v === 'string') {

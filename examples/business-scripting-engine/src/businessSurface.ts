@@ -14,16 +14,18 @@ const chargeResult = z.object({
 });
 
 /**
- * Superficie expuesta a Lua: integraciones de dominio tipadas con Zod + capabilities.
- * Cada workflow declara en su manifiesto solo las capabilities que necesita.
+ * Host surface exposed to Lua: domain integrations with Zod + capabilities.
+ * Each workflow session declares only the capabilities it needs in its allowlist.
+ *
+ * Default-exported for `luarizer generate-defs --surface ...` (see package.json).
  */
-export const businessSurface = defineHostSurface({
+export default defineHostSurface({
   orders: {
     get: fn<BusinessEngineHost, { orderId: string }, OrderRecord | undefined>({
       capability: cap('orders:read'),
       input: z.object({ orderId: z.string() }),
       output: orderDto.optional(),
-      description: 'Carga un pedido por id',
+      description: 'Load order by id',
       lua: { paramTypes: { orderId: 'OrderId' }, returns: 'OrderDto|nil' },
       handler: ({ host }, { orderId }) => host.orders.get(orderId),
     }),
@@ -36,7 +38,7 @@ export const businessSurface = defineHostSurface({
         amountCents: z.number().int().nonnegative(),
       }),
       output: chargeResult,
-      description: 'Registra un cargo contra un pedido',
+      description: 'Record a charge against an order',
       lua: { paramTypes: { orderId: 'OrderId', amountCents: 'integer' }, returns: 'ChargeResult' },
       handler: ({ host }, input) => host.billing.charge(input.orderId, input.amountCents),
     }),
@@ -46,7 +48,7 @@ export const businessSurface = defineHostSurface({
       capability: cap('notifications:send'),
       input: z.object({ channel: z.string(), message: z.string() }),
       output: z.undefined(),
-      description: 'Envía un aviso (email, slack, …)',
+      description: 'Send a notification (email, slack, …)',
       handler: ({ host }, input) => {
         host.notifications.send(input.channel, input.message);
         return undefined;

@@ -1,5 +1,6 @@
 import type {
   LuarizerDefManifest,
+  ManifestAlias,
   ManifestClass,
   ManifestGlobal,
   ManifestMethod,
@@ -28,6 +29,10 @@ function emitMethod(className: string, m: ManifestMethod): string {
   return lines.join('\n');
 }
 
+function emitAlias(a: ManifestAlias): string {
+  return `---@alias ${a.name} ${a.definition}`;
+}
+
 function emitClass(c: ManifestClass): string {
   const parts: string[] = [];
   parts.push('');
@@ -39,7 +44,7 @@ function emitClass(c: ManifestClass): string {
     const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
     parts.push(`---@field ${f.name} ${f.luaType}${d}`);
   }
-  parts.push(`local ${c.name} = {}`);
+  parts.push(`${c.name} = {}`);
   for (const m of c.methods ?? []) {
     parts.push(emitMethod(c.name, m));
   }
@@ -75,6 +80,11 @@ export function buildLuaCatsDocument(manifest: LuarizerDefManifest): string {
   out.push('');
   out.push('---@meta');
   out.push('');
+
+  for (const a of manifest.aliases ?? []) {
+    out.push(emitAlias(a));
+    out.push('');
+  }
 
   for (const c of manifest.classes ?? []) {
     out.push(emitClass(c));

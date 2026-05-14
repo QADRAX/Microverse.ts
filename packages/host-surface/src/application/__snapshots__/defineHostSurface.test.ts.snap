@@ -7,16 +7,18 @@ exports[`defineHostSurface > builds LuarizerDefManifest for lua-defs snapshot 1`
 
 ---@meta
 
+---@alias EntityId string
+
 
 ---@class time
-local time = {}
+time = {}
 ---Frame delta seconds
 ---@param self time
 ---@return number
 function time:delta() end
 
 ---@class ecs
-local ecs = {}
+ecs = {}
 ---@param self ecs
 ---@param id EntityId
 ---@return string|nil

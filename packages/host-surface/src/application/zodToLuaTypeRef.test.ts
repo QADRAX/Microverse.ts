@@ -11,8 +11,8 @@ describe('zodToLuaTypeRef', () => {
     expect(zodToLuaTypeRef(z.unknown())).toBe('unknown');
   });
 
-  it('maps object to table', () => {
-    expect(zodToLuaTypeRef(z.object({ a: z.string() }))).toBe('table');
+  it('maps object to inline LuaCATS record', () => {
+    expect(zodToLuaTypeRef(z.object({ a: z.string() }))).toBe('{ a: string }');
   });
 
   it('maps optional and nullable', () => {

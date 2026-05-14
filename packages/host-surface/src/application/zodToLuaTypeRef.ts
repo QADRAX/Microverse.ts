@@ -89,7 +89,13 @@ export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
     return 'table';
   }
   if (schema instanceof z.ZodObject) {
-    return 'table';
+    const shape = schema.shape as Record<string, z.ZodTypeAny>;
+    const keys = Object.keys(shape);
+    if (keys.length === 0) {
+      return '{}';
+    }
+    const parts = keys.map((k) => `${k}: ${zodToLuaTypeRef(shape[k]!)}`);
+    return `{ ${parts.join(', ')} }`;
   }
   if (schema instanceof z.ZodUnion) {
     return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o)).join('|');

@@ -67,4 +67,11 @@ export const luarizerEslintConfig = tseslint.config(
       ],
     },
   },
+  {
+    files: ['**/examples/business-scripting-engine/src/businessSurface.ts'],
+    rules: {
+      'import-x/no-default-export': 'off',
+      'no-restricted-syntax': 'off',
+    },
+  },
 );

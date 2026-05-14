@@ -39,6 +39,8 @@ describe('HostScriptSession', () => {
     await session.openSession();
     const r = await session.runChunk('-- stub');
     expect(r._tag).toBe('ok');
+    const hook = await session.invokeGlobalHookIfPresent('onSmoke', { n: 1, ok: true, msg: 'x' });
+    expect(hook._tag).toBe('ok');
     await session.dispose();
   });
 });

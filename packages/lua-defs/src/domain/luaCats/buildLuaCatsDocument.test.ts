@@ -29,6 +29,7 @@ describe('buildLuaCatsDocument', () => {
     };
     const lua = buildLuaCatsDocument(manifest);
     expect(lua).toContain('---@class EchoBridge');
+    expect(lua).toContain('EchoBridge = {}');
     expect(lua).toContain('function EchoBridge:ping(msg) end');
     expect(lua).toContain('---@class EngineGlobal');
     expect(lua).toContain('---@field Echo EchoBridge');
@@ -50,6 +51,38 @@ describe('buildLuaCatsDocument', () => {
     const lua = buildLuaCatsDocument(manifest);
     expect(lua).toContain('---@class Data');
     expect(lua).toContain('---@field id number');
+    expect(lua).toContain('Data = {}');
     expect(lua).toContain('function Data:reset() end');
+  });
+
+  it('emits aliases before bridge classes', () => {
+    const manifest: LuarizerDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      aliases: [
+        { name: 'OrderId', definition: 'string' },
+        { name: 'OrderDto', definition: '{ id: string, customerId: string, totalCents: number }' },
+      ],
+      classes: [
+        {
+          name: 'orders',
+          methods: [
+            {
+              name: 'get',
+              params: [{ name: 'orderId', luaType: 'OrderId' }],
+              returns: 'OrderDto|nil',
+            },
+          ],
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    const meta = lua.indexOf('---@meta');
+    const aliasOrderId = lua.indexOf('---@alias OrderId string');
+    const classOrders = lua.indexOf('---@class orders');
+    expect(meta).toBeGreaterThanOrEqual(0);
+    expect(aliasOrderId).toBeGreaterThan(meta);
+    expect(classOrders).toBeGreaterThan(aliasOrderId);
+    expect(lua).toContain('orders = {}');
   });
 });

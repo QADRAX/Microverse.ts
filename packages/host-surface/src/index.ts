@@ -14,8 +14,10 @@ export {
   type HostSurface,
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
+  type LuarizerDefManifestGeneratorOpts,
 } from './application/defineHostSurface.js';
 export { HostScriptSession, type HostScriptSessionOptions } from './application/hostScriptSession.js';
+export { luaGlobalHookName, type LuaGlobalHookName } from './application/luaGlobalHook.js';
 export { zodToLuaTypeRef } from './application/zodToLuaTypeRef.js';
 export {
   augmentHostWithCapabilityRegistry,

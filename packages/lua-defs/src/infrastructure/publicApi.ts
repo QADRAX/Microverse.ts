@@ -6,6 +6,7 @@ export type {
   LuarizerDefManifest,
   LuaPrimitiveType,
   LuaTypeRef,
+  ManifestAlias,
   ManifestClass,
   ManifestClassField,
   ManifestGlobal,
@@ -35,4 +36,8 @@ export {
 export { createNodeFileSystemPort } from './adapters/nodeFileSystemAdapter.js';
 export { createDefaultLuaDefinitionsFromManifestFilePorts } from './defaultLuaDefinitionsPorts.js';
 export { generateDefs, type GenerateDefsOptions } from './generateDefs.js';
+export {
+  writeLuaDefinitionsFromManifest,
+  type WriteLuaDefinitionsFromManifestOptions,
+} from './writeLuaDefinitionsFromManifest.js';
 export { loadLuaDefinitionsFromManifestFile, type LoadLuaDefinitionsFromManifestFileOptions } from './loadLuaDefinitionsFromManifestFile.js';

@@ -10,6 +10,10 @@
     "schemaVersion": { "const": 1 },
     "output": { "type": "string", "minLength": 1 },
     "headerNote": { "type": "string" },
+    "aliases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/alias" }
+    },
     "classes": {
       "type": "array",
       "items": { "$ref": "#/$defs/class" }
@@ -20,6 +24,15 @@
     }
   },
   "$defs": {
+    "alias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "definition"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "definition": { "type": "string", "minLength": 1 }
+      }
+    },
     "param": {
       "type": "object",
       "additionalProperties": false,

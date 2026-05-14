@@ -2,11 +2,12 @@ import {
   type CapabilityId,
   createSandboxId,
   HostScriptSession,
+  luaGlobalHookName,
   Luarizer,
   type SandboxRuntime,
 } from '@luarizer/luarizer';
 
-import { businessSurface } from './businessSurface.js';
+import businessSurface from './businessSurface.js';
 import type { BusinessEngineHost } from './integrations.js';
 
 export type BusinessDomainEvent =
@@ -21,16 +22,6 @@ export type BusinessDomainEvent =
       readonly sku: string;
       readonly unitsLeft: number;
     };
-
-function hookNameForEvent(kind: BusinessDomainEvent['kind']): string {
-  return `on${kind}`;
-}
-
-function assertSafeLuaIdentifier(name: string): void {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
-    throw new Error(`unsafe Lua identifier: ${name}`);
-  }
-}
 
 function eventToPayloadRecord(event: BusinessDomainEvent): Record<string, string | number | boolean> {
   switch (event.kind) {
@@ -48,25 +39,9 @@ function eventToPayloadRecord(event: BusinessDomainEvent): Record<string, string
   }
 }
 
-function recordToLuaTableLiteral(o: Record<string, string | number | boolean>): string {
-  const parts: string[] = [];
-  for (const [k, v] of Object.entries(o)) {
-    if (typeof v === 'string') {
-      parts.push(`${k} = ${JSON.stringify(v)}`);
-    } else if (typeof v === 'number' && Number.isFinite(v)) {
-      parts.push(`${k} = ${v}`);
-    } else if (typeof v === 'boolean') {
-      parts.push(`${k} = ${v ? 'true' : 'false'}`);
-    } else {
-      throw new Error(`unsupported payload field ${k}`);
-    }
-  }
-  return `{ ${parts.join(', ')} }`;
-}
-
 /**
- * Motor ilustrativo: varias integraciones (pedidos, cobros, notificaciones) detrás de una superficie,
- * eventos de negocio que disparan hooks Lua (`onOrderPlaced`, `onInventoryLow`, …) y un workflow por `workflowId`.
+ * Illustrative engine: orders, billing, and notifications behind a typed surface; business events invoke
+ * Lua hooks (`onOrderPlaced`, `onInventoryLow`, …); each `workflowId` is an isolated session + allowlist.
  */
 export class BusinessScriptingEngine {
   private readonly runtime: SandboxRuntime;
@@ -78,7 +53,7 @@ export class BusinessScriptingEngine {
   }
 
   /**
-   * Registra un workflow: carga Lua una vez en un slot aislado con la allowlist de capabilities dada.
+   * Registers a workflow: loads Lua once in an isolated slot with the given capability allowlist.
    */
   readonly registerWorkflow = async (
     workflowId: string,
@@ -109,21 +84,14 @@ export class BusinessScriptingEngine {
   };
 
   /**
-   * Propaga un evento de negocio a todos los workflows: invoca `on<EventKind>` si existe en el entorno Lua.
+   * Dispatches a business event to every workflow: calls `on<EventKind>` if defined in the Lua environment.
    */
   readonly dispatch = async (event: BusinessDomainEvent): Promise<void> => {
-    const hook = hookNameForEvent(event.kind);
-    assertSafeLuaIdentifier(hook);
-    const payloadLit = recordToLuaTableLiteral(eventToPayloadRecord(event));
-    const chunk = [
-      `local f = rawget(_ENV, ${JSON.stringify(hook)})`,
-      `if type(f) == "function" then`,
-      `  f(${payloadLit})`,
-      `end`,
-    ].join('\n');
+    const hook = luaGlobalHookName(event.kind);
+    const payload = eventToPayloadRecord(event);
 
     for (const [id, session] of this.sessions) {
-      const r = await session.runChunk(chunk);
+      const r = await session.invokeGlobalHookIfPresent(hook, payload);
       if (r._tag !== 'ok') {
         const detail =
           r._tag === 'err' && r.error._tag === 'AdapterError' ? r.error.message : JSON.stringify(r.error);
