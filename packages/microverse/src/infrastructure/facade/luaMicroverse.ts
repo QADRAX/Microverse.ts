@@ -67,8 +67,6 @@ export type LuaMicroverseConfig<
   readonly host: THost;
   /** From {@link defineHostSurface} / {@link defineHostSurfaceFor}; hooks live on `surface.workflowHooks` when present. */
   readonly surface: HostSurface<THooks, TCapabilities>;
-  /** When omitted, a Wasm-backed {@link MicroverseRuntime} is created for this microverse. */
-  readonly runtime?: MicroverseRuntime | undefined;
   /** Prefix for internal Lua env slot ids, default `script` (ids look like `script:my-id`). */
   readonly envSlotScope?: string | undefined;
   /** Wall-clock limit per `runChunk` / hook invocation (Wasm adapter + session forwarding). */
@@ -94,9 +92,10 @@ type EmitToAllScriptsFn<THooks extends HostWorkflowHooksSpec | undefined> = THoo
     ) => Promise<void>;
 
 /**
- * One **Lua microverse**: a shared Wasm VM, a map of {@link HostScriptSession}s keyed by `scriptId`, and helpers to
- * register Lua scripts and broadcast hook events. Capabilities for each script come from the host surface definition
- * ({@link HostSurfaceCore.pickCapabilities} / {@link HostSurfaceCore.capabilities}).
+ * One **Lua microverse**: a shared built-in Wasm Lua VM, {@link HostScriptSession}s keyed by `scriptId`, and helpers to
+ * register scripts and broadcast hook events. Capabilities per script come from the host surface
+ * ({@link HostSurfaceCore.pickCapabilities} / {@link HostSurfaceCore.capabilities}). Created via {@link MicroverseLua.create}
+ * or {@link createLuaMicroverse}.
  */
 export class LuaMicroverse<
   THost extends object = object,
@@ -122,15 +121,11 @@ export class LuaMicroverse<
     this.surface = config.surface;
     this.defaultTimeout = config.defaultTimeout;
     this.sharedLuaChunks = config.sharedLuaChunks ?? [];
-    this.runtime =
-      config.runtime ??
-      createWasmMicroverseRuntime(
-        config.defaultTimeout !== undefined ? { defaultTimeout: config.defaultTimeout } : {},
-      );
+    this.runtime = createWasmMicroverseRuntime(
+      config.defaultTimeout !== undefined ? { defaultTimeout: config.defaultTimeout } : {},
+    );
     this.envSlotScope = config.envSlotScope ?? 'script';
   }
-
-  readonly getRuntime = (): MicroverseRuntime => this.runtime;
 
   /** Capability ids declared on the bound host surface. */
   readonly getSurfaceCapabilities = (): readonly TCapabilities[] => this.surface.capabilities;
@@ -219,7 +214,8 @@ export type HostWorkflowHub<
 > = LuaMicroverse<THost, THooks, TCapabilities>;
 
 /**
- * Creates a {@link LuaMicroverse} (Lua/Wasm flavor). Type `host` with {@link TaggedLuaMicroverseHost} so hook emits narrow correctly.
+ * Creates a {@link LuaMicroverse} with a **built-in** Wasm Lua VM (Wasmoon). Type `host` with
+ * {@link TaggedLuaMicroverseHost} so hook emits narrow correctly. Prefer {@link MicroverseLua.create} for the same API.
  */
 export function createLuaMicroverse<
   THost extends object,
@@ -227,7 +223,6 @@ export function createLuaMicroverse<
 >(config: {
   readonly host: THost;
   readonly surface: TSurface;
-  readonly runtime?: MicroverseRuntime | undefined;
   readonly envSlotScope?: string | undefined;
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   readonly sharedLuaChunks?: readonly string[] | undefined;
@@ -237,7 +232,6 @@ export function createLuaMicroverse<
   return new LuaMicroverse<THost, H, C>({
     host: config.host,
     surface: config.surface as unknown as HostSurface<H, C>,
-    runtime: config.runtime,
     envSlotScope: config.envSlotScope,
     defaultTimeout: config.defaultTimeout,
     sharedLuaChunks: config.sharedLuaChunks,

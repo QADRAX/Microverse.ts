@@ -1,6 +1,6 @@
 import {
-  createLuaMicroverse,
   fixedTimeout,
+  MicroverseLua,
   type LuaMicroverse,
   type TimeoutPolicy,
 } from '@microverse/microverse';
@@ -27,7 +27,7 @@ export type BusinessScriptingEngineOptions = {
 };
 
 /**
- * Thin façade: {@link createLuaMicroverse} with this package's default surface.
+ * Thin façade: {@link MicroverseLua.create} with this package's default surface (built-in Wasm Lua VM).
  * Script capabilities come from `surface.pickCapabilities(…)` — see {@link businessSurface.ts}.
  */
 export class BusinessScriptingEngine {
@@ -40,7 +40,7 @@ export class BusinessScriptingEngine {
     readonly host: BusinessEngineHost,
     options: BusinessScriptingEngineOptions = {},
   ) {
-    this.microverse = createLuaMicroverse({
+    this.microverse = MicroverseLua.create({
       host,
       surface,
       defaultTimeout: options.defaultTimeout ?? fixedTimeout(30_000),

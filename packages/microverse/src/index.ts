@@ -1,9 +1,8 @@
 /**
  * **@microverse/microverse** — single entry for consuming applications.
  *
- * Re-exports runtime, bridges, capabilities, Zod helpers, shared types, **{@link defineHostSurface}**,
- * and the {@link createLuaMicroverse} façade for multi-script Lua hosts.
- * from `@microverse/host-surface`. Prefer importing from this package so apps depend on one workspace / npm name.
+ * Plug-and-play Lua scripting: **{@link MicroverseLua.create}** (built-in Wasm VM), plus **{@link defineHostSurface}**,
+ * {@link fn}, and {@link cap} from `@microverse/host-surface`. Prefer this package over wiring runtimes yourself.
  */
 export * from '@microverse/host-surface';
 export * from '@microverse/shared';
@@ -14,7 +13,9 @@ export * from '@microverse/runtime-bridge';
 export * from '@microverse/runtime-capabilities';
 export * from '@microverse/runtime-zod';
 
-export { Microverse } from './infrastructure/facade/microverseNamespace';
+export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace.js';
+/** @deprecated Use {@link MicroverseLua}. */
+export { Microverse } from './infrastructure/facade/microverseNamespace.js';
 export {
   createLuaMicroverse,
   LuaMicroverse,

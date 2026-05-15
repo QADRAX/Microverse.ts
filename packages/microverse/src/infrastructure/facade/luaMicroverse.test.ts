@@ -1,9 +1,4 @@
 import { cap, defineHostSurface, fn } from '@microverse/microverse';
-import {
-  ConsoleLogger,
-  createStubMicroverseRuntime,
-  StubRuntimeAdapter,
-} from '@microverse/runtime-core';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
@@ -12,7 +7,7 @@ import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicrover
 type H = { readonly n: number };
 
 describe('createLuaMicroverse', () => {
-  it('registers a script and runs typed emitToAllScripts', async () => {
+  it('registers a script and runs typed emitToAllScripts (built-in Wasm runtime)', async () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
@@ -33,10 +28,6 @@ describe('createLuaMicroverse', () => {
     const microverse = createLuaMicroverse({
       host: { n: 0 } satisfies Host,
       surface,
-      runtime: createStubMicroverseRuntime({
-        adapter: new StubRuntimeAdapter(),
-        logger: new ConsoleLogger(),
-      }),
     });
 
     await microverse.registerScript({
