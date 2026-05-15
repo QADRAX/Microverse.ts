@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { BusinessEngineHost } from './services/businessEngineHost.js';
 import type { OrderRecord } from './domain/models/orderRecord.js';
 import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
-import { chargeResult, orderDto } from './schemas/surface/bridgePayloads.js';
+import { chargeResult, inventoryUnitsDto, orderDto } from './schemas/surface/bridgePayloads.js';
 
 export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
 
@@ -14,7 +14,7 @@ export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks
  *
  * Default-exported for `luarizer generate-defs --surface ...` (see package.json).
  * Workflow hooks: abstract **`Workflow`** plus injected **`workflow:extend()`** helper (see generated `businessSurface.d.lua`).
- * For LuaLS, keep `.luarc.json` **`workspace.library`** as `./generated` (relative to that file) so stubs apply when the repo root is the IDE workspace.
+ * For LuaLS, keep `.luarc.json` **`workspace.library`** as `./generated` (relative to that file) so stubs apply when the repo root is the IDE workspace. If your editor still flags bridge tables as undefined, list them under **`diagnostics.globals`** (see this package’s `.luarc.json`).
  */
 export default defineHostSurfaceFor(
   {
@@ -51,6 +51,28 @@ export default defineHostSurfaceFor(
           host.notifications.send(input.channel, input.message);
           return undefined;
         },
+      }),
+    },
+    audit: {
+      record: fn<BusinessEngineHost, { line: string }, undefined>({
+        capability: cap('audit:record'),
+        input: z.object({ line: z.string() }),
+        output: z.undefined(),
+        description: 'Append one line to the in-memory audit trail',
+        handler: ({ host }, { line }) => {
+          host.audit.record(line);
+          return undefined;
+        },
+      }),
+    },
+    inventory: {
+      getUnits: fn<BusinessEngineHost, { sku: string }, { units: number }>({
+        capability: cap('inventory:read'),
+        input: z.object({ sku: z.string() }),
+        output: inventoryUnitsDto,
+        description: 'Read stock units for a SKU',
+        lua: { returns: 'InventoryUnits' },
+        handler: ({ host }, { sku }) => ({ units: host.inventory.getUnits(sku) }),
       }),
     },
   },

@@ -6,6 +6,8 @@
 
 ---@alias ChargeResult { ok: boolean }
 
+---@alias InventoryUnits { units: number }
+
 ---@alias OrderDto { id: string; customerId: string; totalCents: number }
 
 ---@alias OrderId string
@@ -31,6 +33,20 @@ notifications = {}
 ---@param payload { channel: string; message: string }
 ---@return nil
 function notifications:send(payload) end
+
+---@class audit
+audit = {}
+---Append one line to the in-memory audit trail
+---@param payload { line: string }
+---@return nil
+function audit:record(payload) end
+
+---@class inventory
+inventory = {}
+---Read stock units for a SKU
+---@param payload { sku: string }
+---@return InventoryUnits
+function inventory:getUnits(payload) end
 
 ---Workflow hook payload for `onInventoryLow` (Zod → LuaCATS fields).
 ---@class LuarizerWorkflowEvt_InventoryLow

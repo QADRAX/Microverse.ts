@@ -9,3 +9,7 @@ export const orderDto = z.object({
 export const chargeResult = z.object({
   ok: z.boolean(),
 });
+
+export const inventoryUnitsDto = z.object({
+  units: z.number(),
+});

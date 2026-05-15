@@ -88,6 +88,64 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 
     await engine.dispose();
   });
+
+  it('dispatches the same OrderPlaced hook to every workflow (separate Lua slots, separate allowlists)', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-multi', customerId: 'c-m', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    const auditCap = cap('audit:record');
+
+    await engine.registerWorkflow('audit-a', readWorkflowLua('workflows/order_audit_alpha.lua'), [auditCap]);
+    await engine.registerWorkflow('audit-b', readWorkflowLua('workflows/order_audit_beta.lua'), [auditCap]);
+
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-multi',
+      amountCents: 7,
+      customerId: 'c-m',
+    });
+
+    const lines = host.audit.getLines();
+    expect(lines.some((l) => l === 'alpha:o-multi')).toBe(true);
+    expect(lines.some((l) => l === 'beta:o-multi')).toBe(true);
+
+    await engine.dispose();
+  });
+
+  it('dispatches InventoryLow to two workflows that share inventory + audit bridges', async () => {
+    const host = createDefaultBusinessHost([], { GADGET: 42 });
+    const engine = new BusinessScriptingEngine(host);
+    const caps = [cap('inventory:read'), cap('audit:record')];
+
+    await engine.registerWorkflow('inv-a', readWorkflowLua('workflows/inventory_low_audit_a.lua'), caps);
+    await engine.registerWorkflow('inv-b', readWorkflowLua('workflows/inventory_low_audit_b.lua'), caps);
+
+    await engine.dispatch({ kind: 'InventoryLow', sku: 'GADGET', unitsLeft: 2 });
+
+    const lines = host.audit.getLines();
+    expect(lines.some((l) => l === 'inv-a:GADGET:units=42')).toBe(true);
+    expect(lines.some((l) => l === 'inv-b:GADGET:units=42')).toBe(true);
+
+    await engine.dispose();
+  });
+
+  it('fails the whole emit when one workflow is missing a capability its script uses', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-cap', customerId: 'c-c', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+
+    await engine.registerWorkflow('has-audit', readWorkflowLua('workflows/order_audit_alpha.lua'), [cap('audit:record')]);
+    await engine.registerWorkflow('no-audit', readWorkflowLua('workflows/order_audit_beta.lua'), []);
+
+    await expect(
+      engine.dispatch({
+        kind: 'OrderPlaced',
+        orderId: 'o-cap',
+        amountCents: 1,
+        customerId: 'c-c',
+      }),
+    ).rejects.toThrow(/capability denied/);
+
+    await engine.dispose();
+  });
 });
 
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
@@ -96,6 +154,9 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function orders:get(payload) end');
     expect(doc).toContain('function billing:charge(payload) end');
     expect(doc).toContain('function notifications:send(payload) end');
+    expect(doc).toContain('function audit:record(payload) end');
+    expect(doc).toContain('function inventory:getUnits(payload) end');
+    expect(doc).toContain('---@alias InventoryUnits');
     expect(doc).toContain('---@class LuarizerWorkflowEvt_OrderPlaced');
     expect(doc).toContain('---@field orderId string');
     expect(doc).toContain('---@field amountCents number');

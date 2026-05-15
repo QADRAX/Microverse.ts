@@ -1,6 +1,8 @@
 export type { BusinessEngineHost } from './businessEngineHost.js';
 export { createDefaultBusinessHost } from './businessEngineHost.js';
+export { createAuditService } from './audit/createAuditService.js';
 export { createBillingService } from './billing/createBillingService.js';
+export { createInventoryService } from './inventory/createInventoryService.js';
 export { createInMemoryOrders } from './orders/createInMemoryOrders.js';
 export { createNotificationService } from './notifications/createNotificationService.js';
 export { readWorkflowLua } from './workflows/loadWorkflowScript.js';
