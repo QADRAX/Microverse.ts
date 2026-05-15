@@ -31,7 +31,7 @@ export type {
  * @remarks
  * - Each top-level key becomes one bridge name injected via `mergeEnv` (e.g. `orders`, `time`).
  * - Lua calls look like `orders:get({ orderId = "x" })` (or `orders.get({ ... })`) — one payload table per method;
- *   bridges accept both forms (colon passes `self` as the first argument). Handlers may return `Promise<T>`; the Wasm slot bootstrap resolves them before Lua continues (see `@luarizer/runtime-wasm`).
+ *   bridges accept both forms (colon passes `self` as the first argument). Async handlers return handles; Lua uses `:await()` or a 2nd-arg `onComplete` callback (see `@luarizer/runtime-wasm`).
  * - Pair with {@link HostScriptSession} or {@link buildBridgeMergeEnvForHost} and an allowlisted registry.
  * - Optional **workflow hooks** (second argument): Zod payloads per event kind — emitted into LuaCATS as abstract `Workflow` plus a per-slot `workflow:extend()` helper; the returned surface includes them as readonly `workflowHooks` on the surface object. Do not name a TS bridge table `workflow` when hooks are enabled (that name is reserved for the injected Lua helper).
  *

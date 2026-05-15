@@ -25,7 +25,7 @@ export type ManifestMethod = {
    * - `tablePayload` (default): one argument `payload` as `{ field: type; … }` (bridge style).
    * - `singleValue`: one argument using the single param’s name and type (e.g. workflow `evt`).
    */
-  readonly callStyle?: 'tablePayload' | 'singleValue' | undefined;
+  readonly callStyle?: 'tablePayload' | 'singleValue' | 'asyncBridge' | undefined;
 };
 
 export type ManifestClassField = {

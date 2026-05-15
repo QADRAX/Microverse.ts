@@ -14,6 +14,11 @@ import { isLuaTypeAtom } from './luaTypeAtoms.js';
 import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
+function asyncHandleClassName(bridgeName: string, methodName: string): string {
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  return `${cap(bridgeName)}${cap(methodName)}Handle`;
+}
+
 function buildWorkflowHookManifestFields(
   kinds: readonly string[],
   workflowHooks: HostWorkflowHooksSpec,
@@ -76,12 +81,34 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
     const manifestMethods: ManifestMethod[] = [];
     for (const methodName of Object.keys(methods)) {
       const entry = methods[methodName]!;
-      manifestMethods.push({
-        name: methodName,
-        description: entry.description,
-        params: zodInputToManifestParams(entry.input, entry.lua?.paramTypes),
-        returns: entry.lua?.returns ?? zodToLuaTypeRef(entry.output),
-      });
+      const resultLua = entry.lua?.returns ?? zodToLuaTypeRef(entry.output);
+      if (entry.async === true) {
+        const handleName = asyncHandleClassName(bridgeName, methodName);
+        const payloadParams = zodInputToManifestParams(entry.input, entry.lua?.paramTypes) ?? [];
+        manifestMethods.push({
+          name: methodName,
+          description: entry.description,
+          callStyle: 'asyncBridge',
+          params: [
+            ...payloadParams,
+            { name: 'onComplete', luaType: `fun(result: ${resultLua})|nil` },
+          ],
+          returns: handleName,
+        });
+        classes.push({
+          name: handleName,
+          description: `Async handle for \`${bridgeName}:${methodName}\`. Call \`:await()\` for the resolved value.`,
+          fields: [{ name: 'await', luaType: `fun(self: ${handleName}): ${resultLua}` }],
+          emitSingleton: false,
+        });
+      } else {
+        manifestMethods.push({
+          name: methodName,
+          description: entry.description,
+          params: zodInputToManifestParams(entry.input, entry.lua?.paramTypes),
+          returns: resultLua,
+        });
+      }
     }
     classes.push({
       name: bridgeName,

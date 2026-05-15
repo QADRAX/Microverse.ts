@@ -61,7 +61,7 @@ export class BusinessScriptingEngine {
 
   /**
    * Host → Lua: emit a workflow hook defined on the surface (e.g. `JobDone` when completion is **not** modeled as a bridge return).
-   * Prefer async `fn` handlers returning `Promise<T>` for work tied to a single bridge call; they resolve in-Lua via the Wasm slot bootstrap.
+   * For async tied to one bridge call, prefer `async fn` handlers and explicit Lua `:await()` or `onComplete`; hooks are for host-pushed events (see job_async_partner.lua).
    * Payload fields must be JSON-serializable literals accepted by `emitToAllWorkflows`.
    */
   readonly emitWorkflowHook = async <K extends keyof typeof businessWorkflowHooks & string>(

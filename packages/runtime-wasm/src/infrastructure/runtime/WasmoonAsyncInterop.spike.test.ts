@@ -1,7 +1,7 @@
 /**
  * Spike: how Wasmoon exposes JS functions to Lua when the JS side returns a Promise.
- * Raw `async`/`Promise` returns are userdata until `:await()`; the Luarizer slot bootstrap wraps bridge
- * userdata so typical `orders:get({...})` calls auto-await (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA`).
+ * Raw `async`/`Promise` returns are userdata until `:await()`; Luarizer slot bootstrap requires explicit
+ * `:await()` or a 2nd-arg callback (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA`).
  */
 import { LuaFactory } from 'wasmoon';
 import { describe, expect, it } from 'vitest';
@@ -31,6 +31,25 @@ describe('wasmoon JS↔Lua interop (async spike, real engine)', () => {
       // Wasmoon 1.15: Promise is not transparently awaited into a Lua number.
       expect(rtype).not.toBe('number');
       expect(['userdata', 'table']).toContain(rtype);
+    } finally {
+      await lua.global.close?.();
+    }
+  });
+
+  it('Lua closure passed as second argument has type function or userdata', async () => {
+    const factory = new LuaFactory();
+    const lua = await factory.createEngine({ injectObjects: true });
+    try {
+      lua.global.set('echoType', (...args: unknown[]) => {
+        const second = args[1];
+        return typeof second;
+      });
+      await lua.doString(`
+        local t = echoType("a", function() end)
+        _G.__secondArgType = t
+      `);
+      const t = lua.global.get('__secondArgType') as string;
+      expect(['function', 'userdata']).toContain(t);
     } finally {
       await lua.global.close?.();
     }

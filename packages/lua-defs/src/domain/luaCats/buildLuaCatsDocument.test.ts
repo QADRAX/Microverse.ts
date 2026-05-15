@@ -130,6 +130,39 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).not.toContain('function Workflow:onPing(payload) end');
   });
 
+  it('emits asyncBridge methods with payload and onComplete', () => {
+    const manifest: LuarizerDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      classes: [
+        {
+          name: 'asyncio',
+          methods: [
+            {
+              name: 'tick',
+              callStyle: 'asyncBridge',
+              params: [
+                { name: 'delayMs', luaType: 'integer' },
+                { name: 'seed', luaType: 'number' },
+                { name: 'onComplete', luaType: 'fun(result: TickResult)|nil' },
+              ],
+              returns: 'AsyncioTickHandle',
+            },
+          ],
+        },
+        {
+          name: 'AsyncioTickHandle',
+          fields: [{ name: 'await', luaType: 'fun(self): TickResult' }],
+          emitSingleton: false,
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    expect(lua).toContain('---@param payload { delayMs: integer; seed: number }');
+    expect(lua).toContain('---@param onComplete fun(result: TickResult)|nil');
+    expect(lua).toContain('function asyncio:tick(payload, onComplete) end');
+  });
+
   it('emits luaHooks after classes', () => {
     const manifest: LuarizerDefManifest = {
       schemaVersion: 1,

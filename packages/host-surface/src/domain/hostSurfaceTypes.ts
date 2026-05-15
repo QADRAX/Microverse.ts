@@ -32,15 +32,21 @@ export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
   /** Zod schema for the value returned to Lua. */
   readonly output: z.ZodType<TOut>;
   /**
-   * Host logic at the Lua↔JS boundary. May return `Promise<TOut>`; the Wasm runtime applies the resolved value
-   * back to Lua (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA` in `@luarizer/runtime-wasm`).
+   * Host logic at the Lua↔JS boundary. May return `Promise<TOut>`; Lua must use `:await()` on the returned handle
+   * or pass an `onComplete` callback as the second argument (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA` in `@luarizer/runtime-wasm`).
    */
   readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut | Promise<TOut>;
+  /**
+   * When true, manifest and Lua runtime treat this method as async (`MethodHandle` + optional `onComplete`).
+   * Set automatically by {@link fn} for `async function` handlers.
+   */
+  readonly async?: boolean | undefined;
   /** Optional description emitted into the LuaCATS manifest. */
   readonly description?: string | undefined;
   /**
    * Advanced escape hatch for manifest emission. Prefer registering Zod schemas with {@link luaType}
    * (see `bridgePayloads` in the business example) so `.d.lua` stays inferred from `input` / `output`.
+   * Does not replace async bridge typing (`async` on {@link fn} emits handle + `onComplete`).
    * `paramTypes` keys must match `input` object keys (or `value` for non-object inputs).
    */
   readonly lua?: {
@@ -57,6 +63,7 @@ export type AnyHostSurfaceMethod = {
   readonly input: z.ZodTypeAny;
   readonly output: z.ZodTypeAny;
   readonly handler: (ctx: HostFnContext<unknown>, input: unknown) => unknown;
+  readonly async?: boolean | undefined;
   readonly description?: string | undefined;
   readonly lua?: {
     readonly paramTypes?: Partial<Record<string, string>> | undefined;

@@ -3,6 +3,7 @@
  * - Slot `_ENV` uses a **safe global** table (no `debug`, `load`, `io`, `os`, …).
  * - Slot registry and internals are **closure-local** (not on `_G`).
  * - Bridge tables are **read-only** from Lua (`__newindex`); host re-injects via `mergeEnv` each run.
+ * - **No auto-await**: async bridges return a handle with `:await()`; optional 2nd-arg callback runs after the current chunk step.
  * - Optional **instruction budget** per chunk via `debug.sethook` when available.
  */
 export const LUARIZER_DEFAULT_INSTRUCTION_BUDGET = 5_000_000;
@@ -11,6 +12,7 @@ export const LUARIZER_SLOT_VM_BOOTSTRAP_LUA = `
 do
   local REAL_G = _G
   local envs = {}
+  local pending_async = {}
 
   local function copy_functions(lib)
     if type(lib) ~= "table" then return nil end
@@ -76,12 +78,15 @@ do
   local DEFAULT_BUDGET = ${LUARIZER_DEFAULT_INSTRUCTION_BUDGET}
   local HOOK_STEP = 10000
 
-  function __luarizer_maybe_await_bridge_result(r)
-    local aw = nil
+  local function is_awaitable(r)
     if type(r) == "userdata" or type(r) == "table" then
-      aw = r.await
+      return type(r.await) == "function"
     end
-    if type(aw) ~= "function" then
+    return false
+  end
+
+  function __luarizer_await_value(r)
+    if not is_awaitable(r) then
       return r
     end
     local ok, out = pcall(function()
@@ -93,6 +98,38 @@ do
     return out
   end
 
+  function __luarizer_wrap_async_result(r)
+    if not is_awaitable(r) then
+      return r
+    end
+    return setmetatable({}, {
+      __index = function(_, key)
+        if key == "await" then
+          return function()
+            return __luarizer_await_value(r)
+          end
+        end
+        return nil
+      end,
+    })
+  end
+
+  local function is_lua_callback(v)
+    return type(v) == "function"
+  end
+
+  local function schedule_on_complete(onComplete, r)
+    pending_async[#pending_async + 1] = { cb = onComplete, r = r }
+  end
+
+  local function flush_pending_async()
+    for i = 1, #pending_async do
+      local job = pending_async[i]
+      local out = __luarizer_await_value(job.r)
+      job.cb(out)
+    end
+  end
+
   local function proxy_bridge(impl)
     return setmetatable({}, {
       __index = function(_, method)
@@ -102,15 +139,37 @@ do
         end
         return function(...)
           local n = select("#", ...)
-          local r
-          if n == 0 then
-            r = f(impl)
-          elseif n == 1 then
-            r = f(impl, select(1, ...))
-          else
-            r = f(impl, select(2, ...))
+          local onComplete = nil
+          local payload
+          if n >= 3 and is_lua_callback(select(3, ...)) then
+            onComplete = select(3, ...)
+            payload = select(2, ...)
+          elseif n >= 2 and is_lua_callback(select(2, ...)) then
+            onComplete = select(2, ...)
+            payload = select(1, ...)
+          elseif n >= 2 then
+            payload = select(2, ...)
+          elseif n >= 1 then
+            payload = select(1, ...)
           end
-          return __luarizer_maybe_await_bridge_result(r)
+          local r
+          if onComplete ~= nil then
+            if payload ~= nil then
+              r = f(impl, payload)
+            else
+              r = f(impl)
+            end
+            schedule_on_complete(onComplete, r)
+            return nil
+          end
+          if payload ~= nil then
+            r = f(impl, payload)
+          elseif n == 0 then
+            r = f(impl)
+          else
+            r = f(impl, select(1, ...))
+          end
+          return __luarizer_wrap_async_result(r)
         end
       end,
       __newindex = function(_, key)
@@ -131,6 +190,7 @@ do
 
   function __luarizer_execute_in_slot(slot_key, source, instr_budget)
     instr_budget = instr_budget or DEFAULT_BUDGET
+    pending_async = {}
     local env = ensure_env(slot_key)
     local f, load_err = load(source, "@" .. tostring(slot_key), "t", env)
     if not f then
@@ -150,6 +210,7 @@ do
     if debug_lib and debug_lib.sethook then
       debug_lib.sethook()
     end
+    flush_pending_async()
     if not ok then
       error(result, 0)
     end

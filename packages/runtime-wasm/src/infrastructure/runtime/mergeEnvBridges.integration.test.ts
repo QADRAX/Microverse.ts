@@ -79,7 +79,7 @@ describe('Wasmoon mergeEnv (bridges into slot _ENV)', () => {
     await sandbox.dispose();
   });
 
-  it('slot bootstrap auto-awaits Promise returned from a mergeEnv bridge method', async () => {
+  it('slot bootstrap requires explicit :await() for Promise returned from a mergeEnv bridge method', async () => {
     const adapter = new WasmoonRuntimeAdapter();
     const runtime = createStubSandboxRuntime({
       adapter,
@@ -99,7 +99,7 @@ describe('Wasmoon mergeEnv (bridges into slot _ENV)', () => {
         },
       },
       script: createSandboxScript(`
-        local row = Data.load("99")
+        local row = Data.load("99"):await()
         assert(row == "row:99", row)
       `),
     });

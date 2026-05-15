@@ -27,6 +27,22 @@ function emitMethod(className: string, m: ManifestMethod): string {
     lines.push(`function ${className}:${m.name}(${p.name}) end`);
     return lines.join('\n');
   }
+  if (m.callStyle === 'asyncBridge') {
+    const payloadParams = ps.filter((p) => p.name !== 'onComplete');
+    const onComplete = ps.find((p) => p.name === 'onComplete');
+    if (payloadParams.length > 0) {
+      const recordInner = payloadParams.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join('; ');
+      lines.push(`---@param payload { ${recordInner} }`);
+    }
+    if (onComplete !== undefined) {
+      lines.push(`---@param onComplete ${onComplete.luaType}`);
+    }
+    if (m.returns !== undefined) {
+      lines.push(`---@return ${m.returns}`);
+    }
+    lines.push(`function ${className}:${m.name}(payload, onComplete) end`);
+    return lines.join('\n');
+  }
   if (ps.length === 0) {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);

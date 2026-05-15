@@ -1,4 +1,4 @@
--- Sync bridge `jobs:create` returns a job id; host completes work asynchronously and emits `JobDone` (see tests).
+-- Consumer recipe (not Luarizer engine async): sync `jobs:create`, host does TS async work, then emits `JobDone` hook.
 local W = workflow:extend()
 
 ---@param evt LuarizerWorkflowEvt_OrderPlaced

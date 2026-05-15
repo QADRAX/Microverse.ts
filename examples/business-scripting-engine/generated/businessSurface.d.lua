@@ -54,17 +54,22 @@ function inventory:getUnits(payload) end
 
 ---@class jobs
 jobs = {}
----Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook.
+---Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook (consumer pattern, not engine async).
 ---@param payload { label: string }
 ---@return JobCreateResult
 function jobs:create(payload) end
 
+---Async handle for `asyncio:tick`. Call `:await()` for the resolved value.
+---@class AsyncioTickHandle
+---@field await fun(self: AsyncioTickHandle): AsyncioTickResult
+
 ---@class asyncio
 asyncio = {}
----Async-capable bridge: handler may await; Wasmoon Promise is applied in Lua via slot bootstrap.
+---Demo async bridge: use `:await()` or optional `onComplete` 2nd argument in Lua.
 ---@param payload { delayMs: integer; seed: integer }
----@return AsyncioTickResult
-function asyncio:tick(payload) end
+---@param onComplete fun(result: AsyncioTickResult)|nil
+---@return AsyncioTickHandle
+function asyncio:tick(payload, onComplete) end
 
 ---Workflow hook payload for `onInventoryLow` (Zod → LuaCATS fields).
 ---@class LuarizerWorkflowEvt_InventoryLow

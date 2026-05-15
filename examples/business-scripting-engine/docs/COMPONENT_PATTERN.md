@@ -18,7 +18,7 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 ## Estado
 
 - **Solo Lua**: tablas locales al chunk (`local state = { … }`) + métodos `W:on…` que mutan `state` (ver `lua/components/stateful_counter.lua`).
-- **Host como fuente de verdad**: bridges sync (`store:get` / `store:set`) + estado mínimo en Lua como cache; async del host sigue los patrones de `packages/host-surface/docs/async-subroutines-components.md` (repo raíz).
+- **Host como fuente de verdad**: bridges sync (`store:get` / `store:set`) + estado mínimo en Lua como cache. Async en Lua: `:await()` / callback en bridges (`order_asyncio_tick.lua`). Async vía hook tras trabajo TS (`job_async_partner.lua`) es receta del consumidor — ver `packages/host-surface/docs/async-subroutines-components.md`.
 
 ## “Hooks” de ciclo de vida
 

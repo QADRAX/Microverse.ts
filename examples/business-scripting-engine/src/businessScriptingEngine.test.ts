@@ -212,7 +212,7 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('async bridge: handler returns Promise; Lua sees resolved Zod output without :await', async () => {
+  it('async bridge: Lua uses :await() on asyncio:tick handle', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-io', customerId: 'c-io', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
     await engine.registerWorkflow('asyncio-demo', readWorkflowLua('workflows/order_asyncio_tick.lua'), [
@@ -284,7 +284,8 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function audit:record(payload) end');
     expect(doc).toContain('function inventory:getUnits(payload) end');
     expect(doc).toContain('---@class asyncio');
-    expect(doc).toContain('function asyncio:tick(payload) end');
+    expect(doc).toContain('---@class AsyncioTickHandle');
+    expect(doc).toContain('function asyncio:tick(payload, onComplete) end');
     expect(doc).toContain('---@alias AsyncioTickResult');
     expect(doc).toContain('---@class jobs');
     expect(doc).toContain('function jobs:create(payload) end');

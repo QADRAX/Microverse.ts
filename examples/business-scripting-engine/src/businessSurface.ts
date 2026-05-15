@@ -85,7 +85,8 @@ export default defineHostSurfaceFor(
         capability: cap('jobs:create'),
         input: z.object({ label: z.string() }),
         output: jobCreateResult,
-        description: 'Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook.',
+        description:
+          'Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook (consumer pattern, not engine async).',
         handler: ({ host }, { label }) => ({ jobId: host.jobs.createJob(label) }),
       }),
     },
@@ -97,7 +98,7 @@ export default defineHostSurfaceFor(
           seed: z.number().int(),
         }),
         output: asyncioTickResult,
-        description: 'Async-capable bridge: handler may await; Wasmoon Promise is applied in Lua via slot bootstrap.',
+        description: 'Demo async bridge: use `:await()` or optional `onComplete` 2nd argument in Lua.',
         handler: async (_ctx, { delayMs, seed }) => {
           await new Promise((r) => setTimeout(r, Math.min(delayMs, 30)));
           return { value: seed + 7 };
