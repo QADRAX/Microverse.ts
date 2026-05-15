@@ -1,5 +1,5 @@
 {
-  "name": "@luarizer/prettier-config",
+  "name": "@microverse/prettier-config",
   "private": true,
   "version": "0.0.0",
   "type": "module",

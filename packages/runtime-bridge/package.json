@@ -1,5 +1,5 @@
 {
-  "name": "@luarizer/runtime-bridge",
+  "name": "@microverse/runtime-bridge",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,9 +18,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/runtime-capabilities": "workspace:*",
-    "@luarizer/runtime-core": "workspace:*",
-    "@luarizer/shared": "workspace:*"
+    "@microverse/runtime-capabilities": "workspace:*",
+    "@microverse/runtime-core": "workspace:*",
+    "@microverse/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

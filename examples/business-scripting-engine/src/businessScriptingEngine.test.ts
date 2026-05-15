@@ -1,4 +1,4 @@
-import { cap } from '@luarizer/luarizer';
+import { cap } from '@microverse/microverse';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -291,11 +291,11 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function jobs:create(payload) end');
     expect(doc).toContain('---@alias JobCreateResult');
     expect(doc).toContain('---@alias InventoryUnits');
-    expect(doc).toContain('---@class LuarizerWorkflowEvt_OrderPlaced');
+    expect(doc).toContain('---@class MicroverseWorkflowEvt_OrderPlaced');
     expect(doc).toContain('---@field orderId string');
     expect(doc).toContain('---@field amountCents number');
     expect(doc).toContain('---@field customerId string');
-    expect(doc).toContain('---@class LuarizerWorkflowEvt_InventoryLow');
+    expect(doc).toContain('---@class MicroverseWorkflowEvt_InventoryLow');
     expect(doc).toContain('---@field sku string');
     expect(doc).toContain('---@field unitsLeft number');
     expect(doc).toContain('---@class Workflow');
@@ -305,14 +305,14 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function workflow:extend() end');
     expect(doc).toContain('---@return Workflow');
     expect(doc).toContain('---@field onOrderPlaced');
-    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_OrderPlaced)');
+    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_OrderPlaced)');
     expect(doc).toContain('---@field onInventoryLow');
-    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_InventoryLow)');
-    expect(doc).toContain('---@class LuarizerWorkflowEvt_JobDone');
+    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_InventoryLow)');
+    expect(doc).toContain('---@class MicroverseWorkflowEvt_JobDone');
     expect(doc).toContain('---@field jobId string');
     expect(doc).toContain('---@field result number');
     expect(doc).toContain('---@field onJobDone');
-    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_JobDone)');
+    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_JobDone)');
     expect(doc).toContain('---@alias OrderId string');
     expect(doc).toContain('orders = {}');
     expect(doc).not.toContain('function onOrderPlaced(evt) end');

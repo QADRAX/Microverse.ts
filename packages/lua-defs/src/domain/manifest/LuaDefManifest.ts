@@ -74,7 +74,7 @@ export type ManifestAlias = {
   readonly definition: string;
 };
 
-export type LuarizerDefManifest = {
+export type LuaDefManifest = {
   readonly schemaVersion: 1;
   /** Ruta de salida relativa a `cwd` (o absoluta). */
   readonly output: string;

@@ -21,10 +21,10 @@ importers:
       '@eslint/js':
         specifier: ^9.27.0
         version: 9.39.4
-      '@luarizer/eslint-config':
+      '@microverse/eslint-config':
         specifier: workspace:*
         version: link:tooling/eslint
-      '@luarizer/prettier-config':
+      '@microverse/prettier-config':
         specifier: workspace:*
         version: link:tooling/prettier
       eslint:
@@ -63,14 +63,14 @@ importers:
 
   examples/business-scripting-engine:
     dependencies:
-      '@luarizer/luarizer':
+      '@microverse/microverse':
         specifier: workspace:*
-        version: link:../../packages/luarizer
+        version: link:../../packages/microverse
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
-      '@luarizer/cli':
+      '@microverse/cli':
         specifier: workspace:*
         version: link:../../packages/cli
       typescript:
@@ -82,7 +82,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@luarizer/lua-defs':
+      '@microverse/lua-defs':
         specifier: workspace:*
         version: link:../lua-defs
       tsx:
@@ -98,22 +98,22 @@ importers:
 
   packages/host-surface:
     dependencies:
-      '@luarizer/lua-defs':
+      '@microverse/lua-defs':
         specifier: workspace:*
         version: link:../lua-defs
-      '@luarizer/runtime-bridge':
+      '@microverse/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@luarizer/runtime-capabilities':
+      '@microverse/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@luarizer/runtime-core':
+      '@microverse/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@luarizer/runtime-zod':
+      '@microverse/runtime-zod':
         specifier: workspace:*
         version: link:../runtime-zod
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -135,7 +135,7 @@ importers:
 
   packages/lua-defs:
     dependencies:
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -149,30 +149,30 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
 
-  packages/luarizer:
+  packages/microverse:
     dependencies:
-      '@luarizer/host-surface':
+      '@microverse/host-surface':
         specifier: workspace:*
         version: link:../host-surface
-      '@luarizer/runtime-bridge':
+      '@microverse/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@luarizer/runtime-capabilities':
+      '@microverse/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@luarizer/runtime-core':
+      '@microverse/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@luarizer/runtime-lua':
+      '@microverse/runtime-lua':
         specifier: workspace:*
         version: link:../runtime-lua
-      '@luarizer/runtime-wasm':
+      '@microverse/runtime-wasm':
         specifier: workspace:*
         version: link:../runtime-wasm
-      '@luarizer/runtime-zod':
+      '@microverse/runtime-zod':
         specifier: workspace:*
         version: link:../runtime-zod
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -194,13 +194,13 @@ importers:
 
   packages/runtime-bridge:
     dependencies:
-      '@luarizer/runtime-capabilities':
+      '@microverse/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@luarizer/runtime-core':
+      '@microverse/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -219,7 +219,7 @@ importers:
 
   packages/runtime-capabilities:
     dependencies:
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -238,7 +238,7 @@ importers:
 
   packages/runtime-core:
     dependencies:
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -257,7 +257,7 @@ importers:
 
   packages/runtime-lua:
     dependencies:
-      '@luarizer/runtime-core':
+      '@microverse/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
     devDependencies:
@@ -276,13 +276,13 @@ importers:
 
   packages/runtime-wasm:
     dependencies:
-      '@luarizer/runtime-core':
+      '@microverse/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@luarizer/runtime-lua':
+      '@microverse/runtime-lua':
         specifier: workspace:*
         version: link:../runtime-lua
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
       wasmoon:
@@ -304,10 +304,10 @@ importers:
 
   packages/runtime-zod:
     dependencies:
-      '@luarizer/runtime-bridge':
+      '@microverse/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@luarizer/shared':
+      '@microverse/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:

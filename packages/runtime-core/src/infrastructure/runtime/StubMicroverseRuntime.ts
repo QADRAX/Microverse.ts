@@ -2,26 +2,26 @@ import { executeScript } from '../../application/useCases/executeScript';
 import type { LoggerPort } from '../../application/ports/LoggerPort';
 import type { RuntimeAdapter } from '../../domain/runtime/RuntimeAdapter';
 import type { RunScriptInput } from '../../domain/runtime/RunScriptInput';
-import type { CreateSandboxOptions, Sandbox, SandboxRuntime } from '../../domain/runtime/SandboxRuntime';
+import type { CreateMicroverseOptions, MicroverseSlot, MicroverseRuntime } from '../../domain/runtime/MicroverseRuntime';
 import { neverCancelledToken } from '../../domain/runtime/CancellationToken';
 import type { TimeoutPolicy } from '../../domain/runtime/TimeoutPolicy';
-import { createSandboxId, type SandboxId } from '../../domain/sandbox/SandboxId';
+import { createMicroverseId, type MicroverseId } from '../../domain/microverse/MicroverseId';
 
-export type StubSandboxRuntimeDeps = {
+export type StubMicroverseRuntimeDeps = {
   readonly adapter: RuntimeAdapter;
   readonly logger: LoggerPort;
-  /** Applied when neither {@link RunScriptInput.timeout} nor {@link CreateSandboxOptions.defaultTimeout} is set. */
+  /** Applied when neither {@link RunScriptInput.timeout} nor {@link CreateMicroverseOptions.defaultTimeout} is set. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
 };
 
-export class StubSandboxRuntime implements SandboxRuntime {
+export class StubMicroverseRuntime implements MicroverseRuntime {
   private readonly usedSlotKeys = new Set<string>();
 
-  constructor(private readonly deps: StubSandboxRuntimeDeps) {}
+  constructor(private readonly deps: StubMicroverseRuntimeDeps) {}
 
-  readonly createSandbox = async (options: CreateSandboxOptions): Promise<Sandbox> => {
+  readonly createMicroverse = async (options: CreateMicroverseOptions): Promise<MicroverseSlot> => {
     const id =
-      options.slotKey !== undefined ? options.slotKey : createSandboxId(createRandomId());
+      options.slotKey !== undefined ? options.slotKey : createMicroverseId(createRandomId());
     if (options.slotKey !== undefined) {
       const k = String(options.slotKey);
       if (this.usedSlotKeys.has(k)) {
@@ -29,7 +29,7 @@ export class StubSandboxRuntime implements SandboxRuntime {
       }
       this.usedSlotKeys.add(k);
     }
-    return createStubSandbox({
+    return createStubMicroverseSlot({
       id,
       deps: this.deps,
       options,
@@ -49,14 +49,14 @@ function createRandomId(): string {
   return `sandbox-${Math.random().toString(16).slice(2)}`;
 }
 
-function createStubSandbox(input: {
-  readonly id: SandboxId;
-  readonly deps: StubSandboxRuntimeDeps;
-  readonly options: CreateSandboxOptions;
+function createStubMicroverseSlot(input: {
+  readonly id: MicroverseId;
+  readonly deps: StubMicroverseRuntimeDeps;
+  readonly options: CreateMicroverseOptions;
   readonly explicitSlotKey: boolean;
   readonly usedSlotKeys: Set<string>;
-}): Sandbox {
-  const ctx = { sandboxId: input.id, cancellation: neverCancelledToken };
+}): MicroverseSlot {
+  const ctx = { microverseId: input.id, cancellation: neverCancelledToken };
   return {
     id: input.id,
     run: async (runInput) => {
@@ -67,7 +67,7 @@ function createStubSandbox(input: {
       return executeScript([input.deps.adapter, input.deps.logger], ctx, inputMerged);
     },
     dispose: async () => {
-      await input.deps.adapter.disposeSandbox?.(input.id);
+      await input.deps.adapter.disposeMicroverse?.(input.id);
       if (input.explicitSlotKey) {
         input.usedSlotKeys.delete(String(input.id));
       }
@@ -75,6 +75,6 @@ function createStubSandbox(input: {
   };
 }
 
-export function createStubSandboxRuntime(deps: StubSandboxRuntimeDeps): SandboxRuntime {
-  return new StubSandboxRuntime(deps);
+export function createStubMicroverseRuntime(deps: StubMicroverseRuntimeDeps): MicroverseRuntime {
+  return new StubMicroverseRuntime(deps);
 }

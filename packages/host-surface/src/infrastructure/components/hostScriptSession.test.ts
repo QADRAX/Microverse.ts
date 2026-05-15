@@ -1,9 +1,9 @@
 import {
   ConsoleLogger,
-  createSandboxId,
-  createStubSandboxRuntime,
+  createMicroverseId,
+  createStubMicroverseRuntime,
   StubRuntimeAdapter,
-} from '@luarizer/runtime-core';
+} from '@microverse/runtime-core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -26,13 +26,13 @@ describe('HostScriptSession', () => {
     });
 
     const session = new HostScriptSession({
-      runtime: createStubSandboxRuntime({
+      runtime: createStubMicroverseRuntime({
         adapter: new StubRuntimeAdapter(),
         logger: new ConsoleLogger(),
       }),
       surface,
       host: { tag: 'ok' },
-      slotKey: createSandboxId('sess-1'),
+      slotKey: createMicroverseId('sess-1'),
       allowedCapabilities: [cap('demo:ping')],
     });
 
@@ -64,13 +64,13 @@ describe('HostScriptSession', () => {
     );
 
     const session = new HostScriptSession<H, typeof workflowHooks>({
-      runtime: createStubSandboxRuntime({
+      runtime: createStubMicroverseRuntime({
         adapter: new StubRuntimeAdapter(),
         logger: new ConsoleLogger(),
       }),
       surface,
       host: { tag: 'ok' },
-      slotKey: createSandboxId('sess-hooks'),
+      slotKey: createMicroverseId('sess-hooks'),
       allowedCapabilities: [cap('demo:ping')],
     });
 

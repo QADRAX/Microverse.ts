@@ -1,3 +1,3 @@
-import type { LuarizerDefManifest } from '../../domain/manifest/LuarizerDefManifest.js';
+import type { LuaDefManifest } from '../../domain/manifest/LuaDefManifest.js';
 
-export type ManifestParserPort = (raw: string) => LuarizerDefManifest;
+export type ManifestParserPort = (raw: string) => LuaDefManifest;

@@ -1,5 +1,5 @@
 {
-  "name": "@luarizer/runtime-wasm",
+  "name": "@microverse/runtime-wasm",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,9 +18,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/runtime-core": "workspace:*",
-    "@luarizer/runtime-lua": "workspace:*",
-    "@luarizer/shared": "workspace:*",
+    "@microverse/runtime-core": "workspace:*",
+    "@microverse/runtime-lua": "workspace:*",
+    "@microverse/shared": "workspace:*",
     "wasmoon": "^1.15.0"
   },
   "devDependencies": {

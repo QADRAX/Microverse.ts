@@ -1,7 +1,7 @@
-import type { SandboxId } from '../sandbox/SandboxId';
+import type { MicroverseId } from '../microverse/MicroverseId';
 import type { CancellationToken } from './CancellationToken';
 
 export type ExecutionContext = {
-  readonly sandboxId: SandboxId;
+  readonly microverseId: MicroverseId;
   readonly cancellation: CancellationToken;
 };

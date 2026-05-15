@@ -6,7 +6,7 @@
 
 local W = workflow:extend()
 
----@param evt LuarizerWorkflowEvt_OrderPlaced
+---@param evt MicroverseWorkflowEvt_OrderPlaced
 function W:onOrderPlaced(evt)
   local o = orders:get({ orderId = evt.orderId })
   if o and o.totalCents >= 1000 then
@@ -16,7 +16,7 @@ function W:onOrderPlaced(evt)
   end
 end
 
----@param evt LuarizerWorkflowEvt_InventoryLow
+---@param evt MicroverseWorkflowEvt_InventoryLow
 function W:onInventoryLow(evt)
   if evt.unitsLeft <= 2 then
     notifications:send({ channel = "ops", message = "low stock " .. evt.sku })

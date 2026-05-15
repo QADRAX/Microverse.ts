@@ -1,5 +1,5 @@
 {
-  "name": "@luarizer/runtime-lua",
+  "name": "@microverse/runtime-lua",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,7 +18,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/runtime-core": "workspace:*"
+    "@microverse/runtime-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

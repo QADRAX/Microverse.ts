@@ -3,7 +3,7 @@ import boundaries from 'eslint-plugin-boundaries';
 import importX from 'eslint-plugin-import-x';
 import tseslint from 'typescript-eslint';
 
-export const luarizerEslintConfig = tseslint.config(
+export const microverseEslintConfig = tseslint.config(
   {
     ignores: [
       '**/dist/**',

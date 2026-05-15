@@ -1,4 +1,4 @@
-import { buildLuarizerDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest.js';
+import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest.js';
 import type {
   HostSurface,
   HostSurfaceCore,
@@ -10,7 +10,7 @@ import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
 import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec.js';
 
 /**
- * Compiles a host surface using the injected schema validation port (tuple matches `UseCase` conventions in `@luarizer/shared`).
+ * Compiles a host surface using the injected schema validation port (tuple matches `UseCase` conventions in `@microverse/shared`).
  */
 export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   ports: readonly [SchemaValidationPort],
@@ -28,7 +28,7 @@ export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   const [schemaValidation] = ports;
   const core: HostSurfaceCore = {
     toBridgeDeclarations: () => createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, spec),
-    toLuarizerDefManifest: (opts) => buildLuarizerDefManifestFromHostSurfaceSpec(spec, opts, workflowHooks),
+    toLuaDefManifest: (opts) => buildLuaDefManifestFromHostSurfaceSpec(spec, opts, workflowHooks),
   };
   if (workflowHooks === undefined) {
     return core;

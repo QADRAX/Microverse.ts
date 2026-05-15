@@ -1,9 +1,9 @@
 import {
-  createSandboxId,
-  createSandboxScript,
+  createMicroverseId,
+  createMicroverseScript,
   fixedTimeout,
   neverCancelledToken,
-} from '@luarizer/runtime-core';
+} from '@microverse/runtime-core';
 import { describe, expect, it, vi } from 'vitest';
 
 const { createEngineMock, doStringMock } = vi.hoisted(() => {
@@ -27,8 +27,8 @@ describe('WasmoonRuntimeAdapter', () => {
     const { WasmoonRuntimeAdapter } = await import('./WasmoonRuntimeAdapter');
     const adapter = new WasmoonRuntimeAdapter();
     const result = await adapter.execute(
-      { sandboxId: createSandboxId('s1'), cancellation: neverCancelledToken },
-      { script: createSandboxScript('return 1') },
+      { microverseId: createMicroverseId('s1'), cancellation: neverCancelledToken },
+      { script: createMicroverseScript('return 1') },
     );
     expect(result._tag).toBe('ok');
   });
@@ -38,23 +38,26 @@ describe('WasmoonRuntimeAdapter', () => {
     const { WasmoonRuntimeAdapter } = await import('./WasmoonRuntimeAdapter');
     const adapter = new WasmoonRuntimeAdapter();
     await adapter.execute(
-      { sandboxId: createSandboxId('a'), cancellation: neverCancelledToken },
-      { script: createSandboxScript('1') },
+      { microverseId: createMicroverseId('a'), cancellation: neverCancelledToken },
+      { script: createMicroverseScript('1') },
     );
     await adapter.execute(
-      { sandboxId: createSandboxId('b'), cancellation: neverCancelledToken },
-      { script: createSandboxScript('2') },
+      { microverseId: createMicroverseId('b'), cancellation: neverCancelledToken },
+      { script: createMicroverseScript('2') },
     );
     expect(createEngineMock).toHaveBeenCalledTimes(1);
   });
 
   it('returns Timeout when wall-clock budget is exceeded', async () => {
     createEngineMock.mockClear();
-    doStringMock.mockImplementation(async (chunk: string) => {
+    doStringMock.mockImplementation(async (chunk?: string) => {
+      if (chunk === undefined) {
+        return;
+      }
       if (chunk.includes('do\n  local REAL_G')) {
         return;
       }
-      if (chunk.includes('__luarizer_execute_in_slot')) {
+      if (chunk.includes('__microverse_lua_execute_in_slot')) {
         return new Promise<void>(() => {
           /* never resolves — wall-clock race should win */
         });
@@ -63,8 +66,8 @@ describe('WasmoonRuntimeAdapter', () => {
     const { WasmoonRuntimeAdapter } = await import('./WasmoonRuntimeAdapter');
     const adapter = new WasmoonRuntimeAdapter();
     const result = await adapter.execute(
-      { sandboxId: createSandboxId('timeout'), cancellation: neverCancelledToken },
-      { script: createSandboxScript(''), timeout: fixedTimeout(25) },
+      { microverseId: createMicroverseId('timeout'), cancellation: neverCancelledToken },
+      { script: createMicroverseScript(''), timeout: fixedTimeout(25) },
     );
     expect(result._tag).toBe('err');
     if (result._tag === 'err') {

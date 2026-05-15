@@ -1,15 +1,15 @@
 import {
   ConsoleLogger,
-  createSandboxId,
-  createSandboxScript,
-  createStubSandboxRuntime,
-} from '@luarizer/runtime-core';
+  createMicroverseId,
+  createMicroverseScript,
+  createStubMicroverseRuntime,
+} from '@microverse/runtime-core';
 import { describe, expect, it } from 'vitest';
 
 import { WasmoonRuntimeAdapter } from './WasmoonRuntimeAdapter';
 
 function createRuntime() {
-  return createStubSandboxRuntime({
+  return createStubMicroverseRuntime({
     adapter: new WasmoonRuntimeAdapter(),
     logger: new ConsoleLogger(),
   });
@@ -18,31 +18,31 @@ function createRuntime() {
 describe('explicit async bridges (integration)', () => {
   it('sync bridge returns value directly without :await()', async () => {
     const runtime = createRuntime();
-    const slot = createSandboxId('explicit-sync-bridge');
-    const sandbox = await runtime.createSandbox({ slotKey: slot });
+    const slot = createMicroverseId('explicit-sync-bridge');
+    const microverse = await runtime.createMicroverse({ slotKey: slot });
 
-    const r = await sandbox.run({
+    const r = await microverse.run({
       mergeEnv: {
         Data: {
           load: (id: string) => `row:${id}`,
         },
       },
-      script: createSandboxScript(`
+      script: createMicroverseScript(`
         local row = Data.load("7")
         assert(row == "row:7", row)
         assert(type(row) == "string")
       `),
     });
     expect(r._tag).toBe('ok');
-    await sandbox.dispose();
+    await microverse.dispose();
   });
 
   it('async bridge without :await() returns a handle, not the resolved value', async () => {
     const runtime = createRuntime();
-    const slot = createSandboxId('explicit-async-handle');
-    const sandbox = await runtime.createSandbox({ slotKey: slot });
+    const slot = createMicroverseId('explicit-async-handle');
+    const microverse = await runtime.createMicroverse({ slotKey: slot });
 
-    const r = await sandbox.run({
+    const r = await microverse.run({
       mergeEnv: {
         Data: {
           load: async (id: string) => {
@@ -51,22 +51,22 @@ describe('explicit async bridges (integration)', () => {
           },
         },
       },
-      script: createSandboxScript(`
+      script: createMicroverseScript(`
         local h = Data.load("9")
         assert(type(h) == "table" or type(h) == "userdata", type(h))
         assert(type(h.await) == "function")
       `),
     });
     expect(r._tag).toBe('ok');
-    await sandbox.dispose();
+    await microverse.dispose();
   });
 
   it('async bridge resolves via handle:await()', async () => {
     const runtime = createRuntime();
-    const slot = createSandboxId('explicit-async-await');
-    const sandbox = await runtime.createSandbox({ slotKey: slot });
+    const slot = createMicroverseId('explicit-async-await');
+    const microverse = await runtime.createMicroverse({ slotKey: slot });
 
-    const r = await sandbox.run({
+    const r = await microverse.run({
       mergeEnv: {
         Data: {
           load: async (id: string) => {
@@ -75,21 +75,21 @@ describe('explicit async bridges (integration)', () => {
           },
         },
       },
-      script: createSandboxScript(`
+      script: createMicroverseScript(`
         local row = Data.load("99"):await()
         assert(row == "row:99", row)
       `),
     });
     expect(r._tag).toBe('ok');
-    await sandbox.dispose();
+    await microverse.dispose();
   });
 
   it('optional onComplete runs after following statements in the same chunk', async () => {
     const runtime = createRuntime();
-    const slot = createSandboxId('explicit-async-callback');
-    const sandbox = await runtime.createSandbox({ slotKey: slot });
+    const slot = createMicroverseId('explicit-async-callback');
+    const microverse = await runtime.createMicroverse({ slotKey: slot });
 
-    const r = await sandbox.run({
+    const r = await microverse.run({
       mergeEnv: {
         Data: {
           load: async (id: string) => {
@@ -98,7 +98,7 @@ describe('explicit async bridges (integration)', () => {
           },
         },
       },
-      script: createSandboxScript(`
+      script: createMicroverseScript(`
         __async_cb_order = ""
         Data.load("cb", function(row)
           __async_cb_order = __async_cb_order .. "c:" .. tostring(row)
@@ -107,12 +107,12 @@ describe('explicit async bridges (integration)', () => {
       `),
     });
     expect(r._tag).toBe('ok');
-    const r2 = await sandbox.run({
-      script: createSandboxScript(`
+    const r2 = await microverse.run({
+      script: createMicroverseScript(`
         assert(__async_cb_order == "ac:row:cb", __async_cb_order)
       `),
     });
     expect(r2._tag).toBe('ok');
-    await sandbox.dispose();
+    await microverse.dispose();
   });
 });

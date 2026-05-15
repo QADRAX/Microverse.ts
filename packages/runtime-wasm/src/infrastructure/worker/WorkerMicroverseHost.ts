@@ -1,9 +1,9 @@
 import type {
   WorkerHostToRuntimeMessage,
   WorkerRuntimeToHostMessage,
-} from '../../domain/worker/WorkerSandboxMessages';
+} from '../../domain/worker/WorkerMicroverseMessages';
 
-export class WorkerSandboxHost {
+export class WorkerMicroverseHost {
   private last: WorkerRuntimeToHostMessage | null = null;
 
   readonly post = (message: WorkerHostToRuntimeMessage): void => {

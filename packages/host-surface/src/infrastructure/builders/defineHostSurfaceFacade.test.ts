@@ -1,4 +1,4 @@
-import { buildLuaCatsDocument } from '@luarizer/lua-defs';
+import { buildLuaCatsDocument } from '@microverse/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -12,7 +12,7 @@ type ToyHost = {
 const entityId = luaType('EntityId', z.string());
 
 describe('defineHostSurface', () => {
-  it('builds LuarizerDefManifest for lua-defs snapshot', () => {
+  it('builds LuaDefManifest for lua-defs snapshot', () => {
     const surface = defineHostSurface({
       time: {
         delta: fn<ToyHost, Record<string, never>, number>({
@@ -33,7 +33,7 @@ describe('defineHostSurface', () => {
       },
     });
 
-    const manifest = surface.toLuarizerDefManifest({
+    const manifest = surface.toLuaDefManifest({
       output: 'generated/surface.d.lua',
       headerNote: 'toy',
     });

@@ -1,4 +1,4 @@
-import { ok, type Result } from '@luarizer/shared';
+import { ok, type Result } from '@microverse/shared';
 
 import type { RuntimeAdapter } from '../../domain/runtime/RuntimeAdapter';
 import type { ExecutionContext } from '../../domain/runtime/ExecutionContext';

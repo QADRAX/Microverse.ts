@@ -4,7 +4,7 @@ import {
   createAllowlist,
   createCapabilityId,
   InMemoryCapabilityRegistry,
-} from '@luarizer/runtime-capabilities';
+} from '@microverse/runtime-capabilities';
 
 import { registerBridgeHandler } from './registerBridgeHandler';
 import { createBridgeChannelId } from '../../domain/bridge/BridgeChannelId';

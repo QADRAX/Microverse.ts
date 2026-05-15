@@ -1,10 +1,10 @@
 {
-  "name": "@luarizer/host-surface",
+  "name": "@microverse/host-surface",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
-  "description": "Declarative host surface (Zod + capabilities) → bridge tables and LuarizerDefManifest for .d.lua.",
+  "description": "Declarative host surface (Zod + capabilities) → bridge tables and LuaDefManifest for .d.lua.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,12 +19,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/lua-defs": "workspace:*",
-    "@luarizer/runtime-bridge": "workspace:*",
-    "@luarizer/runtime-capabilities": "workspace:*",
-    "@luarizer/runtime-core": "workspace:*",
-    "@luarizer/runtime-zod": "workspace:*",
-    "@luarizer/shared": "workspace:*",
+    "@microverse/lua-defs": "workspace:*",
+    "@microverse/runtime-bridge": "workspace:*",
+    "@microverse/runtime-capabilities": "workspace:*",
+    "@microverse/runtime-core": "workspace:*",
+    "@microverse/runtime-zod": "workspace:*",
+    "@microverse/shared": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

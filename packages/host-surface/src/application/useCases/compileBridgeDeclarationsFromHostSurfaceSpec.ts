@@ -1,7 +1,7 @@
-import { type DeclarativeBridgeDeclaration } from '@luarizer/runtime-bridge';
+import { type DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
 import type { z } from 'zod';
 
-import { LUARIZER_CAPABILITY_REGISTRY, type WithLuarizerCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
+import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
 import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
 
@@ -22,8 +22,8 @@ function isThenable(value: unknown): value is Promise<unknown> {
 export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSurfaceSpec>(
   schemaValidation: SchemaValidationPort,
   spec: TSpec,
-): ReadonlyArray<DeclarativeBridgeDeclaration<WithLuarizerCapabilityRegistry, string>> {
-  const out: DeclarativeBridgeDeclaration<WithLuarizerCapabilityRegistry, string>[] = [];
+): ReadonlyArray<DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>> {
+  const out: DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>[] = [];
   for (const bridgeName of Object.keys(spec)) {
     const methods = spec[bridgeName]!;
     out.push({
@@ -35,7 +35,7 @@ export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSu
           const entry = methods[methodName]!;
           api[methodName] = (...args: unknown[]) => {
             const payload = args.length >= 2 ? args[1] : args[0];
-            const registry = host[LUARIZER_CAPABILITY_REGISTRY];
+            const registry = host[MICROVERSE_CAPABILITY_REGISTRY];
             if (!registry.isAllowed(entry.capability)) {
               throw new Error(`capability denied: ${String(entry.capability)}`);
             }

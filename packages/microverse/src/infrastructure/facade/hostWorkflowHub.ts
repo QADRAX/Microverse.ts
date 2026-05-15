@@ -6,10 +6,10 @@ import {
   type HostSurface,
   type HostSurfaceCore,
   type HostWorkflowHooksSpec,
-} from '@luarizer/host-surface';
-import type { CapabilityId } from '@luarizer/runtime-capabilities';
-import { createLuaEnvSlotKey, type SandboxRuntime, type TimeoutPolicy } from '@luarizer/runtime-core';
-import { createWasmSandboxRuntime } from '@luarizer/runtime-wasm';
+} from '@microverse/host-surface';
+import type { CapabilityId } from '@microverse/runtime-capabilities';
+import { createLuaEnvSlotKey, type MicroverseRuntime, type TimeoutPolicy } from '@microverse/runtime-core';
+import { createWasmMicroverseRuntime } from '@microverse/runtime-wasm';
 
 /** Phantom key: optional on the host **type** so {@link InferWorkflowHooksFromHost} can recover workflow Zod map typing. Never set at runtime. */
 declare const WORKFLOW_HOOKS_TYPE: unique symbol;
@@ -30,7 +30,7 @@ export type TaggedWorkflowHost<
 /**
  * Reads workflow hook typing from a host built with {@link TaggedWorkflowHost}.
  */
-export type InferWorkflowHooksFromHost<THost> = THost extends TaggedWorkflowHost<infer H, infer _Rest>
+export type InferWorkflowHooksFromHost<THost> = THost extends TaggedWorkflowHost<infer H, unknown>
   ? H extends HostWorkflowHooksSpec
     ? H
     : undefined
@@ -56,8 +56,8 @@ export type HostWorkflowHubConfig<
   readonly host: THost;
   /** From {@link defineHostSurface} / {@link defineHostSurfaceFor}; hooks live on `surface.workflowHooks` when present. */
   readonly surface: HostSurface<THooks>;
-  /** When omitted, a Wasm-backed {@link SandboxRuntime} is created for this hub. */
-  readonly runtime?: SandboxRuntime | undefined;
+  /** When omitted, a Wasm-backed {@link MicroverseRuntime} is created for this hub. */
+  readonly runtime?: MicroverseRuntime | undefined;
   /** Prefix for internal Lua env slot ids, default `workflow` (ids look like `workflow:my-id`). */
   readonly envSlotScope?: string | undefined;
   /** Wall-clock limit per `runChunk` / workflow hook invocation (Wasm adapter + session forwarding). */
@@ -77,9 +77,9 @@ type EmitToAllWorkflowsFn<THooks extends HostWorkflowHooksSpec | undefined> = TH
     ) => Promise<void>;
 
 /**
- * Owns one {@link SandboxRuntime}, a map of {@link HostScriptSession}s keyed by `workflowId`, and helpers to
+ * Owns one {@link MicroverseRuntime}, a map of {@link HostScriptSession}s keyed by `workflowId`, and helpers to
  * register Lua + emit workflow hooks across all sessions — intended as the default host integration surface
- * instead of wiring `createSandbox` / `slotKey` / `Map` by hand. Each `workflowId` gets an isolated Lua env slot,
+ * instead of wiring `createMicroverse` / `slotKey` / `Map` by hand. Each `workflowId` gets an isolated Lua env slot,
  * so many workflows run concurrently without sharing handler state.
  *
  * @typeParam THost - Use {@link TaggedWorkflowHost} so `emitToAllWorkflows` narrows to your workflow Zod map without a second generic.
@@ -88,7 +88,7 @@ export class HostWorkflowHub<
   THost extends object = object,
   THooks extends HostWorkflowHooksSpec | undefined = InferWorkflowHooksFromHost<THost>,
 > {
-  private readonly runtime: SandboxRuntime;
+  private readonly runtime: MicroverseRuntime;
 
   private readonly sessions = new Map<string, HostScriptSession<THost, THooks>>();
 
@@ -109,14 +109,14 @@ export class HostWorkflowHub<
     this.sharedLuaChunks = config.sharedLuaChunks ?? [];
     this.runtime =
       config.runtime ??
-      createWasmSandboxRuntime(
+      createWasmMicroverseRuntime(
         config.defaultTimeout !== undefined ? { defaultTimeout: config.defaultTimeout } : {},
       );
     this.envSlotScope = config.envSlotScope ?? 'workflow';
   }
 
   /** Shared Lua VM / adapter used by every workflow session in this hub. */
-  readonly getRuntime = (): SandboxRuntime => this.runtime;
+  readonly getRuntime = (): MicroverseRuntime => this.runtime;
 
   /**
    * Loads one Lua chunk in an isolated env slot; `workflowId` must be unique within this hub.
@@ -205,7 +205,7 @@ export class HostWorkflowHub<
 export function createHostWorkflowHub<THost extends object, const TSurface extends HostSurfaceCore>(config: {
   readonly host: THost;
   readonly surface: TSurface;
-  readonly runtime?: SandboxRuntime | undefined;
+  readonly runtime?: MicroverseRuntime | undefined;
   readonly envSlotScope?: string | undefined;
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   readonly sharedLuaChunks?: readonly string[] | undefined;

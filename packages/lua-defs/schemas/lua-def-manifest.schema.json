@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://luarizer.local/schemas/luarizer-def-manifest.json",
-  "title": "LuarizerDefManifest",
+  "$id": "https://microverse.local/schemas/lua-def-manifest.json",
+  "title": "LuaDefManifest",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "output"],

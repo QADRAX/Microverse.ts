@@ -5,21 +5,21 @@ import { pathToFileURL } from 'node:url';
 import {
   generateDefs,
   writeLuaDefinitionsFromManifest,
-  type LuarizerDefManifest,
-} from '@luarizer/lua-defs';
+  type LuaDefManifest,
+} from '@microverse/lua-defs';
 
 function printHelp(): void {
   const lines = [
-    'luarizer — tooling for Luarizer Lua sandboxes',
+    'microverse — tooling for Microverse Lua sandboxes',
     '',
     'Commands:',
     '  generate-defs   Emit LuaCATS .d.lua',
     '',
     'Usage (JSON manifest — for hand-authored or CI-exported manifests):',
-    '  luarizer generate-defs --manifest <path/to/manifest.json> [--out <path>]',
+    '  microverse generate-defs --manifest <path/to/manifest.json> [--out <path>]',
     '',
     'Usage (TypeScript host surface — Zod + defineHostSurface; default export only):',
-    '  luarizer generate-defs --surface <path/to/surface.ts|js> [--out <path>] [--header-note <text>]',
+    '  microverse generate-defs --surface <path/to/surface.ts|js> [--out <path>] [--header-note <text>]',
     '',
     '  The module must `export default` the value from `defineHostSurface({...})`.',
     '  If --out is omitted, writes generated/<surfaceBasename>.d.lua (basename without extension).',
@@ -63,18 +63,18 @@ function parseArgs(argv: readonly string[]): {
 }
 
 type HostSurfaceLike = {
-  readonly toLuarizerDefManifest: (opts: {
+  readonly toLuaDefManifest: (opts: {
     readonly output: string;
     readonly headerNote?: string | undefined;
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
-  }) => LuarizerDefManifest;
+  }) => LuaDefManifest;
 };
 
 function isHostSurfaceLike(v: unknown): v is HostSurfaceLike {
-  if (typeof v !== 'object' || v === null || !('toLuarizerDefManifest' in v)) {
+  if (typeof v !== 'object' || v === null || !('toLuaDefManifest' in v)) {
     return false;
   }
-  return typeof Reflect.get(v, 'toLuarizerDefManifest') === 'function';
+  return typeof Reflect.get(v, 'toLuaDefManifest') === 'function';
 }
 
 async function loadSurfaceModule(absPath: string): Promise<Record<string, unknown>> {
@@ -148,7 +148,7 @@ async function main(): Promise<void> {
   const headerNote =
     typeof headerFlag === 'string' && headerFlag.length > 0 ? headerFlag : undefined;
 
-  const manifest = surfaceRaw.toLuarizerDefManifest({
+  const manifest = surfaceRaw.toLuaDefManifest({
     output: outputRel,
     headerNote,
   });

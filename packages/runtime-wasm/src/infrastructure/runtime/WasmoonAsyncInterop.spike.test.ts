@@ -1,7 +1,7 @@
 /**
  * Spike: how Wasmoon exposes JS functions to Lua when the JS side returns a Promise.
- * Raw `async`/`Promise` returns are userdata until `:await()`; Luarizer slot bootstrap requires explicit
- * `:await()` or a 2nd-arg callback (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA`).
+ * Raw `async`/`Promise` returns are userdata until `:await()`; Microverse Lua slot bootstrap requires explicit
+ * `:await()` or a 2nd-arg callback (see `MICROVERSE_LUA_SLOT_VM_BOOTSTRAP`).
  */
 import { LuaFactory } from 'wasmoon';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +14,7 @@ describe('wasmoon JS↔Lua interop (async spike, real engine)', () => {
       lua.global.set('double', (n: number) => n * 2);
       await lua.doString(`assert(double(21) == 42)`);
     } finally {
-      await lua.global.close?.();
+      await Promise.resolve(lua.global.close?.());
     }
   });
 
@@ -32,7 +32,7 @@ describe('wasmoon JS↔Lua interop (async spike, real engine)', () => {
       expect(rtype).not.toBe('number');
       expect(['userdata', 'table']).toContain(rtype);
     } finally {
-      await lua.global.close?.();
+      await Promise.resolve(lua.global.close?.());
     }
   });
 
@@ -51,7 +51,7 @@ describe('wasmoon JS↔Lua interop (async spike, real engine)', () => {
       const t = lua.global.get('__secondArgType') as string;
       expect(['function', 'userdata']).toContain(t);
     } finally {
-      await lua.global.close?.();
+      await Promise.resolve(lua.global.close?.());
     }
   });
 
@@ -67,7 +67,7 @@ describe('wasmoon JS↔Lua interop (async spike, real engine)', () => {
       const ptype = lua.global.get('__ptype') as string;
       expect(ptype).not.toBe('number');
     } finally {
-      await lua.global.close?.();
+      await Promise.resolve(lua.global.close?.());
     }
   });
 });

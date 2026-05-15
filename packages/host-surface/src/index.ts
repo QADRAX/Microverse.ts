@@ -1,6 +1,6 @@
 /**
  * Declarative **host surface** for Lua sandboxes: Zod-validated bridge methods, capability checks,
- * `LuarizerDefManifest` generation for `.d.lua`, and {@link HostScriptSession} helpers.
+ * `LuaDefManifest` generation for `.d.lua`, and {@link HostScriptSession} helpers.
  *
  * @packageDocumentation
  */
@@ -20,7 +20,7 @@ export {
   type HostSurfaceSpec,
   type HostSurfaceSpecForHost,
   type HostWorkflowHooksSpec,
-  type LuarizerDefManifestGeneratorOpts,
+  type LuaDefManifestGeneratorOpts,
 } from './infrastructure/builders/defineHostSurfaceFacade.js';
 export {
   compileHostSurface,
@@ -36,5 +36,5 @@ export {
 export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook.js';
 export { luaType } from './domain/zodLuaType.js';
 export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef.js';
-export { LUARIZER_CAPABILITY_REGISTRY, type WithLuarizerCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
+export { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
 export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';

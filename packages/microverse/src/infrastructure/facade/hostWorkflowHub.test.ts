@@ -1,9 +1,9 @@
-import { cap, defineHostSurface, fn } from '@luarizer/luarizer';
+import { cap, defineHostSurface, fn } from '@microverse/microverse';
 import {
   ConsoleLogger,
-  createStubSandboxRuntime,
+  createStubMicroverseRuntime,
   StubRuntimeAdapter,
-} from '@luarizer/runtime-core';
+} from '@microverse/runtime-core';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
@@ -33,7 +33,7 @@ describe('createHostWorkflowHub', () => {
     const hub = createHostWorkflowHub({
       host: { n: 0 } satisfies Host,
       surface,
-      runtime: createStubSandboxRuntime({
+      runtime: createStubMicroverseRuntime({
         adapter: new StubRuntimeAdapter(),
         logger: new ConsoleLogger(),
       }),

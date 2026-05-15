@@ -5,10 +5,10 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 /**
- * Vite 8 library build + declaration emit for @luarizer/* packages.
+ * Vite 8 library build + declaration emit for @microverse/* packages.
  * @param {string} metaUrl `import.meta.url` from the package's `vite.config.ts`
  */
-export function luarizerLibraryViteConfig(metaUrl) {
+export function microverseLibraryViteConfig(metaUrl) {
   const root = dirname(fileURLToPath(metaUrl));
   const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
   const external = [

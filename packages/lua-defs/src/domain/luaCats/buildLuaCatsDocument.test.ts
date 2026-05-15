@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LuarizerDefManifest } from '../manifest/LuarizerDefManifest.js';
+import type { LuaDefManifest } from '../manifest/LuaDefManifest.js';
 import { buildLuaCatsDocument } from './buildLuaCatsDocument.js';
 
 describe('buildLuaCatsDocument', () => {
   it('emits classes and globals', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       classes: [
@@ -38,7 +38,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('emits class fields before methods', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       classes: [
@@ -57,7 +57,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('emits aliases before bridge classes', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       aliases: [
@@ -88,7 +88,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('omits class singleton when emitSingleton is false', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       classes: [
@@ -106,7 +106,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('emits singleValue methods on a class (workflow evt)', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       aliases: [{ name: 'Evt', definition: '{ x: number }' }],
@@ -131,7 +131,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('emits asyncBridge methods with payload and onComplete', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       classes: [
@@ -164,7 +164,7 @@ describe('buildLuaCatsDocument', () => {
   });
 
   it('emits luaHooks after classes', () => {
-    const manifest: LuarizerDefManifest = {
+    const manifest: LuaDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
       aliases: [{ name: 'OrderPlacedPayload', definition: '{ orderId: string; amountCents: number }' }],

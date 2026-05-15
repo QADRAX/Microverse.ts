@@ -1,3 +1,3 @@
-import { luarizerEslintConfig } from '@luarizer/eslint-config';
+import { microverseEslintConfig } from '@microverse/eslint-config';
 
-export default luarizerEslintConfig;
+export default microverseEslintConfig;

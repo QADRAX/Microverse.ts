@@ -1,4 +1,4 @@
-import type { AsyncUseCase } from '@luarizer/shared';
+import type { AsyncUseCase } from '@microverse/shared';
 
 import type { LuaDefinitionsFromManifestFilePorts } from '../ports/LuaDefinitionsFromManifestFilePorts.js';
 

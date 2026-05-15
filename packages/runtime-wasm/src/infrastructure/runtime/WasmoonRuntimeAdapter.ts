@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@luarizer/shared';
+import { err, ok, type Result } from '@microverse/shared';
 import { LuaFactory } from 'wasmoon';
 
 import type {
@@ -7,18 +7,18 @@ import type {
   RuntimeAdapter,
   RunScriptInput,
   RunScriptResult,
-  SandboxId,
-} from '@luarizer/runtime-core';
+  MicroverseId,
+} from '@microverse/runtime-core';
 
 import {
-  LUARIZER_DEFAULT_INSTRUCTION_BUDGET,
-  LUARIZER_SLOT_VM_BOOTSTRAP_LUA,
-} from './luarizerSlotVmBootstrapLua';
+  MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET,
+  MICROVERSE_LUA_SLOT_VM_BOOTSTRAP,
+} from './microverseLuaSlotVmBootstrap';
 import { toLuaLongStringLiteral } from './luaLongString';
 import {
   assertNotCancelled,
   assertScriptSize,
-  LUARIZER_DEFAULT_MAX_SCRIPT_CHARS,
+  MICROVERSE_LUA_DEFAULT_MAX_SCRIPT_CHARS,
   mapExecuteError,
   resolveTimeoutMs,
   runWithWallClockTimeout,
@@ -27,9 +27,9 @@ import {
 type WasmoonLuaEngine = Awaited<ReturnType<LuaFactory['createEngine']>>;
 
 export type WasmoonRuntimeAdapterOptions = {
-  /** Rejects {@link RunScriptInput.script} larger than this (default {@link LUARIZER_DEFAULT_MAX_SCRIPT_CHARS}). */
+  /** Rejects {@link RunScriptInput.script} larger than this (default {@link MICROVERSE_LUA_DEFAULT_MAX_SCRIPT_CHARS}). */
   readonly maxScriptChars?: number | undefined;
-  /** Passed to `__luarizer_execute_in_slot` when the third argument is omitted (default {@link LUARIZER_DEFAULT_INSTRUCTION_BUDGET}). */
+  /** Passed to `__microverse_lua_execute_in_slot` when the third argument is omitted (default {@link MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET}). */
   readonly defaultInstructionBudget?: number | undefined;
 };
 
@@ -43,16 +43,16 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
   private engineInit: Promise<WasmoonLuaEngine> | undefined;
 
   constructor(private readonly options: WasmoonRuntimeAdapterOptions = {}) {
-    this.maxScriptChars = options.maxScriptChars ?? LUARIZER_DEFAULT_MAX_SCRIPT_CHARS;
+    this.maxScriptChars = options.maxScriptChars ?? MICROVERSE_LUA_DEFAULT_MAX_SCRIPT_CHARS;
     this.defaultInstructionBudget =
-      options.defaultInstructionBudget ?? LUARIZER_DEFAULT_INSTRUCTION_BUDGET;
+      options.defaultInstructionBudget ?? MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET;
   }
 
   private getEngine = (): Promise<WasmoonLuaEngine> => {
     if (this.engineInit === undefined) {
       this.engineInit = (async () => {
         const lua = await this.factory.createEngine({ injectObjects: true });
-        await lua.doString(LUARIZER_SLOT_VM_BOOTSTRAP_LUA);
+        await lua.doString(MICROVERSE_LUA_SLOT_VM_BOOTSTRAP);
         return lua;
       })();
     }
@@ -68,7 +68,7 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
     const lua = await current.catch(() => undefined);
     if (lua !== undefined) {
       try {
-        await lua.global.close();
+        await Promise.resolve(lua.global.close());
       } catch {
         // ignore
       }
@@ -95,18 +95,18 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
 
     const runOnce = async (): Promise<Result<RunScriptResult, ExecutionFailure>> => {
       const lua = await this.getEngine();
-      const slotLit = toLuaLongStringLiteral(String(ctx.sandboxId));
+      const slotLit = toLuaLongStringLiteral(String(ctx.microverseId));
       const merge = input.mergeEnv;
       if (merge !== undefined && Object.keys(merge).length > 0) {
         for (const name of Object.keys(merge)) {
           if (!Object.prototype.hasOwnProperty.call(merge, name)) {
             continue;
           }
-          const tmp = `__luarizer_one_${randomLuarizerToken()}`;
+          const tmp = `__microverse_lua_one_${randomMicroverseToken()}`;
           lua.global.set(tmp, merge[name]);
           const nameLit = toLuaLongStringLiteral(name);
           const tmpLit = toLuaLongStringLiteral(tmp);
-          const putChunk = `__luarizer_put_bridge_from_global(${slotLit}, ${nameLit}, ${tmpLit})`;
+          const putChunk = `__microverse_lua_put_bridge_from_global(${slotLit}, ${nameLit}, ${tmpLit})`;
           const putOutcome = await runWithWallClockTimeout(() => this.runLua(lua, putChunk), timeoutMs);
           if (putOutcome === 'timeout') {
             await this.resetEngine();
@@ -115,7 +115,7 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
         }
       }
       const srcLit = toLuaLongStringLiteral(String(input.script));
-      const execChunk = `__luarizer_execute_in_slot(${slotLit}, ${srcLit}, ${budget})`;
+      const execChunk = `__microverse_lua_execute_in_slot(${slotLit}, ${srcLit}, ${budget})`;
       const execOutcome = await runWithWallClockTimeout(() => this.runLua(lua, execChunk), timeoutMs);
       if (execOutcome === 'timeout') {
         await this.resetEngine();
@@ -135,7 +135,7 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
     }
   };
 
-  readonly disposeSandbox = async (sandboxId: SandboxId): Promise<void> => {
+  readonly disposeMicroverse = async (microverseId: MicroverseId): Promise<void> => {
     if (this.engineInit === undefined) {
       return;
     }
@@ -143,16 +143,16 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
     if (lua === undefined) {
       return;
     }
-    const slotLit = toLuaLongStringLiteral(String(sandboxId));
+    const slotLit = toLuaLongStringLiteral(String(microverseId));
     try {
-      await lua.doString(`__luarizer_destroy_slot(${slotLit})`);
+      await lua.doString(`__microverse_lua_destroy_slot(${slotLit})`);
     } catch {
       // ignore
     }
   };
 }
 
-function randomLuarizerToken(): string {
+function randomMicroverseToken(): string {
   const g = globalThis as typeof globalThis & { crypto?: { randomUUID?: () => string } };
   if (g.crypto?.randomUUID) {
     return g.crypto.randomUUID();

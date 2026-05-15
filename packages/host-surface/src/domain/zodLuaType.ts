@@ -48,25 +48,25 @@ export function getRegisteredLuaTypeName(root: z.ZodTypeAny): string | undefined
 
 function unwrapOneLayer(schema: z.ZodTypeAny): z.ZodTypeAny | undefined {
   if (schema instanceof z.ZodOptional || schema instanceof z.ZodNullable) {
-    return schema.unwrap();
+    return schema.unwrap() as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodDefault) {
-    return schema.removeDefault();
+    return schema.removeDefault() as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodReadonly) {
-    return schema.unwrap();
+    return schema.unwrap() as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodEffects) {
-    return schema.innerType();
+    return schema.innerType() as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodPipeline) {
     return schema._def.in as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodLazy) {
-    return schema.schema;
+    return schema.schema as z.ZodTypeAny;
   }
   if (schema instanceof z.ZodBranded) {
-    return schema.unwrap();
+    return schema.unwrap() as z.ZodTypeAny;
   }
   return undefined;
 }

@@ -1,4 +1,4 @@
-import type { TaggedWorkflowHost } from '@luarizer/luarizer';
+import type { TaggedWorkflowHost } from '@microverse/microverse';
 
 import type { OrderRecord } from '../domain/models/orderRecord.js';
 import type { BusinessWorkflowHooksSpec } from '../schemas/workflows/businessWorkflowHooks.js';

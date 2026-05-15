@@ -1,10 +1,10 @@
 {
-  "name": "@luarizer/luarizer",
+  "name": "@microverse/microverse",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
-  "description": "Single entry re-export and small facades for apps that depend on Luarizer via one package.",
+  "description": "Single entry re-export and small facades for apps that depend on Microverse via one package.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,14 +19,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/host-surface": "workspace:*",
-    "@luarizer/runtime-bridge": "workspace:*",
-    "@luarizer/runtime-capabilities": "workspace:*",
-    "@luarizer/runtime-core": "workspace:*",
-    "@luarizer/runtime-lua": "workspace:*",
-    "@luarizer/runtime-wasm": "workspace:*",
-    "@luarizer/runtime-zod": "workspace:*",
-    "@luarizer/shared": "workspace:*",
+    "@microverse/host-surface": "workspace:*",
+    "@microverse/runtime-bridge": "workspace:*",
+    "@microverse/runtime-capabilities": "workspace:*",
+    "@microverse/runtime-core": "workspace:*",
+    "@microverse/runtime-lua": "workspace:*",
+    "@microverse/runtime-wasm": "workspace:*",
+    "@microverse/runtime-zod": "workspace:*",
+    "@microverse/shared": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

@@ -1,15 +1,15 @@
 export type {
   WorkerHostToRuntimeMessage,
   WorkerRuntimeToHostMessage,
-} from './domain/worker/WorkerSandboxMessages';
+} from './domain/worker/WorkerMicroverseMessages';
 export {
-  createWasmSandboxRuntime,
-  type WasmSandboxRuntimeOptions,
-} from './infrastructure/runtime/createWasmSandboxRuntime';
+  createWasmMicroverseRuntime,
+  type WasmMicroverseRuntimeOptions,
+} from './infrastructure/runtime/createWasmMicroverseRuntime';
 export {
-  LUARIZER_DEFAULT_INSTRUCTION_BUDGET,
-  LUARIZER_SLOT_VM_BOOTSTRAP_LUA,
-} from './infrastructure/runtime/luarizerSlotVmBootstrapLua';
-export { LUARIZER_DEFAULT_MAX_SCRIPT_CHARS } from './infrastructure/runtime/wasmoonExecutePolicy';
+  MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET,
+  MICROVERSE_LUA_SLOT_VM_BOOTSTRAP,
+} from './infrastructure/runtime/microverseLuaSlotVmBootstrap';
+export { MICROVERSE_LUA_DEFAULT_MAX_SCRIPT_CHARS } from './infrastructure/runtime/wasmoonExecutePolicy';
 export { WasmoonRuntimeAdapter, type WasmoonRuntimeAdapterOptions } from './infrastructure/runtime/WasmoonRuntimeAdapter';
-export { WorkerSandboxHost } from './infrastructure/worker/WorkerSandboxHost';
+export { WorkerMicroverseHost } from './infrastructure/worker/WorkerMicroverseHost';

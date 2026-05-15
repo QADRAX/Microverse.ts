@@ -2,18 +2,18 @@ import {
   createAllowlist,
   type CapabilityId,
   InMemoryCapabilityRegistry,
-} from '@luarizer/runtime-capabilities';
-import type { Result } from '@luarizer/shared';
+} from '@microverse/runtime-capabilities';
+import type { Result } from '@microverse/shared';
 import type { z } from 'zod';
 import {
-  createSandboxScript,
+  createMicroverseScript,
   type ExecutionFailure,
   type RunScriptResult,
-  type Sandbox,
-  type SandboxId,
-  type SandboxRuntime,
+  type MicroverseSlot,
+  type MicroverseId,
+  type MicroverseRuntime,
   type TimeoutPolicy,
-} from '@luarizer/runtime-core';
+} from '@microverse/runtime-core';
 
 import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry.js';
 import { buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv.js';
@@ -47,16 +47,16 @@ export type HostScriptSessionOptions<
   THooks extends HostWorkflowHooksSpec | undefined = undefined,
 > = {
   /** Shared runtime (typically one Wasmoon VM for many slots). */
-  readonly runtime: SandboxRuntime;
+  readonly runtime: MicroverseRuntime;
   /** Surface produced by {@link defineHostSurface}. */
   readonly surface: HostSurface<THooks>;
   /** Host services passed into bridge handlers (orders, clock, …). */
   readonly host: THost;
   /** Stable sandbox id for this script / workflow / entity. */
-  readonly slotKey: SandboxId;
+  readonly slotKey: MicroverseId;
   /** Exact capability ids this session may invoke on any bridge method. */
   readonly allowedCapabilities: readonly CapabilityId[];
-  /** Optional default timeout forwarded to {@link Sandbox.run}. */
+  /** Optional default timeout forwarded to {@link MicroverseSlot.run}. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
 };
 
@@ -79,7 +79,7 @@ export class HostScriptSession<
   THost,
   THooks extends HostWorkflowHooksSpec | undefined = undefined,
 > {
-  private sandbox: Sandbox | undefined;
+  private sandbox: MicroverseSlot | undefined;
 
   private readonly registry: InMemoryCapabilityRegistry;
 
@@ -88,16 +88,16 @@ export class HostScriptSession<
   }
 
   /**
-   * Allocates the underlying {@link Sandbox} for this `slotKey` on the shared runtime.
+   * Allocates the underlying {@link MicroverseSlot} for this `slotKey` on the shared runtime.
    */
   readonly openSession = async (): Promise<void> => {
-    this.sandbox = await this.opts.runtime.createSandbox({ slotKey: this.opts.slotKey });
+    this.sandbox = await this.opts.runtime.createMicroverse({ slotKey: this.opts.slotKey });
     const hooks = readWorkflowHooks(this.opts.surface);
     if (hooks !== undefined) {
       const prelude = buildWorkflowStubPreludeLua(hooks);
-      const sb = this.requireSandbox();
+      const sb = this.requireMicroverseSlot();
       await sb.run({
-        script: createSandboxScript(prelude),
+        script: createMicroverseScript(prelude),
         mergeEnv: this.mergeEnv(),
         timeout: this.opts.defaultTimeout,
       });
@@ -109,7 +109,7 @@ export class HostScriptSession<
    */
   readonly getCapabilityRegistry = (): InMemoryCapabilityRegistry => this.registry;
 
-  private requireSandbox(): Sandbox {
+  private requireMicroverseSlot(): MicroverseSlot {
     if (this.sandbox === undefined) {
       throw new Error('HostScriptSession: openSession() was not called');
     }
@@ -127,9 +127,9 @@ export class HostScriptSession<
    * @param source - Full Lua chunk (compiled with `load(..., "t", env)` in the Wasm adapter).
    */
   readonly runChunk = async (source: string) => {
-    const sb = this.requireSandbox();
+    const sb = this.requireMicroverseSlot();
     return sb.run({
-      script: createSandboxScript(source),
+      script: createMicroverseScript(source),
       mergeEnv: this.mergeEnv(),
       timeout: this.opts.defaultTimeout,
     });
@@ -147,7 +147,7 @@ export class HostScriptSession<
     payload: Readonly<Record<string, string | number | boolean>>,
   ) => {
     assertSafeLuaGlobalName(globalName);
-    const sb = this.requireSandbox();
+    const sb = this.requireMicroverseSlot();
     const tbl = luaTableLiteralFromPlainRecord(payload);
     const hooks = readWorkflowHooks(this.opts.surface);
     const src =
@@ -155,7 +155,7 @@ export class HostScriptSession<
         ? buildWorkflowHookInvokeLuaSource(globalName, tbl)
         : buildGlobalHookInvokeLuaSource(globalName, tbl);
     return sb.run({
-      script: createSandboxScript(src),
+      script: createMicroverseScript(src),
       mergeEnv: this.mergeEnv(),
       timeout: this.opts.defaultTimeout,
     });
@@ -170,7 +170,7 @@ export class HostScriptSession<
    * @param payload - Plain serializable fields for the Lua table literal.
    */
   readonly call = async (tableName: string, methodName: string, payload: Record<string, unknown>) => {
-    const sb = this.requireSandbox();
+    const sb = this.requireMicroverseSlot();
     const tbl = luaTableLiteralFromUnknownRecord(payload);
     const src = [
       `local t = _ENV[${JSON.stringify(tableName)}]`,
@@ -180,7 +180,7 @@ export class HostScriptSession<
       `end`,
     ].join('\n');
     return sb.run({
-      script: createSandboxScript(src),
+      script: createMicroverseScript(src),
       mergeEnv: this.mergeEnv(),
       timeout: this.opts.defaultTimeout,
     });
@@ -230,7 +230,7 @@ function buildWorkflowStubPreludeLua(hooks: HostWorkflowHooksSpec): string {
     'rawset(_ENV, "workflow", {',
     '  extend = function(_)',
     '    local w = setmetatable({}, { __index = Base })',
-    '    rawset(_ENV, "__luarizer_WorkflowImpl", w)',
+    '    rawset(_ENV, "__microverse_lua_WorkflowImpl", w)',
     '    return w',
     '  end,',
     '})',
@@ -240,7 +240,7 @@ function buildWorkflowStubPreludeLua(hooks: HostWorkflowHooksSpec): string {
 
 function buildWorkflowHookInvokeLuaSource(methodName: string, evtLiteral: string): string {
   return [
-    `local impl = rawget(_ENV, "__luarizer_WorkflowImpl")`,
+    `local impl = rawget(_ENV, "__microverse_lua_WorkflowImpl")`,
     `if type(impl) == "table" then`,
     `  local m = rawget(impl, ${JSON.stringify(methodName)})`,
     `  if type(m) == "function" then`,

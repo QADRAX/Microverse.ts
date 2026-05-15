@@ -4,18 +4,18 @@ import {
   type CapabilityId,
   type HostWorkflowHub,
   type TimeoutPolicy,
-} from '@luarizer/luarizer';
+} from '@microverse/microverse';
 
 import surface from './businessSurface.js';
 import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
-import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
+import type { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
 import type { BusinessEngineHost } from './services/businessEngineHost.js';
 import type { z } from 'zod';
 
 export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
 
 export type BusinessScriptingEngineOptions = {
-  /** Per-chunk wall-clock limit (default 30s). Combine with Wasm instruction budget in `@luarizer/runtime-wasm`. */
+  /** Per-chunk wall-clock limit (default 30s). Combine with Wasm instruction budget in `@microverse/runtime-wasm`. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   /**
    * Lua library chunks loaded into **every** workflow slot (same `_ENV`, before each workflow script).
@@ -64,7 +64,7 @@ export class BusinessScriptingEngine {
    * For async tied to one bridge call, prefer `async fn` handlers and explicit Lua `:await()` or `onComplete`; hooks are for host-pushed events (see job_async_partner.lua).
    * Payload fields must be JSON-serializable literals accepted by `emitToAllWorkflows`.
    */
-  readonly emitWorkflowHook = async <K extends keyof typeof businessWorkflowHooks & string>(
+  readonly emitWorkflowHook = async <K extends keyof typeof businessWorkflowHooks>(
     kind: K,
     payload: Readonly<z.infer<(typeof businessWorkflowHooks)[K]>>,
   ): Promise<void> => {

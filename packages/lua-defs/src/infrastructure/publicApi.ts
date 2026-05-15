@@ -3,7 +3,7 @@
  * El entry `src/index.ts` solo re-exporta desde aquí.
  */
 export type {
-  LuarizerDefManifest,
+  LuaDefManifest,
   LuaPrimitiveType,
   LuaTypeRef,
   ManifestAlias,
@@ -14,7 +14,7 @@ export type {
   ManifestLuaHook,
   ManifestMethod,
   ManifestParam,
-} from '../domain/manifest/LuarizerDefManifest.js';
+} from '../domain/manifest/LuaDefManifest.js';
 export { parseManifestJson } from '../domain/manifest/parseManifestJson.js';
 export { buildLuaCatsDocument, buildLuaCatsDocument as emitLuaCatsFromManifest } from '../domain/luaCats/buildLuaCatsDocument.js';
 

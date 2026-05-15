@@ -1,23 +1,23 @@
 {
-  "name": "@luarizer-examples/business-scripting-engine",
+  "name": "@microverse-examples/business-scripting-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "description": "Illustrative business rules engine: mock domain APIs, domain events, and per-workflow Lua via host-surface.",
   "scripts": {
-    "generate:defs": "luarizer generate-defs --surface src/businessSurface.ts --header-note \"LuaLS stub for lua/workflows (Zod surface — businessSurface.ts)\"",
-    "build": "pnpm --filter @luarizer/host-surface run build && pnpm --filter @luarizer/runtime-wasm run build && pnpm --filter @luarizer/luarizer run build && pnpm run generate:defs",
+    "generate:defs": "microverse generate-defs --surface src/businessSurface.ts --header-note \"LuaLS stub for lua/workflows (Zod surface — businessSurface.ts)\"",
+    "build": "pnpm --filter @microverse/host-surface run build && pnpm --filter @microverse/runtime-wasm run build && pnpm --filter @microverse/microverse run build && pnpm run generate:defs",
     "lint": "eslint .",
-    "pretest": "pnpm --filter @luarizer/host-surface run build && pnpm --filter @luarizer/runtime-wasm run build && pnpm --filter @luarizer/luarizer run build && pnpm run generate:defs",
+    "pretest": "pnpm --filter @microverse/host-surface run build && pnpm --filter @microverse/runtime-wasm run build && pnpm --filter @microverse/microverse run build && pnpm run generate:defs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/luarizer": "workspace:*",
+    "@microverse/microverse": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@luarizer/cli": "workspace:*",
+    "@microverse/cli": "workspace:*",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
   }

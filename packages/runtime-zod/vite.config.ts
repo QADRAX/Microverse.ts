@@ -1,3 +1,3 @@
-import { luarizerLibraryViteConfig } from '../../tooling/vite/luarizer-lib.mjs';
+import { microverseLibraryViteConfig } from '../../tooling/vite/microverse-lib.mjs';
 
-export default luarizerLibraryViteConfig(import.meta.url);
+export default microverseLibraryViteConfig(import.meta.url);

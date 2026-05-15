@@ -6,9 +6,9 @@
  * - **No auto-await**: async bridges return a handle with `:await()`; optional 2nd-arg callback runs after the current chunk step.
  * - Optional **instruction budget** per chunk via `debug.sethook` when available.
  */
-export const LUARIZER_DEFAULT_INSTRUCTION_BUDGET = 5_000_000;
+export const MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET = 5_000_000;
 
-export const LUARIZER_SLOT_VM_BOOTSTRAP_LUA = `
+export const MICROVERSE_LUA_SLOT_VM_BOOTSTRAP = `
 do
   local REAL_G = _G
   local envs = {}
@@ -75,7 +75,7 @@ do
   end
 
   local debug_lib = REAL_G.debug
-  local DEFAULT_BUDGET = ${LUARIZER_DEFAULT_INSTRUCTION_BUDGET}
+  local DEFAULT_BUDGET = ${MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET}
   local HOOK_STEP = 10000
 
   local function is_awaitable(r)
@@ -85,7 +85,7 @@ do
     return false
   end
 
-  function __luarizer_await_value(r)
+  function __microverse_lua_await_value(r)
     if not is_awaitable(r) then
       return r
     end
@@ -98,7 +98,7 @@ do
     return out
   end
 
-  function __luarizer_wrap_async_result(r)
+  function __microverse_lua_wrap_async_result(r)
     if not is_awaitable(r) then
       return r
     end
@@ -106,7 +106,7 @@ do
       __index = function(_, key)
         if key == "await" then
           return function()
-            return __luarizer_await_value(r)
+            return __microverse_lua_await_value(r)
           end
         end
         return nil
@@ -125,7 +125,7 @@ do
   local function flush_pending_async()
     for i = 1, #pending_async do
       local job = pending_async[i]
-      local out = __luarizer_await_value(job.r)
+      local out = __microverse_lua_await_value(job.r)
       job.cb(out)
     end
   end
@@ -169,16 +169,16 @@ do
           else
             r = f(impl, select(1, ...))
           end
-          return __luarizer_wrap_async_result(r)
+          return __microverse_lua_wrap_async_result(r)
         end
       end,
       __newindex = function(_, key)
-        error("luarizer: bridge table is read-only (" .. tostring(key) .. ")", 2)
+        error("microverse: bridge table is read-only (" .. tostring(key) .. ")", 2)
       end,
     })
   end
 
-  function __luarizer_put_bridge_from_global(slot_key, field_name, global_tmp_key)
+  function __microverse_lua_put_bridge_from_global(slot_key, field_name, global_tmp_key)
     local e = ensure_env(slot_key)
     local v = REAL_G[global_tmp_key]
     REAL_G[global_tmp_key] = nil
@@ -188,7 +188,7 @@ do
     rawset(e, field_name, v)
   end
 
-  function __luarizer_execute_in_slot(slot_key, source, instr_budget)
+  function __microverse_lua_execute_in_slot(slot_key, source, instr_budget)
     instr_budget = instr_budget or DEFAULT_BUDGET
     pending_async = {}
     local env = ensure_env(slot_key)
@@ -202,7 +202,7 @@ do
         count = count + HOOK_STEP
         if count > instr_budget then
           debug_lib.sethook()
-          error("luarizer: instruction limit exceeded", 0)
+          error("microverse: instruction limit exceeded", 0)
         end
       end, "", HOOK_STEP)
     end
@@ -217,7 +217,7 @@ do
     return result
   end
 
-  function __luarizer_destroy_slot(slot_key)
+  function __microverse_lua_destroy_slot(slot_key)
     envs[slot_key] = nil
   end
 end

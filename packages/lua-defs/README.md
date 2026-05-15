@@ -1,13 +1,13 @@
-# `@luarizer/lua-defs`
+# `@microverse/lua-defs`
 
-Biblioteca TypeScript para **generar ficheros `.d.lua`** (anotaciones [LuaCATS](https://luals.github.io/wiki/annotations/)) a partir de un **manifiesto** (`LuarizerDefManifest`), sin pasar por el binario `luarizer`.
+Biblioteca TypeScript para **generar ficheros `.d.lua`** (anotaciones [LuaCATS](https://luals.github.io/wiki/annotations/)) a partir de un **manifiesto** (`LuaDefManifest`), sin pasar por el binario `microverse`.
 
-Úsala cuando quieras integrar la generación en un script de build, un plugin de Vite/Rollup, o cualquier herramienta Node que ya tenga TypeScript. Para construir el manifiesto desde TypeScript (Zod + capabilities), usa [`@luarizer/host-surface`](../host-surface/README.md).
+Úsala cuando quieras integrar la generación en un script de build, un plugin de Vite/Rollup, o cualquier herramienta Node que ya tenga TypeScript. Para construir el manifiesto desde TypeScript (Zod + capabilities), usa [`@microverse/host-surface`](../host-surface/README.md).
 
 ## Instalación
 
 ```bash
-pnpm add -D @luarizer/lua-defs
+pnpm add -D @microverse/lua-defs
 ```
 
 ## Arquitectura (clean / capas)
@@ -28,25 +28,25 @@ El entry del paquete (`src/index.ts`) solo re-exporta `infrastructure/publicApi.
 - **`buildLuaCatsDocument(manifest)`** / **`emitLuaCatsFromManifest(manifest)`** (alias) — devuelve el contenido `.d.lua` como `string`.
 - **`generateDefs({ cwd, manifestPath, outPath? })`** — lee el fichero del manifiesto, escribe el `.d.lua` (crea directorios si hace falta). `outPath` opcional sustituye a `manifest.output`.
 - **`loadLuaDefinitionsFromManifestFile({ cwd, manifestPath })`** — lee el manifiesto desde disco y devuelve el contenido `.d.lua` como `string` (no escribe fichero).
-- **`generateLuaDefinitionsFile(ports, input)`** / **`loadLuaDefinitionsDocumentFromManifestFile(ports, input)`** — casos de uso alineados con `AsyncUseCase` de `@luarizer/shared` (tipos explícitos `GenerateLuaDefinitionsFileUseCase` y `LoadLuaDefinitionsDocumentFromManifestFileUseCase`). El tuple de puertos es `[fs, parseManifest, buildLuaCatsDocument]` (ver `LuaDefinitionsFromManifestFilePorts` y `createDefaultLuaDefinitionsFromManifestFilePorts()`).
+- **`generateLuaDefinitionsFile(ports, input)`** / **`loadLuaDefinitionsDocumentFromManifestFile(ports, input)`** — casos de uso alineados con `AsyncUseCase` de `@microverse/shared` (tipos explícitos `GenerateLuaDefinitionsFileUseCase` y `LoadLuaDefinitionsDocumentFromManifestFileUseCase`). El tuple de puertos es `[fs, parseManifest, buildLuaCatsDocument]` (ver `LuaDefinitionsFromManifestFilePorts` y `createDefaultLuaDefinitionsFromManifestFilePorts()`).
 
 ```ts
 import { readFile } from 'node:fs/promises';
 
-import { emitLuaCatsFromManifest, generateDefs, parseManifestJson } from '@luarizer/lua-defs';
+import { emitLuaCatsFromManifest, generateDefs, parseManifestJson } from '@microverse/lua-defs';
 
 await generateDefs({
   cwd: process.cwd(),
-  manifestPath: 'lua/luarizer.def.json',
+  manifestPath: 'lua/microverse.def.json',
 });
 
-const manifest = parseManifestJson(await readFile('lua/luarizer.def.json', 'utf8'));
+const manifest = parseManifestJson(await readFile('lua/microverse.def.json', 'utf8'));
 const lua = emitLuaCatsFromManifest(manifest);
 ```
 
 ## Esquema y ejemplo
 
-- [schemas/luarizer-def-manifest.schema.json](./schemas/luarizer-def-manifest.schema.json)
-- [fixtures/example.luarizer.def.json](./fixtures/example.luarizer.def.json)
+- [schemas/lua-def-manifest.schema.json](./schemas/lua-def-manifest.schema.json)
+- [fixtures/example.lua.def.json](./fixtures/example.lua.def.json)
 
-Para la línea de comandos, sigue usando [`@luarizer/cli`](../cli/README.md) (`luarizer generate-defs`).
+Para la línea de comandos, sigue usando [`@microverse/cli`](../cli/README.md) (`microverse generate-defs`).

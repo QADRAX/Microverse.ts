@@ -1,11 +1,11 @@
-import { buildLuaCatsDocument } from '@luarizer/lua-defs';
+import { buildLuaCatsDocument } from '@microverse/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { cap, fn } from './hostSurfaceMethodHelpers.js';
-import { buildLuarizerDefManifestFromHostSurfaceSpec } from './hostSurfaceManifest.js';
+import { buildLuaDefManifestFromHostSurfaceSpec } from './hostSurfaceManifest.js';
 
-describe('buildLuarizerDefManifestFromHostSurfaceSpec', () => {
+describe('buildLuaDefManifestFromHostSurfaceSpec', () => {
   it('emits async handle + onComplete for async fn handlers', () => {
     const spec = {
       asyncio: {
@@ -17,7 +17,7 @@ describe('buildLuarizerDefManifestFromHostSurfaceSpec', () => {
         }),
       },
     };
-    const manifest = buildLuarizerDefManifestFromHostSurfaceSpec(spec, { output: 'out.d.lua' });
+    const manifest = buildLuaDefManifestFromHostSurfaceSpec(spec, { output: 'out.d.lua' });
     const doc = buildLuaCatsDocument(manifest);
     expect(spec.asyncio.tick.async).toBe(true);
     expect(doc).toContain('---@class AsyncioTickHandle');

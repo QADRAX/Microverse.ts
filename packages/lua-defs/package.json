@@ -1,9 +1,9 @@
 {
-  "name": "@luarizer/lua-defs",
+  "name": "@microverse/lua-defs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Programmatic LuaCATS (.d.lua) generation from a Luarizer manifest (no CLI).",
+  "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -18,7 +18,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/shared": "workspace:*"
+    "@microverse/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",

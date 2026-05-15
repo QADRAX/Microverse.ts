@@ -1,5 +1,5 @@
 {
-  "name": "@luarizer/runtime-zod",
+  "name": "@microverse/runtime-zod",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,8 +18,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@luarizer/runtime-bridge": "workspace:*",
-    "@luarizer/shared": "workspace:*"
+    "@microverse/runtime-bridge": "workspace:*",
+    "@microverse/shared": "workspace:*"
   },
   "peerDependencies": {
     "zod": "^3.24.0"

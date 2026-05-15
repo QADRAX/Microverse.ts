@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@luarizer/host-surface/*": ["./src/*"]
+      "@microverse/host-surface/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

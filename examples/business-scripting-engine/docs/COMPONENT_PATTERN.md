@@ -1,4 +1,4 @@
-# Patrón “componente” (props, estado, hooks) sobre Luarizer
+# Patrón “componente” (props, estado, hooks) sobre Microverse
 
 Este ejemplo **no** añade React al núcleo: solo documenta convenciones que puedes copiar en tu producto.
 
@@ -6,7 +6,7 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 
 | Capa | Responsabilidad |
 |------|-----------------|
-| `@luarizer/host-surface` | Superficie Zod, capabilities, `mergeEnv`, hooks `workflow:extend()` |
+| `@microverse/host-surface` | Superficie Zod, capabilities, `mergeEnv`, hooks `workflow:extend()` |
 | Tu motor (p. ej. `BusinessScriptingEngine`) | Cuándo cargar chunks, qué allowlist por workflow |
 | Este documento | Cómo componer Lua y dónde vive el “estado” |
 
@@ -39,4 +39,4 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 - Librerías Lua en runtime: `lua/lib/*.lua` con EmmyLua; tipos de bridges/DTOs en `src/schemas/surface/bridgePayloads.ts` vía `luaType('OrderDto', z.object({…}))` → `generated/businessSurface.d.lua` (CLI).
 - **`injectLuaChunks` por workflow** solo para preludes exclusivos de ese workflow (se ejecutan después del shared).
 
-Tras cambiar APIs en `@luarizer/luarizer`, hay que **reconstruir** ese paquete (`pnpm --filter @luarizer/luarizer build`): el ejemplo importa su `dist/`.
+Tras cambiar APIs en `@microverse/microverse`, hay que **reconstruir** ese paquete (`pnpm --filter @microverse/microverse build`): el ejemplo importa su `dist/`.

@@ -2,17 +2,17 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import { buildLuaCatsDocument } from '../domain/luaCats/buildLuaCatsDocument.js';
-import type { LuarizerDefManifest } from '../domain/manifest/LuarizerDefManifest.js';
+import type { LuaDefManifest } from '../domain/manifest/LuaDefManifest.js';
 
 export type WriteLuaDefinitionsFromManifestOptions = {
   readonly cwd: string;
-  readonly manifest: LuarizerDefManifest;
+  readonly manifest: LuaDefManifest;
   /** Overrides `manifest.output` when set. */
   readonly outPath?: string | undefined;
 };
 
 /**
- * Writes a `.d.lua` from an in-memory manifest (e.g. built via `defineHostSurface().toLuarizerDefManifest(...)`).
+ * Writes a `.d.lua` from an in-memory manifest (e.g. built via `defineHostSurface().toLuaDefManifest(...)`).
  */
 export function writeLuaDefinitionsFromManifest(
   options: WriteLuaDefinitionsFromManifestOptions,

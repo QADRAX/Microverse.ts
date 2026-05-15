@@ -1,6 +1,6 @@
-import type { Result } from '@luarizer/shared';
+import type { Result } from '@microverse/shared';
 
-import type { SandboxId } from '../sandbox/SandboxId';
+import type { MicroverseId } from '../microverse/MicroverseId';
 import type { ExecutionContext } from './ExecutionContext';
 import type { ExecutionFailure } from './ExecutionFailure';
 import type { RunScriptInput } from './RunScriptInput';
@@ -12,5 +12,5 @@ export type RuntimeAdapter = {
     input: RunScriptInput,
   ) => Promise<Result<RunScriptResult, ExecutionFailure>>;
   /** Tear down one logical slot in the shared VM (e.g. drop per-slot Lua environment). */
-  readonly disposeSandbox?: (sandboxId: SandboxId) => Promise<void>;
+  readonly disposeMicroverse?: (microverseId: MicroverseId) => Promise<void>;
 };

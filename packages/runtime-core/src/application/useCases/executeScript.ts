@@ -1,5 +1,5 @@
-import type { AsyncUseCase } from '@luarizer/shared';
-import { err, type Result } from '@luarizer/shared';
+import type { AsyncUseCase } from '@microverse/shared';
+import { err, type Result } from '@microverse/shared';
 
 import type { LoggerPort } from '../ports/LoggerPort';
 import type { RuntimeAdapterPort } from '../ports/RuntimeAdapterPort';

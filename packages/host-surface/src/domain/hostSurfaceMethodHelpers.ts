@@ -1,5 +1,5 @@
-import type { CapabilityId } from '@luarizer/runtime-capabilities';
-import { createCapabilityId } from '@luarizer/runtime-capabilities';
+import type { CapabilityId } from '@microverse/runtime-capabilities';
+import { createCapabilityId } from '@microverse/runtime-capabilities';
 
 import type { HostSurfaceMethodEntry } from './hostSurfaceTypes.js';
 

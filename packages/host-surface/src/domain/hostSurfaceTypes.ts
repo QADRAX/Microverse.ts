@@ -1,9 +1,9 @@
-import type { LuarizerDefManifest } from '@luarizer/lua-defs';
-import type { DeclarativeBridgeDeclaration } from '@luarizer/runtime-bridge';
-import type { CapabilityId } from '@luarizer/runtime-capabilities';
+import type { LuaDefManifest } from '@microverse/lua-defs';
+import type { DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
+import type { CapabilityId } from '@microverse/runtime-capabilities';
 import type { z } from 'zod';
 
-import type { WithLuarizerCapabilityRegistry } from './capabilityRegistrySymbol.js';
+import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol.js';
 
 /**
  * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
@@ -33,7 +33,7 @@ export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
   readonly output: z.ZodType<TOut>;
   /**
    * Host logic at the Lua↔JS boundary. May return `Promise<TOut>`; Lua must use `:await()` on the returned handle
-   * or pass an `onComplete` callback as the second argument (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA` in `@luarizer/runtime-wasm`).
+   * or pass an `onComplete` callback as the second argument (see `MICROVERSE_LUA_SLOT_VM_BOOTSTRAP` in `@microverse/runtime-wasm`).
    */
   readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut | Promise<TOut>;
   /**
@@ -107,26 +107,26 @@ export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
 export type HostSurfaceCore = {
   /**
    * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
-   * The host must satisfy {@link WithLuarizerCapabilityRegistry} (see {@link HostScriptSession}).
+   * The host must satisfy {@link WithMicroverseCapabilityRegistry} (see {@link HostScriptSession}).
    */
   readonly toBridgeDeclarations: () => ReadonlyArray<
-    DeclarativeBridgeDeclaration<WithLuarizerCapabilityRegistry, string>
+    DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>
   >;
   /**
-   * Builds a `LuarizerDefManifest` for `@luarizer/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
+   * Builds a `LuaDefManifest` for `@microverse/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
    *
    * @param opts.output - Default `.d.lua` output path recorded in the manifest.
    * @param opts.headerNote - Optional banner comment in the generated file.
      * @param opts.luaTypeAliases - Optional overrides / extra `---@alias` entries; by default aliases come from {@link luaType} on Zod schemas used in the surface.
    */
-  readonly toLuarizerDefManifest: (opts: {
+  readonly toLuaDefManifest: (opts: {
     readonly output: string;
     readonly headerNote?: string | undefined;
     /**
      * Optional extra `---@alias` entries, or overrides for inferred aliases (same key replaces inferred).
      */
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
-  }) => LuarizerDefManifest;
+  }) => LuaDefManifest;
 };
 
 /**
@@ -139,5 +139,5 @@ export type HostSurface<THooks extends HostWorkflowHooksSpec | undefined = undef
   ? HostSurfaceCore
   : HostSurfaceCore & { readonly workflowHooks: THooks };
 
-/** Options passed to {@link HostSurfaceCore.toLuarizerDefManifest}. */
-export type LuarizerDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuarizerDefManifest']>[0];
+/** Options passed to {@link HostSurfaceCore.toLuaDefManifest}. */
+export type LuaDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuaDefManifest']>[0];

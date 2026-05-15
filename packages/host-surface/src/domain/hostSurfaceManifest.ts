@@ -1,11 +1,11 @@
 import type {
-  LuarizerDefManifest,
+  LuaDefManifest,
   ManifestAlias,
   ManifestClass,
   ManifestClassField,
   ManifestMethod,
   ManifestParam,
-} from '@luarizer/lua-defs';
+} from '@microverse/lua-defs';
 import { z } from 'zod';
 
 import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.js';
@@ -31,7 +31,7 @@ function buildWorkflowHookManifestFields(
     if (!(schema instanceof z.ZodObject)) {
       throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
     }
-    const payloadName = `LuarizerWorkflowEvt_${kind}`;
+    const payloadName = `MicroverseWorkflowEvt_${kind}`;
     const hookName = luaGlobalHookName(kind);
     out.push({
       name: hookName,
@@ -52,7 +52,7 @@ function pushWorkflowPayloadManifestClasses(
     if (!(schema instanceof z.ZodObject)) {
       throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
     }
-    const name = `LuarizerWorkflowEvt_${kind}`;
+    const name = `MicroverseWorkflowEvt_${kind}`;
     const shape = schema.shape as Record<string, z.ZodTypeAny>;
     classes.push({
       name,
@@ -66,7 +66,7 @@ function pushWorkflowPayloadManifestClasses(
   }
 }
 
-export function buildLuarizerDefManifestFromHostSurfaceSpec(
+export function buildLuaDefManifestFromHostSurfaceSpec(
   spec: HostSurfaceSpec,
   opts: {
     readonly output: string;
@@ -74,7 +74,7 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   },
   workflowHooks?: HostWorkflowHooksSpec,
-): LuarizerDefManifest {
+): LuaDefManifest {
   const classes: ManifestClass[] = [];
   for (const bridgeName of Object.keys(spec)) {
     const methods = spec[bridgeName]!;

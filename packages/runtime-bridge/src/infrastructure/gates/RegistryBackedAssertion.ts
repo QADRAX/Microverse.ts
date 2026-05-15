@@ -1,4 +1,4 @@
-import type { CapabilityId } from '@luarizer/runtime-capabilities';
+import type { CapabilityId } from '@microverse/runtime-capabilities';
 
 import type { BridgeCapabilityAssertion } from '../../domain/bridge/BridgeCapabilityAssertion';
 

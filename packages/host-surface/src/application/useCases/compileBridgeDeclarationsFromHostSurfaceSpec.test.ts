@@ -1,4 +1,4 @@
-import { createAllowlist, InMemoryCapabilityRegistry } from '@luarizer/runtime-capabilities';
+import { createAllowlist, InMemoryCapabilityRegistry } from '@microverse/runtime-capabilities';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -22,8 +22,8 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
     });
     const registry = new InMemoryCapabilityRegistry(createAllowlist([cap('demo:bump')]));
     const host = augmentHostWithCapabilityRegistry({ n: 0 }, registry);
-    const api = decls[0]!.createApi(host, 'slot-a');
-    const out = api.bump!({ x: 41 });
+    const api = decls[0]!.createApi(host, 'slot-a') as { bump: (payload: { x: number }) => Promise<{ y: number }> };
+    const out = api.bump({ x: 41 });
     expect(out).toBeInstanceOf(Promise);
     await expect(out).resolves.toEqual({ y: 42 });
   });
@@ -36,14 +36,14 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
           capability: cap('demo:bad'),
           input: z.object({}),
           output: z.object({ y: z.number() }),
-          handler: async () => ({ y: 'oops' }) as { y: number },
+          handler: async () => ({ y: 'oops' }) as unknown as { y: number },
         }),
       },
     });
     const registry = new InMemoryCapabilityRegistry(createAllowlist([cap('demo:bad')]));
     const host = augmentHostWithCapabilityRegistry({}, registry);
-    const api = decls[0]!.createApi(host, 'slot-b');
-    const out = api.bad!({});
+    const api = decls[0]!.createApi(host, 'slot-b') as { bad: (payload: Record<string, never>) => Promise<{ y: number }> };
+    const out = api.bad({});
     await expect(out).rejects.toThrow();
   });
 });

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@luarizer/shared';
+import { err, ok, type Result } from '@microverse/shared';
 import type { z } from 'zod';
 
 import type { ContractValidatorPort } from '../../application/ports/ContractValidatorPort';

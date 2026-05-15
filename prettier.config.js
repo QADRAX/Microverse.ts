@@ -1,3 +1,3 @@
-import prettierConfig from '@luarizer/prettier-config';
+import prettierConfig from '@microverse/prettier-config';
 
 export default prettierConfig;
