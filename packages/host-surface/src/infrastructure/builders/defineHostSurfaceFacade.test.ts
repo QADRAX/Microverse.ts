@@ -2,13 +2,14 @@ import { buildLuaCatsDocument } from '@luarizer/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { luaType } from '../../domain/zodLuaType.js';
 import { cap, defineHostSurface, fn } from './defineHostSurfaceFacade.js';
 
 type ToyHost = {
   readonly n: number;
 };
 
-const idSchema = z.string();
+const entityId = luaType('EntityId', z.string());
 
 describe('defineHostSurface', () => {
   it('builds LuarizerDefManifest for lua-defs snapshot', () => {
@@ -23,11 +24,10 @@ describe('defineHostSurface', () => {
         }),
       },
       ecs: {
-        getName: fn<ToyHost, { id: z.infer<typeof idSchema> }, string | undefined>({
+        getName: fn<ToyHost, { id: z.infer<typeof entityId> }, string | undefined>({
           capability: cap('ecs:read'),
-          input: z.object({ id: idSchema }),
+          input: z.object({ id: entityId }),
           output: z.string().optional(),
-          lua: { paramTypes: { id: 'EntityId' }, returns: 'string|nil' },
           handler: (_ctx, { id }) => (id === 'a' ? 'Alice' : undefined),
         }),
       },

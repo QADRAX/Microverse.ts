@@ -39,7 +39,8 @@ export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
   /** Optional description emitted into the LuaCATS manifest. */
   readonly description?: string | undefined;
   /**
-   * Optional LuaCATS overrides for manifest emission when {@link zodToLuaTypeRef} is too generic.
+   * Advanced escape hatch for manifest emission. Prefer registering Zod schemas with {@link luaType}
+   * (see `bridgePayloads` in the business example) so `.d.lua` stays inferred from `input` / `output`.
    * `paramTypes` keys must match `input` object keys (or `value` for non-object inputs).
    */
   readonly lua?: {
@@ -109,7 +110,7 @@ export type HostSurfaceCore = {
    *
    * @param opts.output - Default `.d.lua` output path recorded in the manifest.
    * @param opts.headerNote - Optional banner comment in the generated file.
-   * @param opts.luaTypeAliases - Optional overrides / extra `---@alias` entries; by default aliases are inferred from Zod + `fn(..., lua)`.
+     * @param opts.luaTypeAliases - Optional overrides / extra `---@alias` entries; by default aliases come from {@link luaType} on Zod schemas used in the surface.
    */
   readonly toLuarizerDefManifest: (opts: {
     readonly output: string;

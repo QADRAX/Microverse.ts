@@ -1,52 +1,68 @@
 import { z } from 'zod';
 
+import { resolveZodLuaTypeAlias } from './zodLuaType.js';
+
 /* Zod's internal `_def` / `options` are intentionally untyped for this best-effort emitter. */
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 
+export type ZodToLuaTypeRefOptions = {
+  /**
+   * When `false`, expands {@link luaType} registrations to structural shapes (for `---@alias` bodies).
+   * Default `true` emits registered nominal names at use sites.
+   */
+  readonly emitAliasNames?: boolean | undefined;
+};
+
 /**
- * Maps a Zod schema to a **best-effort** LuaCATS type reference string for manifest emission.
+ * Maps a Zod schema to a LuaCATS type reference string for manifest emission.
  *
  * @remarks
- * Complex or nominal Lua types (e.g. `EntityId`) are not inferred reliably from Zod alone.
- * Use the `lua.paramTypes` / `lua.returns` fields on {@link fn} when you need precise IDE typings.
- *
- * @param schema - Any Zod schema (including wrappers like `optional`, `nullable`, `effects`).
- * @returns A LuaCATS-friendly type string such as `string`, `number`, `table`, `unknown`, or unions with `|nil`.
+ * Register nominal types with {@link luaType} on shared Zod schemas (e.g. `orderDto`, `orderId`).
+ * Prefer that over per-method `lua.paramTypes` / `lua.returns` on {@link fn}.
  */
-export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
+export function zodToLuaTypeRef(schema: z.ZodTypeAny, options?: ZodToLuaTypeRefOptions): string {
+  const emitAliasNames = options?.emitAliasNames !== false;
+
   if (schema instanceof z.ZodOptional) {
-    return `${zodToLuaTypeRef(schema.unwrap())}|nil`;
+    return `${zodToLuaTypeRef(schema.unwrap(), options)}|nil`;
   }
   if (schema instanceof z.ZodNullable) {
-    return `${zodToLuaTypeRef(schema.unwrap())}|nil`;
+    return `${zodToLuaTypeRef(schema.unwrap(), options)}|nil`;
   }
   if (schema instanceof z.ZodDefault) {
-    return zodToLuaTypeRef(schema.removeDefault());
+    return zodToLuaTypeRef(schema.removeDefault(), options);
   }
   if (schema instanceof z.ZodReadonly) {
-    return zodToLuaTypeRef(schema.unwrap());
+    return zodToLuaTypeRef(schema.unwrap(), options);
   }
   if (schema instanceof z.ZodCatch) {
-    return zodToLuaTypeRef(schema._def.innerType as z.ZodTypeAny);
+    return zodToLuaTypeRef(schema._def.innerType as z.ZodTypeAny, options);
   }
   if (schema instanceof z.ZodPipeline) {
-    return zodToLuaTypeRef(schema._def.out as z.ZodTypeAny);
+    return zodToLuaTypeRef(schema._def.out as z.ZodTypeAny, options);
   }
   if (schema instanceof z.ZodEffects) {
-    return zodToLuaTypeRef(schema.innerType());
+    return zodToLuaTypeRef(schema.innerType(), options);
   }
   if (schema instanceof z.ZodLazy) {
-    return zodToLuaTypeRef(schema.schema);
+    return zodToLuaTypeRef(schema.schema, options);
   }
   if (schema instanceof z.ZodBranded) {
-    return zodToLuaTypeRef(schema.unwrap());
+    return zodToLuaTypeRef(schema.unwrap(), options);
+  }
+
+  if (emitAliasNames) {
+    const alias = resolveZodLuaTypeAlias(schema);
+    if (alias !== undefined) {
+      return alias;
+    }
   }
 
   if (schema instanceof z.ZodString) {
     return 'string';
   }
   if (schema instanceof z.ZodNumber) {
-    return 'number';
+    return zodNumberToLua(schema);
   }
   if (schema instanceof z.ZodBoolean) {
     return 'boolean';
@@ -94,14 +110,14 @@ export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
     if (keys.length === 0) {
       return '{}';
     }
-    const parts = keys.map((k) => `${k}: ${zodToLuaTypeRef(shape[k]!)}`);
+    const parts = keys.map((k) => `${k}: ${zodToLuaTypeRef(shape[k]!, options)}`);
     return `{ ${parts.join('; ')} }`;
   }
   if (schema instanceof z.ZodUnion) {
-    return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o)).join('|');
+    return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o, options)).join('|');
   }
   if (schema instanceof z.ZodDiscriminatedUnion) {
-    return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o)).join('|');
+    return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o, options)).join('|');
   }
   if (schema instanceof z.ZodIntersection) {
     return 'table';
@@ -110,4 +126,12 @@ export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
     return 'table';
   }
   return 'unknown';
+}
+
+function zodNumberToLua(schema: z.ZodNumber): string {
+  const checks = schema._def.checks as readonly { readonly kind: string }[];
+  if (checks.some((c) => c.kind === 'int')) {
+    return 'integer';
+  }
+  return 'number';
 }

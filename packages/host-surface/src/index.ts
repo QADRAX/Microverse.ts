@@ -34,6 +34,7 @@ export {
   type WorkflowHookInvokeArgs,
 } from './infrastructure/components/hostScriptSession.js';
 export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook.js';
-export { zodToLuaTypeRef } from './domain/zodToLuaTypeRef.js';
+export { luaType } from './domain/zodLuaType.js';
+export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef.js';
 export { LUARIZER_CAPABILITY_REGISTRY, type WithLuarizerCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
 export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';

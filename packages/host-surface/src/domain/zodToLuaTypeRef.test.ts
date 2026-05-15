@@ -7,6 +7,7 @@ describe('zodToLuaTypeRef', () => {
   it('maps primitives', () => {
     expect(zodToLuaTypeRef(z.string())).toBe('string');
     expect(zodToLuaTypeRef(z.number())).toBe('number');
+    expect(zodToLuaTypeRef(z.number().int())).toBe('integer');
     expect(zodToLuaTypeRef(z.boolean())).toBe('boolean');
     expect(zodToLuaTypeRef(z.unknown())).toBe('unknown');
   });

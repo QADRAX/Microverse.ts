@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.js';
 import { luaGlobalHookName } from './luaGlobalHook.js';
 import { isLuaTypeAtom } from './luaTypeAtoms.js';
+import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
 function buildWorkflowHookManifestFields(
@@ -87,8 +88,12 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
       methods: manifestMethods,
     });
   }
-  const inferred = inferLuaTypeAliasesFromHostSpec(spec);
-  const merged = new Map<string, string>(inferred.map((a) => [a.name, a.definition]));
+  const fromLuaType = collectLuaTypeAliasesFromHostSpec(spec);
+  const fromOverrides = inferLuaTypeAliasesFromHostSpec(spec);
+  const merged = new Map<string, string>([
+    ...fromLuaType.map((a) => [a.name, a.definition] as const),
+    ...fromOverrides.map((a) => [a.name, a.definition] as const),
+  ]);
   if (opts.luaTypeAliases !== undefined) {
     for (const [k, v] of Object.entries(opts.luaTypeAliases)) {
       merged.set(k, v);
@@ -189,6 +194,51 @@ function unwrapOutputBaseForAlias(schema: z.ZodTypeAny): z.ZodTypeAny {
   }
   /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   return cur;
+}
+
+function collectLuaTypeAliasesFromHostSpec(spec: HostSurfaceSpec): readonly ManifestAlias[] {
+  const byName = new Map<string, string>();
+  const seenRoots = new Set<z.ZodTypeAny>();
+
+  const consider = (schema: z.ZodTypeAny): void => {
+    const root = getLuaTypeRegistrationRoot(schema);
+    if (root === undefined || seenRoots.has(root)) {
+      return;
+    }
+    const name = getRegisteredLuaTypeName(root);
+    if (name === undefined) {
+      return;
+    }
+    seenRoots.add(root);
+    const definition = zodToLuaTypeRef(root, { emitAliasNames: false });
+    if (definition !== name) {
+      byName.set(name, definition);
+    }
+  };
+
+  const walk = (schema: z.ZodTypeAny): void => {
+    consider(schema);
+    const base = unwrapInputSchema(schema);
+    if (base instanceof z.ZodObject) {
+      const shape = base.shape as Record<string, z.ZodTypeAny>;
+      for (const field of Object.values(shape)) {
+        consider(field);
+      }
+    }
+  };
+
+  for (const bridgeName of Object.keys(spec)) {
+    const methods = spec[bridgeName]!;
+    for (const methodName of Object.keys(methods)) {
+      const entry = methods[methodName]!;
+      walk(entry.input);
+      walk(entry.output);
+    }
+  }
+
+  return [...byName.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, definition]) => ({ name, definition }));
 }
 
 function inferLuaTypeAliasesFromHostSpec(spec: HostSurfaceSpec): readonly ManifestAlias[] {
