@@ -13,6 +13,7 @@ describe('zodToLuaTypeRef', () => {
 
   it('maps object to inline LuaCATS record', () => {
     expect(zodToLuaTypeRef(z.object({ a: z.string() }))).toBe('{ a: string }');
+    expect(zodToLuaTypeRef(z.object({ a: z.string(), b: z.number() }))).toBe('{ a: string; b: number }');
   });
 
   it('maps optional and nullable', () => {

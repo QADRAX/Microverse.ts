@@ -95,7 +95,7 @@ export function zodToLuaTypeRef(schema: z.ZodTypeAny): string {
       return '{}';
     }
     const parts = keys.map((k) => `${k}: ${zodToLuaTypeRef(shape[k]!)}`);
-    return `{ ${parts.join(', ')} }`;
+    return `{ ${parts.join('; ')} }`;
   }
   if (schema instanceof z.ZodUnion) {
     return schema.options.map((o: z.ZodTypeAny) => zodToLuaTypeRef(o)).join('|');

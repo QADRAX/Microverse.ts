@@ -30,9 +30,8 @@ describe('buildLuaCatsDocument', () => {
     const lua = buildLuaCatsDocument(manifest);
     expect(lua).toContain('---@class EchoBridge');
     expect(lua).toContain('EchoBridge = {}');
-    expect(lua).toContain('---@param self EchoBridge');
     expect(lua).toContain('---@param payload { msg: string }');
-    expect(lua).toContain('function EchoBridge:ping(self, payload) end');
+    expect(lua).toContain('function EchoBridge:ping(payload) end');
     expect(lua).toContain('---@class EngineGlobal');
     expect(lua).toContain('---@field Echo EchoBridge');
     expect(lua).toContain('Engine = {}');
@@ -54,8 +53,7 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).toContain('---@class Data');
     expect(lua).toContain('---@field id number');
     expect(lua).toContain('Data = {}');
-    expect(lua).toContain('---@param self Data');
-    expect(lua).toContain('function Data:reset(self) end');
+    expect(lua).toContain('function Data:reset() end');
   });
 
   it('emits aliases before bridge classes', () => {
@@ -64,7 +62,7 @@ describe('buildLuaCatsDocument', () => {
       output: 'out.d.lua',
       aliases: [
         { name: 'OrderId', definition: 'string' },
-        { name: 'OrderDto', definition: '{ id: string, customerId: string, totalCents: number }' },
+        { name: 'OrderDto', definition: '{ id: string; customerId: string; totalCents: number }' },
       ],
       classes: [
         {
@@ -93,11 +91,12 @@ describe('buildLuaCatsDocument', () => {
     const manifest: LuarizerDefManifest = {
       schemaVersion: 1,
       output: 'out.d.lua',
+      aliases: [{ name: 'OrderPlacedPayload', definition: '{ orderId: string; amountCents: number }' }],
       luaHooks: [
         {
           name: 'onOrderPlaced',
           paramName: 'evt',
-          payloadLuaType: '{ orderId: string, amountCents: number }',
+          payloadLuaType: 'OrderPlacedPayload',
         },
       ],
       classes: [

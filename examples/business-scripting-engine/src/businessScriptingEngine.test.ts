@@ -93,9 +93,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
   it('is produced by pnpm run generate:defs (pretest) and documents bridge methods', () => {
     const doc = readFileSync(generatedDefsPath, 'utf8');
-    expect(doc).toContain('function orders:get(self, payload) end');
-    expect(doc).toContain('function billing:charge(self, payload) end');
-    expect(doc).toContain('function notifications:send(self, payload) end');
+    expect(doc).toContain('function orders:get(payload) end');
+    expect(doc).toContain('function billing:charge(payload) end');
+    expect(doc).toContain('function notifications:send(payload) end');
+    expect(doc).toContain('---@alias LuarizerWorkflowEvt_OrderPlaced');
+    expect(doc).toContain('---@alias LuarizerWorkflowEvt_InventoryLow');
     expect(doc).toContain('function onOrderPlaced(evt) end');
     expect(doc).toContain('function onInventoryLow(evt) end');
     expect(doc).toContain('---@alias OrderId string');

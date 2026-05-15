@@ -6,7 +6,11 @@
 
 ---@alias ChargeResult { ok: boolean }
 
----@alias OrderDto { id: string, customerId: string, totalCents: number }
+---@alias LuarizerWorkflowEvt_InventoryLow { sku: string; unitsLeft: number }
+
+---@alias LuarizerWorkflowEvt_OrderPlaced { orderId: string; amountCents: number; customerId: string }
+
+---@alias OrderDto { id: string; customerId: string; totalCents: number }
 
 ---@alias OrderId string
 
@@ -14,31 +18,28 @@
 ---@class orders
 orders = {}
 ---Load order by id
----@param self orders
 ---@param payload { orderId: OrderId }
 ---@return OrderDto|nil
-function orders:get(self, payload) end
+function orders:get(payload) end
 
 ---@class billing
 billing = {}
 ---Record a charge against an order
----@param self billing
----@param payload { orderId: OrderId, amountCents: integer }
+---@param payload { orderId: OrderId; amountCents: integer }
 ---@return ChargeResult
-function billing:charge(self, payload) end
+function billing:charge(payload) end
 
 ---@class notifications
 notifications = {}
 ---Send a notification (email, slack, …)
----@param self notifications
----@param payload { channel: string, message: string }
+---@param payload { channel: string; message: string }
 ---@return nil
-function notifications:send(self, payload) end
+function notifications:send(payload) end
 
----Workflow hook for InventoryLow events (invoked from host as onInventoryLow).
----@param evt { sku: string, unitsLeft: number }
+---Workflow hook for InventoryLow (global `onInventoryLow`). Payload type: `LuarizerWorkflowEvt_InventoryLow`.
+---@param evt LuarizerWorkflowEvt_InventoryLow
 function onInventoryLow(evt) end
 
----Workflow hook for OrderPlaced events (invoked from host as onOrderPlaced).
----@param evt { orderId: string, amountCents: number, customerId: string }
+---Workflow hook for OrderPlaced (global `onOrderPlaced`). Payload type: `LuarizerWorkflowEvt_OrderPlaced`.
+---@param evt LuarizerWorkflowEvt_OrderPlaced
 function onOrderPlaced(evt) end

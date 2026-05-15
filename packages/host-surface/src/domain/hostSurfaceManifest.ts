@@ -47,29 +47,35 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
       merged.set(k, v);
     }
   }
-  const aliases =
-    merged.size === 0
-      ? undefined
-      : [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, definition]) => ({ name, definition }));
 
   const luaHooks: ManifestLuaHook[] | undefined =
     workflowHooks === undefined
       ? undefined
-      : Object.keys(workflowHooks)
-          .sort((a, b) => a.localeCompare(b))
-          .map((kind) => {
+      : (() => {
+          const kinds = Object.keys(workflowHooks).sort((a, b) => a.localeCompare(b));
+          const out: ManifestLuaHook[] = [];
+          for (const kind of kinds) {
             const schema = workflowHooks[kind];
             if (!(schema instanceof z.ZodObject)) {
               throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
             }
+            const aliasName = `LuarizerWorkflowEvt_${kind}`;
+            merged.set(aliasName, zodToLuaTypeRef(schema));
             const hookName = luaGlobalHookName(kind);
-            return {
+            out.push({
               name: hookName,
               paramName: 'evt',
-              payloadLuaType: zodToLuaTypeRef(schema),
-              description: `Workflow hook for ${kind} events (invoked from host as ${hookName}).`,
-            };
-          });
+              payloadLuaType: aliasName,
+              description: `Workflow hook for ${kind} (global \`${hookName}\`). Payload type: \`${aliasName}\`.`,
+            });
+          }
+          return out;
+        })();
+
+  const aliases =
+    merged.size === 0
+      ? undefined
+      : [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, definition]) => ({ name, definition }));
 
   return {
     schemaVersion: 1,
