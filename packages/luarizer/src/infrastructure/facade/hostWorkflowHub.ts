@@ -8,7 +8,7 @@ import {
   type HostWorkflowHooksSpec,
 } from '@luarizer/host-surface';
 import type { CapabilityId } from '@luarizer/runtime-capabilities';
-import { createLuaEnvSlotKey, type SandboxRuntime } from '@luarizer/runtime-core';
+import { createLuaEnvSlotKey, type SandboxRuntime, type TimeoutPolicy } from '@luarizer/runtime-core';
 import { createWasmSandboxRuntime } from '@luarizer/runtime-wasm';
 
 /** Phantom key: optional on the host **type** so {@link InferWorkflowHooksFromHost} can recover workflow Zod map typing. Never set at runtime. */
@@ -60,6 +60,8 @@ export type HostWorkflowHubConfig<
   readonly runtime?: SandboxRuntime | undefined;
   /** Prefix for internal Lua env slot ids, default `workflow` (ids look like `workflow:my-id`). */
   readonly envSlotScope?: string | undefined;
+  /** Wall-clock limit per `runChunk` / workflow hook invocation (Wasm adapter + session forwarding). */
+  readonly defaultTimeout?: TimeoutPolicy | undefined;
 };
 
 type EmitToAllWorkflowsFn<THooks extends HostWorkflowHooksSpec | undefined> = THooks extends HostWorkflowHooksSpec
@@ -91,10 +93,17 @@ export class HostWorkflowHub<
 
   private readonly envSlotScope: string;
 
+  private readonly defaultTimeout: TimeoutPolicy | undefined;
+
   constructor(private readonly config: HostWorkflowHubConfig<THost, THooks>) {
     this.host = config.host;
     this.surface = config.surface;
-    this.runtime = config.runtime ?? createWasmSandboxRuntime();
+    this.defaultTimeout = config.defaultTimeout;
+    this.runtime =
+      config.runtime ??
+      createWasmSandboxRuntime(
+        config.defaultTimeout !== undefined ? { defaultTimeout: config.defaultTimeout } : {},
+      );
     this.envSlotScope = config.envSlotScope ?? 'workflow';
   }
 
@@ -103,13 +112,17 @@ export class HostWorkflowHub<
 
   /**
    * Loads one Lua chunk in an isolated env slot; `workflowId` must be unique within this hub.
+   *
+   * @param args.injectLuaChunks - Optional Lua sources run in order after `openSession` and before `script`
+   *   (e.g. pure global helpers under `lua/lib/` without string concatenation).
    */
   readonly registerWorkflow = async (args: {
     readonly workflowId: string;
     readonly script: string;
     readonly allowedCapabilities: readonly CapabilityId[];
+    readonly injectLuaChunks?: readonly string[] | undefined;
   }): Promise<void> => {
-    const { workflowId, script, allowedCapabilities } = args;
+    const { workflowId, script, allowedCapabilities, injectLuaChunks } = args;
     if (this.sessions.has(workflowId)) {
       throw new Error(`workflow already registered: ${workflowId}`);
     }
@@ -119,8 +132,20 @@ export class HostWorkflowHub<
       host: this.host,
       slotKey: createLuaEnvSlotKey(`${this.envSlotScope}:${workflowId}`),
       allowedCapabilities,
+      defaultTimeout: this.defaultTimeout,
     });
     await session.openSession();
+    for (const chunk of injectLuaChunks ?? []) {
+      const injected = await session.runChunk(chunk);
+      if (injected._tag !== 'ok') {
+        await session.dispose();
+        const detail =
+          injected._tag === 'err' && injected.error._tag === 'AdapterError'
+            ? injected.error.message
+            : JSON.stringify(injected.error);
+        throw new Error(`workflow "${workflowId}" failed injecting prelude: ${detail}`);
+      }
+    }
     const loaded = await session.runChunk(script);
     if (loaded._tag !== 'ok') {
       await session.dispose();
@@ -169,6 +194,7 @@ export function createHostWorkflowHub<THost extends object, const TSurface exten
   readonly surface: TSurface;
   readonly runtime?: SandboxRuntime | undefined;
   readonly envSlotScope?: string | undefined;
+  readonly defaultTimeout?: TimeoutPolicy | undefined;
 }): HostWorkflowHub<THost, EffectiveWorkflowHooks<THost, TSurface>> {
   type H = EffectiveWorkflowHooks<THost, TSurface>;
   return new HostWorkflowHub<THost, H>({
@@ -176,5 +202,6 @@ export function createHostWorkflowHub<THost extends object, const TSurface exten
     surface: config.surface as unknown as HostSurface<H>,
     runtime: config.runtime,
     envSlotScope: config.envSlotScope,
+    defaultTimeout: config.defaultTimeout,
   });
 }

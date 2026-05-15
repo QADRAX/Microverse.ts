@@ -6,6 +6,7 @@ import type { BusinessWorkflowHooksSpec } from '../schemas/workflows/businessWor
 import { createAuditService } from './audit/createAuditService.js';
 import { createBillingService } from './billing/createBillingService.js';
 import { createInventoryService } from './inventory/createInventoryService.js';
+import { createJobsService } from './jobs/createJobsService.js';
 import { createInMemoryOrders } from './orders/createInMemoryOrders.js';
 import { createNotificationService } from './notifications/createNotificationService.js';
 
@@ -15,6 +16,7 @@ type BusinessEngineServices = {
   readonly notifications: ReturnType<typeof createNotificationService>;
   readonly audit: ReturnType<typeof createAuditService>;
   readonly inventory: ReturnType<typeof createInventoryService>;
+  readonly jobs: ReturnType<typeof createJobsService>;
 };
 
 /**
@@ -34,5 +36,6 @@ export function createDefaultBusinessHost(
     notifications: createNotificationService(),
     audit: createAuditService(),
     inventory: createInventoryService(inventorySeed),
+    jobs: createJobsService(),
   };
 }

@@ -11,6 +11,11 @@ export const businessWorkflowHooks = {
     sku: z.string(),
     unitsLeft: z.number(),
   }),
+  /** Fired from TypeScript when async host work completes (see `emitWorkflowHook`). */
+  JobDone: z.object({
+    jobId: z.string(),
+    result: z.number(),
+  }),
 } as const;
 
 export type BusinessWorkflowHooksSpec = typeof businessWorkflowHooks;

@@ -1,14 +1,23 @@
 import {
   createHostWorkflowHub,
+  fixedTimeout,
   type CapabilityId,
   type HostWorkflowHub,
+  type TimeoutPolicy,
 } from '@luarizer/luarizer';
 
 import surface from './businessSurface.js';
 import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
+import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
 import type { BusinessEngineHost } from './services/businessEngineHost.js';
+import type { z } from 'zod';
 
 export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
+
+export type BusinessScriptingEngineOptions = {
+  /** Per-chunk wall-clock limit (default 30s). Combine with Wasm instruction budget in `@luarizer/runtime-wasm`. */
+  readonly defaultTimeout?: TimeoutPolicy | undefined;
+};
 
 /**
  * Thin façade: {@link createHostWorkflowHub} with this package’s default surface (Lua uses `workflow:extend()` per slot; many workflows run as separate hub sessions).
@@ -16,16 +25,41 @@ export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js
 export class BusinessScriptingEngine {
   private readonly hub: HostWorkflowHub<BusinessEngineHost>;
 
-  constructor(readonly host: BusinessEngineHost) {
-    this.hub = createHostWorkflowHub({ host, surface });
+  constructor(
+    readonly host: BusinessEngineHost,
+    options: BusinessScriptingEngineOptions = {},
+  ) {
+    this.hub = createHostWorkflowHub({
+      host,
+      surface,
+      defaultTimeout: options.defaultTimeout ?? fixedTimeout(30_000),
+    });
   }
 
   readonly registerWorkflow = async (
     workflowId: string,
     luaSource: string,
     allowedCapabilities: readonly CapabilityId[],
+    options?: { readonly injectLuaChunks?: readonly string[] | undefined },
   ): Promise<void> => {
-    await this.hub.registerWorkflow({ workflowId, script: luaSource, allowedCapabilities });
+    await this.hub.registerWorkflow({
+      workflowId,
+      script: luaSource,
+      allowedCapabilities,
+      injectLuaChunks: options?.injectLuaChunks,
+    });
+  };
+
+  /**
+   * Host → Lua: emit a workflow hook defined on the surface (e.g. `JobDone` when completion is **not** modeled as a bridge return).
+   * Prefer async `fn` handlers returning `Promise<T>` for work tied to a single bridge call; they resolve in-Lua via the Wasm slot bootstrap.
+   * Payload fields must be JSON-serializable literals accepted by `emitToAllWorkflows`.
+   */
+  readonly emitWorkflowHook = async <K extends keyof typeof businessWorkflowHooks & string>(
+    kind: K,
+    payload: Readonly<z.infer<(typeof businessWorkflowHooks)[K]>>,
+  ): Promise<void> => {
+    await this.hub.emitToAllWorkflows(kind, payload);
   };
 
   readonly dispatch = async (event: BusinessDomainEvent): Promise<void> => {

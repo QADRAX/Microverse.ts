@@ -1,12 +1,18 @@
-import { createSandboxId, createSandboxScript, neverCancelledToken } from '@luarizer/runtime-core';
+import {
+  createSandboxId,
+  createSandboxScript,
+  fixedTimeout,
+  neverCancelledToken,
+} from '@luarizer/runtime-core';
 import { describe, expect, it, vi } from 'vitest';
 
-const { createEngineMock } = vi.hoisted(() => {
+const { createEngineMock, doStringMock } = vi.hoisted(() => {
+  const doString = vi.fn(async () => {});
   const createEngine = vi.fn(async () => ({
-    doString: vi.fn(async () => {}),
-    global: { close: vi.fn(async () => {}) },
+    doString,
+    global: { close: vi.fn(async () => {}), set: vi.fn() },
   }));
-  return { createEngineMock: createEngine };
+  return { createEngineMock: createEngine, doStringMock: doString };
 });
 
 vi.mock('wasmoon', () => ({
@@ -40,5 +46,30 @@ describe('WasmoonRuntimeAdapter', () => {
       { script: createSandboxScript('2') },
     );
     expect(createEngineMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns Timeout when wall-clock budget is exceeded', async () => {
+    createEngineMock.mockClear();
+    doStringMock.mockImplementation(async (chunk: string) => {
+      if (chunk.includes('do\n  local REAL_G')) {
+        return;
+      }
+      if (chunk.includes('__luarizer_execute_in_slot')) {
+        return new Promise<void>(() => {
+          /* never resolves — wall-clock race should win */
+        });
+      }
+    });
+    const { WasmoonRuntimeAdapter } = await import('./WasmoonRuntimeAdapter');
+    const adapter = new WasmoonRuntimeAdapter();
+    const result = await adapter.execute(
+      { sandboxId: createSandboxId('timeout'), cancellation: neverCancelledToken },
+      { script: createSandboxScript(''), timeout: fixedTimeout(25) },
+    );
+    expect(result._tag).toBe('err');
+    if (result._tag === 'err') {
+      expect(result.error._tag).toBe('Timeout');
+    }
+    doStringMock.mockImplementation(async () => {});
   });
 });

@@ -5,6 +5,17 @@ import { LUARIZER_CAPABILITY_REGISTRY, type WithLuarizerCapabilityRegistry } fro
 import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
 
+function isThenable(value: unknown): value is Promise<unknown> {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  if (typeof value !== 'object' && typeof value !== 'function') {
+    return false;
+  }
+  const then = (value as { then?: unknown }).then;
+  return typeof then === 'function';
+}
+
 /**
  * Builds declarative bridge declarations from a host surface spec, using the schema validation port for Lua ↔ host payloads.
  */
@@ -32,8 +43,20 @@ export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSu
             if (parsedIn._tag === 'err') {
               throw new Error(parsedIn.error);
             }
-            const result: unknown = entry.handler({ host, slotKey: String(slotKey) }, parsedIn.value);
-            const parsedOut = schemaValidation.validateWithZodSchema(entry.output as z.ZodType<unknown>, result);
+            const raw: unknown = entry.handler({ host, slotKey: String(slotKey) }, parsedIn.value);
+            if (isThenable(raw)) {
+              return raw.then((resolved) => {
+                const parsedOut = schemaValidation.validateWithZodSchema(
+                  entry.output as z.ZodType<unknown>,
+                  resolved,
+                );
+                if (parsedOut._tag === 'err') {
+                  throw new Error(parsedOut.error);
+                }
+                return parsedOut.value;
+              });
+            }
+            const parsedOut = schemaValidation.validateWithZodSchema(entry.output as z.ZodType<unknown>, raw);
             if (parsedOut._tag === 'err') {
               throw new Error(parsedOut.error);
             }

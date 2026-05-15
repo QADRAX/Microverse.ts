@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
+import { composeLuaChunk } from './patterns/composeLuaChunk.js';
 import { createDefaultBusinessHost, readWorkflowLua } from './services/index.js';
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -146,6 +147,105 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 
     await engine.dispose();
   });
+
+  it('composeLuaChunk prepends a Lua prelude (shared helpers) before a workflow', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-pre', customerId: 'c-p', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    const script = composeLuaChunk([
+      readWorkflowLua('lib/math_helpers.lua'),
+      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+    ]);
+    await engine.registerWorkflow('prelude-demo', script, [cap('audit:record')]);
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-pre',
+      amountCents: 100,
+      customerId: 'c-p',
+    });
+    expect(host.audit.getLines().some((l) => l === 'prelude-sum:101:order:o-pre')).toBe(true);
+    await engine.dispose();
+  });
+
+  it('registerWorkflow injectLuaChunks runs lib prelude before the workflow (no composeLuaChunk)', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-inj', customerId: 'c-i', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    await engine.registerWorkflow(
+      'inject-prelude',
+      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      [cap('audit:record')],
+      { injectLuaChunks: [readWorkflowLua('lib/math_helpers.lua')] },
+    );
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-inj',
+      amountCents: 200,
+      customerId: 'c-i',
+    });
+    expect(host.audit.getLines().some((l) => l === 'prelude-sum:201:order:o-inj')).toBe(true);
+    await engine.dispose();
+  });
+
+  it('async bridge: handler returns Promise; Lua sees resolved Zod output without :await', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-io', customerId: 'c-io', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    await engine.registerWorkflow('asyncio-demo', readWorkflowLua('workflows/order_asyncio_tick.lua'), [
+      cap('audit:record'),
+      cap('asyncio:tick'),
+    ]);
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-io',
+      amountCents: 10,
+      customerId: 'c-io',
+    });
+    expect(host.audit.getLines().some((l) => l === 'asyncio-value:17:order:o-io')).toBe(true);
+    await engine.dispose();
+  });
+
+  it('async partner pattern: sync jobs:create then host emitWorkflowHook(JobDone)', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-async', customerId: 'c-a', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    await engine.registerWorkflow('job-partner', readWorkflowLua('workflows/job_async_partner.lua'), [
+      cap('audit:record'),
+      cap('jobs:create'),
+    ]);
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-async',
+      amountCents: 1,
+      customerId: 'c-a',
+    });
+    const linesAfterOrder = host.audit.getLines();
+    expect(linesAfterOrder.some((l) => l === 'job-started:job-1:order:o-async')).toBe(true);
+
+    await new Promise((r) => setTimeout(r, 5));
+    await engine.emitWorkflowHook('JobDone', { jobId: 'job-1', result: 99 });
+
+    expect(host.audit.getLines().some((l) => l === 'job-finished:job-1:result:99')).toBe(true);
+    await engine.dispose();
+  });
+
+  it('stateful Lua component pattern: local state across hook invocations in one slot', async () => {
+    const host = createDefaultBusinessHost([{ id: 'o-c1', customerId: 'c-c', totalCents: 1 }]);
+    const engine = new BusinessScriptingEngine(host);
+    await engine.registerWorkflow('counter', readWorkflowLua('components/stateful_counter.lua'), [cap('audit:record')]);
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-c1',
+      amountCents: 1,
+      customerId: 'c-c',
+    });
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-c1',
+      amountCents: 2,
+      customerId: 'c-c',
+    });
+    const lines = host.audit.getLines();
+    expect(lines.some((l) => l === 'counter:n=1:id=o-c1')).toBe(true);
+    expect(lines.some((l) => l === 'counter:n=2:id=o-c1')).toBe(true);
+    await engine.dispose();
+  });
 });
 
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
@@ -156,6 +256,12 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function notifications:send(payload) end');
     expect(doc).toContain('function audit:record(payload) end');
     expect(doc).toContain('function inventory:getUnits(payload) end');
+    expect(doc).toContain('---@class asyncio');
+    expect(doc).toContain('function asyncio:tick(payload) end');
+    expect(doc).toContain('---@alias AsyncioTickResult');
+    expect(doc).toContain('---@class jobs');
+    expect(doc).toContain('function jobs:create(payload) end');
+    expect(doc).toContain('---@alias JobCreateResult');
     expect(doc).toContain('---@alias InventoryUnits');
     expect(doc).toContain('---@class LuarizerWorkflowEvt_OrderPlaced');
     expect(doc).toContain('---@field orderId string');
@@ -174,6 +280,11 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_OrderPlaced)');
     expect(doc).toContain('---@field onInventoryLow');
     expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_InventoryLow)');
+    expect(doc).toContain('---@class LuarizerWorkflowEvt_JobDone');
+    expect(doc).toContain('---@field jobId string');
+    expect(doc).toContain('---@field result number');
+    expect(doc).toContain('---@field onJobDone');
+    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_JobDone)');
     expect(doc).toContain('---@alias OrderId string');
     expect(doc).toContain('orders = {}');
     expect(doc).not.toContain('function onOrderPlaced(evt) end');

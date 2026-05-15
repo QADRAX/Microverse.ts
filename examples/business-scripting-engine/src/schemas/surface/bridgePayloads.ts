@@ -13,3 +13,11 @@ export const chargeResult = z.object({
 export const inventoryUnitsDto = z.object({
   units: z.number(),
 });
+
+export const jobCreateResult = z.object({
+  jobId: z.string(),
+});
+
+export const asyncioTickResult = z.object({
+  value: z.number(),
+});

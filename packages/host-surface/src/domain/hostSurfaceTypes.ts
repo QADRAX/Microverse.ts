@@ -31,8 +31,11 @@ export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
   readonly input: z.ZodType<TIn>;
   /** Zod schema for the value returned to Lua. */
   readonly output: z.ZodType<TOut>;
-  /** Synchronous host logic. Keep side effects on `ctx.host` services only. */
-  readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut;
+  /**
+   * Host logic at the Lua↔JS boundary. May return `Promise<TOut>`; the Wasm runtime applies the resolved value
+   * back to Lua (see `LUARIZER_SLOT_VM_BOOTSTRAP_LUA` in `@luarizer/runtime-wasm`).
+   */
+  readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut | Promise<TOut>;
   /** Optional description emitted into the LuaCATS manifest. */
   readonly description?: string | undefined;
   /**

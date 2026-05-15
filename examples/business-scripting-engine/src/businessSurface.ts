@@ -4,7 +4,13 @@ import { z } from 'zod';
 import type { BusinessEngineHost } from './services/businessEngineHost.js';
 import type { OrderRecord } from './domain/models/orderRecord.js';
 import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
-import { chargeResult, inventoryUnitsDto, orderDto } from './schemas/surface/bridgePayloads.js';
+import {
+  asyncioTickResult,
+  chargeResult,
+  inventoryUnitsDto,
+  jobCreateResult,
+  orderDto,
+} from './schemas/surface/bridgePayloads.js';
 
 export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
 
@@ -73,6 +79,32 @@ export default defineHostSurfaceFor(
         description: 'Read stock units for a SKU',
         lua: { returns: 'InventoryUnits' },
         handler: ({ host }, { sku }) => ({ units: host.inventory.getUnits(sku) }),
+      }),
+    },
+    jobs: {
+      create: fn<BusinessEngineHost, { label: string }, { jobId: string }>({
+        capability: cap('jobs:create'),
+        input: z.object({ label: z.string() }),
+        output: jobCreateResult,
+        description: 'Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook.',
+        lua: { returns: 'JobCreateResult' },
+        handler: ({ host }, { label }) => ({ jobId: host.jobs.createJob(label) }),
+      }),
+    },
+    asyncio: {
+      tick: fn<BusinessEngineHost, { delayMs: number; seed: number }, { value: number }>({
+        capability: cap('asyncio:tick'),
+        input: z.object({
+          delayMs: z.number().int().nonnegative(),
+          seed: z.number().int(),
+        }),
+        output: asyncioTickResult,
+        description: 'Async-capable bridge: handler may await; Wasmoon Promise is applied in Lua via slot bootstrap.',
+        lua: { paramTypes: { delayMs: 'integer', seed: 'integer' }, returns: 'AsyncioTickResult' },
+        handler: async (_ctx, { delayMs, seed }) => {
+          await new Promise((r) => setTimeout(r, Math.min(delayMs, 30)));
+          return { value: seed + 7 };
+        },
       }),
     },
   },

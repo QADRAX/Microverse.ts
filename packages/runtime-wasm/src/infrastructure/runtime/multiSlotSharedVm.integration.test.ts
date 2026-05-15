@@ -32,4 +32,34 @@ describe('Wasmoon multi-slot shared VM', () => {
     await sandboxA.dispose();
     await sandboxB.dispose();
   });
+
+  it('persists globals across sequential runs in the same slot', async () => {
+    const adapter = new WasmoonRuntimeAdapter();
+    const runtime = createStubSandboxRuntime({
+      adapter,
+      logger: new ConsoleLogger(),
+    });
+
+    const slot = createSandboxId('slot-persist-globals');
+    const sandbox = await runtime.createSandbox({ slotKey: slot });
+
+    const r1 = await sandbox.run({
+      script: createSandboxScript(`
+        function luarizer_example_sum(a, b)
+          return a + b
+        end
+      `),
+    });
+    expect(r1._tag).toBe('ok');
+
+    const r2 = await sandbox.run({
+      script: createSandboxScript(`
+        assert(type(luarizer_example_sum) == "function", "missing global from prior chunk")
+        assert(luarizer_example_sum(2, 3) == 5)
+      `),
+    });
+    expect(r2._tag).toBe('ok');
+
+    await sandbox.dispose();
+  });
 });

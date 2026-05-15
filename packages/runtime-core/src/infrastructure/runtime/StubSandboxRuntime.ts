@@ -4,11 +4,14 @@ import type { RuntimeAdapter } from '../../domain/runtime/RuntimeAdapter';
 import type { RunScriptInput } from '../../domain/runtime/RunScriptInput';
 import type { CreateSandboxOptions, Sandbox, SandboxRuntime } from '../../domain/runtime/SandboxRuntime';
 import { neverCancelledToken } from '../../domain/runtime/CancellationToken';
+import type { TimeoutPolicy } from '../../domain/runtime/TimeoutPolicy';
 import { createSandboxId, type SandboxId } from '../../domain/sandbox/SandboxId';
 
 export type StubSandboxRuntimeDeps = {
   readonly adapter: RuntimeAdapter;
   readonly logger: LoggerPort;
+  /** Applied when neither {@link RunScriptInput.timeout} nor {@link CreateSandboxOptions.defaultTimeout} is set. */
+  readonly defaultTimeout?: TimeoutPolicy | undefined;
 };
 
 export class StubSandboxRuntime implements SandboxRuntime {
@@ -57,10 +60,10 @@ function createStubSandbox(input: {
   return {
     id: input.id,
     run: async (runInput) => {
+      const resolvedTimeout =
+        runInput.timeout ?? input.options.defaultTimeout ?? input.deps.defaultTimeout;
       const inputMerged: RunScriptInput =
-        runInput.timeout !== undefined || input.options.defaultTimeout !== undefined
-          ? { ...runInput, timeout: runInput.timeout ?? input.options.defaultTimeout }
-          : { ...runInput };
+        resolvedTimeout !== undefined ? { ...runInput, timeout: resolvedTimeout } : { ...runInput };
       return executeScript([input.deps.adapter, input.deps.logger], ctx, inputMerged);
     },
     dispose: async () => {

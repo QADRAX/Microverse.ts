@@ -4,9 +4,13 @@
 
 ---@meta
 
+---@alias AsyncioTickResult { value: number }
+
 ---@alias ChargeResult { ok: boolean }
 
 ---@alias InventoryUnits { units: number }
+
+---@alias JobCreateResult { jobId: string }
 
 ---@alias OrderDto { id: string; customerId: string; totalCents: number }
 
@@ -48,10 +52,29 @@ inventory = {}
 ---@return InventoryUnits
 function inventory:getUnits(payload) end
 
+---@class jobs
+jobs = {}
+---Allocate a job id (sync). Host completes async work later and emits the JobDone workflow hook.
+---@param payload { label: string }
+---@return JobCreateResult
+function jobs:create(payload) end
+
+---@class asyncio
+asyncio = {}
+---Async-capable bridge: handler may await; Wasmoon Promise is applied in Lua via slot bootstrap.
+---@param payload { delayMs: integer; seed: integer }
+---@return AsyncioTickResult
+function asyncio:tick(payload) end
+
 ---Workflow hook payload for `onInventoryLow` (Zod → LuaCATS fields).
 ---@class LuarizerWorkflowEvt_InventoryLow
 ---@field sku string
 ---@field unitsLeft number
+
+---Workflow hook payload for `onJobDone` (Zod → LuaCATS fields).
+---@class LuarizerWorkflowEvt_JobDone
+---@field jobId string
+---@field result number
 
 ---Workflow hook payload for `onOrderPlaced` (Zod → LuaCATS fields).
 ---@class LuarizerWorkflowEvt_OrderPlaced
@@ -62,6 +85,7 @@ function inventory:getUnits(payload) end
 ---Abstract workflow handler type. Call `local w = workflow:extend()` then define `function w:onOrderPlaced(evt) … end` (etc.). Each Lua slot has its own `workflow` helper and handler table.
 ---@class Workflow
 ---@field onInventoryLow fun(self: Workflow, evt: LuarizerWorkflowEvt_InventoryLow) Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires. Payload: `LuarizerWorkflowEvt_InventoryLow`.
+---@field onJobDone fun(self: Workflow, evt: LuarizerWorkflowEvt_JobDone) Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires. Payload: `LuarizerWorkflowEvt_JobDone`.
 ---@field onOrderPlaced fun(self: Workflow, evt: LuarizerWorkflowEvt_OrderPlaced) Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires. Payload: `LuarizerWorkflowEvt_OrderPlaced`.
 
 ---Per-slot helper injected by the host (not a TS bridge). Creates the active handler table for this sandbox slot.
