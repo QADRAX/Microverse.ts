@@ -49,4 +49,4 @@ const lua = emitLuaCatsFromManifest(manifest);
 - [schemas/lua-def-manifest.schema.json](./schemas/lua-def-manifest.schema.json)
 - [fixtures/example.lua.def.json](./fixtures/example.lua.def.json)
 
-Para la línea de comandos, sigue usando [`@microverse/cli`](../cli/README.md) (`microverse generate-defs`).
+For the command line, use [`@microverse/cli`](../cli/README.md) (`microverse generate-lua-defs`).

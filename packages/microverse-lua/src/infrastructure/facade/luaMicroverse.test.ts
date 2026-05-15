@@ -1,4 +1,4 @@
-import { cap, defineHostSurface, fn } from '@microverse/microverse';
+import { cap, defineHostSurface, fn } from '@microverse/microverse-lua';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 

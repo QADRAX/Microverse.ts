@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "CLI for Microverse (e.g. generate LuaCATS .d.lua for sandbox + bridges at build time).",
+  "description": "CLI for Microverse: per-runtime commands (e.g. generate-lua-defs for LuaCATS .d.lua).",
   "bin": {
     "microverse": "./dist/cli.js"
   },

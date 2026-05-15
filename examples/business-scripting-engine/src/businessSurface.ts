@@ -1,4 +1,4 @@
-import { cap, defineHostSurfaceFor, fn } from '@microverse/microverse';
+import { cap, defineHostSurfaceFor, fn } from '@microverse/microverse-lua';
 import { z } from 'zod';
 
 import type { BusinessEngineHost } from './services/businessEngineHost.js';
@@ -19,7 +19,7 @@ export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks
  * Host surface exposed to Lua: domain integrations with Zod + capabilities.
  * Each script registers a subset via `surface.pickCapabilities(…)` (see {@link BusinessScriptingEngine.registerScript}).
  *
- * Default-exported for `microverse generate-defs --surface ...` (see package.json).
+ * Default-exported for `microverse generate-lua-defs --surface ...` (see package.json).
  * LuaCATS names (`OrderDto`, `OrderId`, …) come from {@link luaType} on schemas in `bridgePayloads.ts`.
  * Workflow hooks: abstract **`Workflow`** plus injected **`workflow:extend()`** helper (see generated `businessSurface.d.lua`).
  * For LuaLS, keep `.luarc.json` **`workspace.library`** as `./generated` (relative to that file) so stubs apply when the repo root is the IDE workspace. If your editor still flags bridge tables as undefined, list them under **`diagnostics.globals`** (see this package’s `.luarc.json`).

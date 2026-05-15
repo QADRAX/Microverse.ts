@@ -1,31 +1,42 @@
 #!/usr/bin/env node
-import { basename, extname, join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-
 import {
-  generateDefs,
-  writeLuaDefinitionsFromManifest,
-  type LuaDefManifest,
-} from '@microverse/lua-defs';
+  GENERATE_LUA_DEFS_COMMAND,
+  printGenerateLuaDefsHelp,
+  runGenerateLuaDefs,
+} from './commands/generate-lua-defs.js';
+
+const BIN = 'microverse';
+
+/** @deprecated Use {@link GENERATE_LUA_DEFS_COMMAND}. */
+const LEGACY_GENERATE_DEFS = 'generate-defs';
+
+type CliCommand = {
+  readonly name: string;
+  readonly description: string;
+  readonly run: (cwd: string, flags: ReadonlyMap<string, string | true>) => Promise<string>;
+  readonly printHelp: (bin: string) => void;
+};
+
+const COMMANDS: ReadonlyMap<string, CliCommand> = new Map([
+  [
+    GENERATE_LUA_DEFS_COMMAND,
+    {
+      name: GENERATE_LUA_DEFS_COMMAND,
+      description: 'Emit LuaCATS .d.lua for Lua microverse host surfaces',
+      run: runGenerateLuaDefs,
+      printHelp: printGenerateLuaDefsHelp,
+    },
+  ],
+]);
 
 function printHelp(): void {
   const lines = [
-    'microverse — tooling for Microverse Lua sandboxes',
+    `${BIN} — tooling for Microverse (Lua and future runtimes)`,
     '',
     'Commands:',
-    '  generate-defs   Emit LuaCATS .d.lua',
+    ...[...COMMANDS.values()].map((c) => `  ${c.name.padEnd(22)} ${c.description}`),
     '',
-    'Usage (JSON manifest — for hand-authored or CI-exported manifests):',
-    '  microverse generate-defs --manifest <path/to/manifest.json> [--out <path>]',
-    '',
-    'Usage (TypeScript host surface — Zod + defineHostSurface; default export only):',
-    '  microverse generate-defs --surface <path/to/surface.ts|js> [--out <path>] [--header-note <text>]',
-    '',
-    '  The module must `export default` the value from `defineHostSurface({...})`.',
-    '  If --out is omitted, writes generated/<surfaceBasename>.d.lua (basename without extension).',
-    '  .ts surfaces are loaded via tsx (bundled with this CLI).',
-    '',
-    '  --out   Optional; overrides the default output path above',
+    `Run \`${BIN} <command> --help\` for command-specific usage.`,
     '',
   ];
   process.stderr.write(`${lines.join('\n')}\n`);
@@ -62,101 +73,45 @@ function parseArgs(argv: readonly string[]): {
   return { command: positional[0], flags };
 }
 
-type HostSurfaceLike = {
-  readonly toLuaDefManifest: (opts: {
-    readonly output: string;
-    readonly headerNote?: string | undefined;
-    readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
-  }) => LuaDefManifest;
-};
-
-function isHostSurfaceLike(v: unknown): v is HostSurfaceLike {
-  if (typeof v !== 'object' || v === null || !('toLuaDefManifest' in v)) {
-    return false;
+function resolveCommand(name: string): CliCommand | undefined {
+  if (name === LEGACY_GENERATE_DEFS) {
+    process.stderr.write(
+      `Warning: \`${LEGACY_GENERATE_DEFS}\` is deprecated; use \`${GENERATE_LUA_DEFS_COMMAND}\` instead.\n`,
+    );
+    return COMMANDS.get(GENERATE_LUA_DEFS_COMMAND);
   }
-  return typeof Reflect.get(v, 'toLuaDefManifest') === 'function';
-}
-
-async function loadSurfaceModule(absPath: string): Promise<Record<string, unknown>> {
-  const href = pathToFileURL(absPath).href;
-  if (absPath.endsWith('.ts') || absPath.endsWith('.mts')) {
-    const { tsImport } = await import('tsx/esm/api');
-    return (await tsImport(href, href)) as Record<string, unknown>;
-  }
-  return (await import(href)) as Record<string, unknown>;
+  return COMMANDS.get(name);
 }
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const { command, flags } = parseArgs(argv);
-  if (flags.has('help') || command === undefined) {
+
+  if (flags.has('help') && command === undefined) {
     printHelp();
-    process.exit(command === undefined ? 1 : 0);
+    process.exit(0);
   }
 
-  if (command !== 'generate-defs') {
-    process.stderr.write(`Unknown command: ${command}\n`);
+  if (command === undefined) {
     printHelp();
     process.exit(1);
+  }
+
+  const cmd = resolveCommand(command);
+  if (cmd === undefined) {
+    process.stderr.write(`Unknown command: ${command}\n\n`);
+    printHelp();
+    process.exit(1);
+  }
+
+  if (flags.has('help')) {
+    cmd.printHelp(BIN);
+    process.exit(0);
   }
 
   const cwd = process.cwd();
-  const manifestPath = flags.get('manifest');
-  const surfacePath = flags.get('surface');
-  const hasManifest = typeof manifestPath === 'string' && manifestPath.length > 0;
-  const hasSurface = typeof surfacePath === 'string' && surfacePath.length > 0;
-
-  if (hasManifest === hasSurface) {
-    process.stderr.write('Provide exactly one of: --manifest <path.json>  OR  --surface <path.ts|js>\n');
-    process.exit(1);
-  }
-
-  const outFlag = flags.get('out');
-  const outPath = typeof outFlag === 'string' && outFlag.length > 0 ? outFlag : undefined;
-
-  if (hasManifest) {
-    if (typeof manifestPath !== 'string') {
-      process.exit(1);
-    }
-    const { written } = await generateDefs({
-      cwd,
-      manifestPath,
-      outPath,
-    });
-    process.stdout.write(`Wrote ${resolve(written)}\n`);
-    return;
-  }
-
-  if (typeof surfacePath !== 'string') {
-    process.exit(1);
-  }
-  const absSurface = resolve(cwd, surfacePath);
-  const mod = await loadSurfaceModule(absSurface);
-
-  const surfaceRaw = mod.default;
-  if (!isHostSurfaceLike(surfaceRaw)) {
-    process.stderr.write(
-      'The --surface module must default-export a host surface (result of defineHostSurface(...)).\n',
-    );
-    process.exit(1);
-  }
-
-  const stem = basename(absSurface, extname(absSurface));
-  const outputRel = outPath ?? join('generated', `${stem}.d.lua`);
-
-  const headerFlag = flags.get('header-note');
-  const headerNote =
-    typeof headerFlag === 'string' && headerFlag.length > 0 ? headerFlag : undefined;
-
-  const manifest = surfaceRaw.toLuaDefManifest({
-    output: outputRel,
-    headerNote,
-  });
-  const { written } = writeLuaDefinitionsFromManifest({
-    cwd,
-    manifest,
-  });
-  process.stdout.write(`Wrote ${resolve(written)}\n`);
+  const written = await cmd.run(cwd, flags);
+  process.stdout.write(`Wrote ${written}\n`);
 }
 
 void main().catch((e: unknown) => {

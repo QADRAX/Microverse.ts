@@ -1,5 +1,5 @@
 /**
- * **@microverse/microverse** — single entry for consuming applications.
+ * **@microverse/microverse-lua** — Lua microverse entry for consuming applications.
  *
  * Plug-and-play Lua scripting: **{@link MicroverseLua.create}** (built-in Wasm VM), plus **{@link defineHostSurface}**,
  * {@link fn}, and {@link cap} from `@microverse/host-surface`. Prefer this package over wiring runtimes yourself.

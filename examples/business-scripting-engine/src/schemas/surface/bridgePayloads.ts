@@ -1,4 +1,4 @@
-import { luaType } from '@microverse/microverse';
+import { luaType } from '@microverse/microverse-lua';
 import { z } from 'zod';
 
 export const orderId = luaType('OrderId', z.string());

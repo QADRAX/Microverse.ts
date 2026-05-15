@@ -1,4 +1,4 @@
-import type { TaggedLuaMicroverseHost } from '@microverse/microverse';
+import type { TaggedLuaMicroverseHost } from '@microverse/microverse-lua';
 
 import type { OrderRecord } from '../domain/models/orderRecord.js';
 import type { BusinessWorkflowHooksSpec } from '../schemas/workflows/businessWorkflowHooks.js';

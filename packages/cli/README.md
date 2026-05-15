@@ -1,43 +1,66 @@
 # `@microverse/cli`
 
-CLI para tareas de **build-time** en proyectos consumidores (p. ej. generar `.d.lua` con anotaciones [LuaCATS](https://luals.github.io/wiki/annotations/) para LuaLS / el IDE).
+CLI for **build-time** tasks in Microverse consumer projects. Commands are grouped by runtime (Lua today; other microverse types can add their own subcommands later).
 
-La lógica de generación vive en **`@microverse/lua-defs`**: si necesitas llamarla desde código TypeScript (plugins, scripts), usa ese paquete en lugar del binario.
+Generation logic for Lua stubs lives in **`@microverse/lua-defs`** — use that package from TypeScript plugins or scripts when you do not need the binary.
 
-## Instalación
+## Installation
 
 ```bash
 pnpm add -D @microverse/cli
 ```
 
-Tras publicar el paquete, el binario quedará como `microverse` (equivalente a `npx microverse` en npm).
+The binary is `microverse` (`pnpm exec microverse`, or `npx microverse` when published).
 
-En este monorepo:
+In this monorepo:
 
 ```bash
-pnpm exec microverse generate-defs --manifest packages/lua-defs/fixtures/example.lua.def.json
+pnpm exec microverse --help
+pnpm exec microverse generate-lua-defs --help
 ```
 
-## `generate-defs`
+## Commands
 
-Emite un único fichero `.d.lua` a partir de un **manifiesto JSON** (`LuaDefManifest`) que describe:
+| Command | Description |
+|---------|-------------|
+| `generate-lua-defs` | Emit a single LuaCATS `.d.lua` file for **Lua** microverse host surfaces or JSON manifests. |
+| `generate-defs` | **Deprecated** — alias of `generate-lua-defs` (prints a warning). |
 
-- **`classes`**: tipos bridge (métodos con `@param` / `@return`).
-- **`globals`**: tablas globales que el host inyecta en Lua (p. ej. `Engine` con campos `Input`, `Time`, …).
+Future runtimes might add e.g. `generate-<runtime>-defs` without changing the top-level binary name.
 
-El manifiesto **no** se infiere automáticamente desde TypeScript hoy: es la capa estable entre tu `buildDeclarativeBridgeTable` (runtime) y lo que quieres que vea el usuario en Lua. Opciones futuras: codegen desde TS, o generar el JSON desde tests de contrato.
+## `generate-lua-defs`
 
-Esquema JSON y ejemplo: [packages/lua-defs/schemas/lua-def-manifest.schema.json](../lua-defs/schemas/lua-def-manifest.schema.json) y [packages/lua-defs/fixtures/example.lua.def.json](../lua-defs/fixtures/example.lua.def.json).
+Produces [LuaCATS](https://luals.github.io/wiki/annotations/) stubs for LuaLS / the IDE.
 
-### Tipos TypeScript del manifiesto
+### From a TypeScript host surface
 
-```ts
-import type { LuaDefManifest } from '@microverse/lua-defs';
-
-const manifest = { schemaVersion: 1, output: 'gen/sandbox.d.lua', globals: [] } satisfies LuaDefManifest;
+```bash
+microverse generate-lua-defs --surface src/mySurface.ts [--out <path>] [--header-note <text>]
 ```
 
-### Uso programático (sin CLI)
+- Module must **`export default`** the value from `defineHostSurface` / `defineHostSurfaceFor`.
+- Default output: `generated/<surfaceBasename>.d.lua` (override with `--out`).
+- `.ts` surfaces load via `tsx` (bundled with this CLI).
+
+### From a JSON manifest
+
+```bash
+microverse generate-lua-defs --manifest ./lua/microverse.def.json [--out <path>]
+```
+
+Hand-authored or CI-exported `LuaDefManifest` — see [`@microverse/lua-defs`](../lua-defs/README.md).
+
+### `package.json` script
+
+```json
+{
+  "scripts": {
+    "lua:defs": "microverse generate-lua-defs --surface ./src/mySurface.ts"
+  }
+}
+```
+
+### Programmatic (no CLI)
 
 ```ts
 import { generateDefs } from '@microverse/lua-defs';
@@ -45,20 +68,10 @@ import { generateDefs } from '@microverse/lua-defs';
 await generateDefs({ cwd: process.cwd(), manifestPath: './lua/microverse.def.json' });
 ```
 
-Detalle: [packages/lua-defs/README.md](../lua-defs/README.md).
+## Keeping stubs aligned with runtime
 
-### Script en `package.json` del consumidor
+1. Match manifest / surface names to what you inject at runtime (`mergeEnv` bridge tables).
+2. Run generation in CI so drift fails the build.
+3. Roadmap: export `LuaDefManifest` from TS at build time without a hand-maintained JSON file.
 
-```json
-{
-  "scripts": {
-    "lua:defs": "microverse generate-defs --manifest ./lua/microverse.def.json"
-  }
-}
-```
-
-## Bridges y manifiesto
-
-1. **Mantén el manifiesto alineado con lo que inyectas**: mismos nombres de tabla (`Engine.Input`) y firmas que expone tu host al hacer `engine.global.set` / tablas en el entorno del slot.
-2. **Versión en CI**: falla el build si el manifiesto no cumple el JSON Schema (podéis validar con `ajv-cli` u otra herramienta).
-3. **Roadmap** (fuera de este MVP): leer `DeclarativeBridgeDeclaration[]` en build vía un módulo que exporte un `LuaDefManifest` en TS y serialice a JSON, o generar `.d.lua` directamente desde ese objeto.
+Schema: [lua-def-manifest.schema.json](../lua-defs/schemas/lua-def-manifest.schema.json).

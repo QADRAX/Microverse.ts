@@ -3,7 +3,7 @@ import {
   MicroverseLua,
   type LuaMicroverse,
   type TimeoutPolicy,
-} from '@microverse/microverse';
+} from '@microverse/microverse-lua';
 
 import surface from './businessSurface.js';
 import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';

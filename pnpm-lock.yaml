@@ -63,9 +63,9 @@ importers:
 
   examples/business-scripting-engine:
     dependencies:
-      '@microverse/microverse':
+      '@microverse/microverse-lua':
         specifier: workspace:*
-        version: link:../../packages/microverse
+        version: link:../../packages/microverse-lua
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -149,7 +149,7 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
 
-  packages/microverse:
+  packages/microverse-lua:
     dependencies:
       '@microverse/host-surface':
         specifier: workspace:*

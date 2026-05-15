@@ -1,10 +1,10 @@
 {
-  "name": "@microverse/microverse",
+  "name": "@microverse/microverse-lua",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
-  "description": "Single entry re-export and small facades for apps that depend on Microverse via one package.",
+  "description": "Plug-and-play Lua microverse facade: Wasm VM, MicroverseLua, and re-exports for host surfaces and bridges.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
