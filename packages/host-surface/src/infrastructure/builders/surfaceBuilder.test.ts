@@ -70,6 +70,30 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
     expect(surface.workflowHooks).toBe(hooks);
   });
 
+  it('rejects reserved bridge/method names', () => {
+    expect(() =>
+      defineHostSurfaceFor<ToyHost>()
+        .bridge('__proto__' as 'time')
+        .method('delta', {
+          requires: 'engine:time',
+          input: z.object({}),
+          output: z.number(),
+          handler: ({ host }) => host.n,
+        }),
+    ).toThrow(/reserved key/);
+
+    expect(() =>
+      defineHostSurfaceFor<ToyHost>()
+        .bridge('time')
+        .method('constructor' as 'delta', {
+          requires: 'engine:time',
+          input: z.object({}),
+          output: z.number(),
+          handler: ({ host }) => host.n,
+        }),
+    ).toThrow(/reserved key/);
+  });
+
   it('marks async handlers in manifest', () => {
     const surface = defineHostSurfaceFor<ToyHost>()
       .bridge('asyncio')

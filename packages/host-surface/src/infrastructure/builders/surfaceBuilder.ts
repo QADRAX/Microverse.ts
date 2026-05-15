@@ -2,6 +2,7 @@ import { compileHostSurfaceFor } from '../../application/useCases/compileHostSur
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
 import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
 import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef.js';
+import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey.js';
 import type {
   AnyHostSurfaceMethod,
   HostSurface,
@@ -18,7 +19,7 @@ export class SurfaceBuilder<
   THost,
   const THooks extends HostWorkflowHooksSpec | undefined = undefined,
 > {
-  private readonly spec: MutableHostSurfaceSpec = {};
+  private readonly spec: MutableHostSurfaceSpec = createNullPrototypeRecord();
 
   private workflowHooksSpec: THooks;
 
@@ -33,7 +34,14 @@ export class SurfaceBuilder<
     this.workflowHooksSpec = workflowHooks as THooks;
     if (initialSpec !== undefined) {
       for (const bridgeName of Object.keys(initialSpec)) {
-        this.spec[bridgeName] = { ...initialSpec[bridgeName] };
+        assertSafeObjectKey('bridge', bridgeName);
+        const srcBridge = initialSpec[bridgeName]!;
+        const bridge = createNullPrototypeRecord<Record<string, AnyHostSurfaceMethod>>();
+        for (const methodName of Object.keys(srcBridge)) {
+          assertSafeObjectKey('method', methodName);
+          bridge[methodName] = srcBridge[methodName]!;
+        }
+        this.spec[bridgeName] = bridge;
       }
     }
   }
@@ -64,9 +72,11 @@ export class SurfaceBuilder<
     methodName: M,
     entry: AnyHostSurfaceMethod,
   ): SurfaceBuilder<THost, THooks> {
+    assertSafeObjectKey('bridge', bridgeName);
+    assertSafeObjectKey('method', methodName);
     let bridge = this.spec[bridgeName];
     if (bridge === undefined) {
-      bridge = {};
+      bridge = createNullPrototypeRecord<Record<string, AnyHostSurfaceMethod>>();
       this.spec[bridgeName] = bridge;
     }
     bridge[methodName] = entry;
