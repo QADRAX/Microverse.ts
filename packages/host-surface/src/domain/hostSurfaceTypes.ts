@@ -1,0 +1,132 @@
+import type { LuarizerDefManifest } from '@luarizer/lua-defs';
+import type { DeclarativeBridgeDeclaration } from '@luarizer/runtime-bridge';
+import type { CapabilityId } from '@luarizer/runtime-capabilities';
+import type { z } from 'zod';
+
+import type { WithLuarizerCapabilityRegistry } from './capabilityRegistrySymbol.js';
+
+/**
+ * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
+ *
+ * @typeParam THost - Host services / world object you declare for `fn` handlers.
+ */
+export type HostFnContext<THost> = {
+  readonly host: THost;
+  /** Stable slot identifier for this sandbox (same convention as `DeclarativeBridgeDeclaration`). */
+  readonly slotKey: string;
+};
+
+/**
+ * Strongly typed description of one bridge method. Pass this object to {@link fn} so TypeScript
+ * checks `handler` against `input` / `output` schemas.
+ *
+ * @typeParam THost - Host type available as `ctx.host` inside `handler`.
+ * @typeParam TIn - Payload type after Zod `input` parsing (Lua calls the bridge with one table argument).
+ * @typeParam TOut - Return type validated by Zod `output` before crossing back to Lua.
+ */
+export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
+  /** Capability required to invoke this method; checked against the session registry before the handler runs. */
+  readonly capability: CapabilityId;
+  /** Zod schema for the single payload object from Lua (e.g. `z.object({ id: z.string() })`). */
+  readonly input: z.ZodType<TIn>;
+  /** Zod schema for the value returned to Lua. */
+  readonly output: z.ZodType<TOut>;
+  /** Synchronous host logic. Keep side effects on `ctx.host` services only. */
+  readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut;
+  /** Optional description emitted into the LuaCATS manifest. */
+  readonly description?: string | undefined;
+  /**
+   * Optional LuaCATS overrides for manifest emission when {@link zodToLuaTypeRef} is too generic.
+   * `paramTypes` keys must match `input` object keys (or `value` for non-object inputs).
+   */
+  readonly lua?: {
+    readonly paramTypes?: Partial<Record<string, string>> | undefined;
+    readonly returns?: string | undefined;
+  };
+};
+
+/**
+ * Erased method entry stored inside a {@link HostSurfaceSpec}. Use {@link fn} for typed entries; assignability widens at the spec boundary.
+ */
+export type AnyHostSurfaceMethod = {
+  readonly capability: CapabilityId;
+  readonly input: z.ZodTypeAny;
+  readonly output: z.ZodTypeAny;
+  readonly handler: (ctx: HostFnContext<unknown>, input: unknown) => unknown;
+  readonly description?: string | undefined;
+  readonly lua?: {
+    readonly paramTypes?: Partial<Record<string, string>> | undefined;
+    readonly returns?: string | undefined;
+  };
+};
+
+/**
+ * Tree shape accepted by {@link defineHostSurface}: top-level keys become Lua global bridge **tables**
+ * (e.g. `orders`, `billing`); inner keys become **methods** on that table.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any -- spec tree uses erased method entries */
+export type HostSurfaceSpec = Readonly<
+  Record<string, Readonly<Record<string, AnyHostSurfaceMethod | HostSurfaceMethodEntry<any, any, any>>>>
+>;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Surface spec where every `fn<THost, …>(…)` entry must use the same host type as your engine context
+ * (the `THost` you pass as `host` into {@link HostScriptSession}).
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any -- per-method host typing uses independent in/out */
+export type HostSurfaceSpecForHost<THost> = Readonly<{
+  readonly [bridge: string]: Readonly<{
+    readonly [method: string]: HostSurfaceMethodEntry<THost, any, any>;
+  }>;
+}>;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua global `onOrderPlaced`).
+ * Passed as the second argument to {@link defineHostSurface} to emit workflow hook typings into `.d.lua`.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any -- workflow hook payloads use open Zod object shapes */
+export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Bridge + manifest API shared by every {@link HostSurface} (with or without workflow hooks).
+ */
+export type HostSurfaceCore = {
+  /**
+   * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
+   * The host must satisfy {@link WithLuarizerCapabilityRegistry} (see {@link HostScriptSession}).
+   */
+  readonly toBridgeDeclarations: () => ReadonlyArray<
+    DeclarativeBridgeDeclaration<WithLuarizerCapabilityRegistry, string>
+  >;
+  /**
+   * Builds a `LuarizerDefManifest` for `@luarizer/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
+   *
+   * @param opts.output - Default `.d.lua` output path recorded in the manifest.
+   * @param opts.headerNote - Optional banner comment in the generated file.
+   * @param opts.luaTypeAliases - Optional overrides / extra `---@alias` entries; by default aliases are inferred from Zod + `fn(..., lua)`.
+   */
+  readonly toLuarizerDefManifest: (opts: {
+    readonly output: string;
+    readonly headerNote?: string | undefined;
+    /**
+     * Optional extra `---@alias` entries, or overrides for inferred aliases (same key replaces inferred).
+     */
+    readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
+  }) => LuarizerDefManifest;
+};
+
+/**
+ * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
+ *
+ * @typeParam THooks - When you pass `workflowHooks` to {@link defineHostSurface}, the returned surface includes
+ * `workflowHooks` so callers can type workflow events from the surface object alone.
+ */
+export type HostSurface<THooks extends HostWorkflowHooksSpec | undefined = undefined> = [undefined] extends [THooks]
+  ? HostSurfaceCore
+  : HostSurfaceCore & { readonly workflowHooks: THooks };
+
+/** Options passed to {@link HostSurfaceCore.toLuarizerDefManifest}. */
+export type LuarizerDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuarizerDefManifest']>[0];

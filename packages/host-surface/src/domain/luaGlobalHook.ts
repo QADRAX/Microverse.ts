@@ -11,5 +11,6 @@ export function luaGlobalHookName<const Kind extends string>(kind: Kind): LuaGlo
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(kind)) {
     throw new Error(`unsafe Lua identifier for event kind: ${kind}`);
   }
-  return `on${kind}` as LuaGlobalHookName<Kind>;
+  const name = `on${kind}`;
+  return name as LuaGlobalHookName<Kind>;
 }

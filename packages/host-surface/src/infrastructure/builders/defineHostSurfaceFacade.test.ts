@@ -2,7 +2,7 @@ import { buildLuaCatsDocument } from '@luarizer/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { cap, defineHostSurface, fn } from './defineHostSurface';
+import { cap, defineHostSurface, fn } from './defineHostSurfaceFacade.js';
 
 type ToyHost = {
   readonly n: number;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 
-import { zodToLuaTypeRef } from './zodToLuaTypeRef';
+import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
 
 describe('zodToLuaTypeRef', () => {
   it('maps primitives', () => {

@@ -4,30 +4,20 @@ import {
   type HostWorkflowHub,
 } from '@luarizer/luarizer';
 
-import businessSurface from './businessSurface.js';
-import type { BusinessEngineHost } from './integrations.js';
+import surface from './businessSurface.js';
+import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
+import type { BusinessEngineHost } from './services/businessEngineHost.js';
 
-export type BusinessDomainEvent =
-  | {
-      readonly kind: 'OrderPlaced';
-      readonly orderId: string;
-      readonly amountCents: number;
-      readonly customerId: string;
-    }
-  | {
-      readonly kind: 'InventoryLow';
-      readonly sku: string;
-      readonly unitsLeft: number;
-    };
+export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
 
 /**
  * Thin façade: {@link createHostWorkflowHub} with this package’s default surface (workflow hooks live on the surface).
  */
 export class BusinessScriptingEngine {
-  private readonly hub: HostWorkflowHub<BusinessEngineHost, typeof businessSurface.workflowHooks>;
+  private readonly hub: HostWorkflowHub<BusinessEngineHost>;
 
   constructor(readonly host: BusinessEngineHost) {
-    this.hub = createHostWorkflowHub({ host, surface: businessSurface });
+    this.hub = createHostWorkflowHub({ host, surface });
   }
 
   readonly registerWorkflow = async (

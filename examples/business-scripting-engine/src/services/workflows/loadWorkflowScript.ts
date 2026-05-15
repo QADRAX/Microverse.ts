@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 /**
  * Reads a UTF-8 Lua file from this package's `lua/` directory (e.g. `workflows/promotions.lua`).

@@ -5,8 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
-import { createDefaultBusinessHost } from './integrations.js';
-import { readWorkflowLua } from './loadWorkflowScript.js';
+import { createDefaultBusinessHost, readWorkflowLua } from './services/index.js';
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const generatedDefsPath = join(packageRoot, 'generated', 'businessSurface.d.lua');

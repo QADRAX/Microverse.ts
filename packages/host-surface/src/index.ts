@@ -6,6 +6,8 @@
  */
 export {
   buildBridgeMergeEnvForHost,
+} from './infrastructure/builders/bridgeMergeEnv.js';
+export {
   cap,
   defineHostSurface,
   defineHostSurfaceFor,
@@ -19,16 +21,19 @@ export {
   type HostSurfaceSpecForHost,
   type HostWorkflowHooksSpec,
   type LuarizerDefManifestGeneratorOpts,
-} from './application/defineHostSurface.js';
+} from './infrastructure/builders/defineHostSurfaceFacade.js';
+export {
+  compileHostSurface,
+  compileHostSurfaceFor,
+} from './application/useCases/compileHostSurface.js';
+export { createBridgeDeclarationsFromHostSurfaceSpec } from './application/useCases/compileBridgeDeclarationsFromHostSurfaceSpec.js';
+export type { SchemaValidationPort } from './application/ports/SchemaValidationPort.js';
 export {
   HostScriptSession,
   type HostScriptSessionOptions,
   type WorkflowHookInvokeArgs,
-} from './application/hostScriptSession.js';
-export { luaGlobalHookName, type LuaGlobalHookName } from './application/luaGlobalHook.js';
-export { zodToLuaTypeRef } from './application/zodToLuaTypeRef.js';
-export {
-  augmentHostWithCapabilityRegistry,
-  LUARIZER_CAPABILITY_REGISTRY,
-  type WithLuarizerCapabilityRegistry,
-} from './domain/capabilityRegistrySymbol.js';
+} from './infrastructure/components/hostScriptSession.js';
+export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook.js';
+export { zodToLuaTypeRef } from './domain/zodToLuaTypeRef.js';
+export { LUARIZER_CAPABILITY_REGISTRY, type WithLuarizerCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
+export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';

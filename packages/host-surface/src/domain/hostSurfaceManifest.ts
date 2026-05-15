@@ -1,0 +1,209 @@
+import type {
+  LuarizerDefManifest,
+  ManifestAlias,
+  ManifestClass,
+  ManifestLuaHook,
+  ManifestMethod,
+  ManifestParam,
+} from '@luarizer/lua-defs';
+import { z } from 'zod';
+
+import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.js';
+import { luaGlobalHookName } from './luaGlobalHook.js';
+import { isLuaTypeAtom } from './luaTypeAtoms.js';
+import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
+
+export function buildLuarizerDefManifestFromHostSurfaceSpec(
+  spec: HostSurfaceSpec,
+  opts: {
+    readonly output: string;
+    readonly headerNote?: string | undefined;
+    readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
+  },
+  workflowHooks?: HostWorkflowHooksSpec,
+): LuarizerDefManifest {
+  const classes: ManifestClass[] = [];
+  for (const bridgeName of Object.keys(spec)) {
+    const methods = spec[bridgeName]!;
+    const manifestMethods: ManifestMethod[] = [];
+    for (const methodName of Object.keys(methods)) {
+      const entry = methods[methodName]!;
+      manifestMethods.push({
+        name: methodName,
+        description: entry.description,
+        params: zodInputToManifestParams(entry.input, entry.lua?.paramTypes),
+        returns: entry.lua?.returns ?? zodToLuaTypeRef(entry.output),
+      });
+    }
+    classes.push({
+      name: bridgeName,
+      methods: manifestMethods,
+    });
+  }
+  const inferred = inferLuaTypeAliasesFromHostSpec(spec);
+  const merged = new Map<string, string>(inferred.map((a) => [a.name, a.definition]));
+  if (opts.luaTypeAliases !== undefined) {
+    for (const [k, v] of Object.entries(opts.luaTypeAliases)) {
+      merged.set(k, v);
+    }
+  }
+  const aliases =
+    merged.size === 0
+      ? undefined
+      : [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, definition]) => ({ name, definition }));
+
+  const luaHooks: ManifestLuaHook[] | undefined =
+    workflowHooks === undefined
+      ? undefined
+      : Object.keys(workflowHooks)
+          .sort((a, b) => a.localeCompare(b))
+          .map((kind) => {
+            const schema = workflowHooks[kind];
+            if (!(schema instanceof z.ZodObject)) {
+              throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+            }
+            const hookName = luaGlobalHookName(kind);
+            return {
+              name: hookName,
+              paramName: 'evt',
+              payloadLuaType: zodToLuaTypeRef(schema),
+              description: `Workflow hook for ${kind} events (invoked from host as ${hookName}).`,
+            };
+          });
+
+  return {
+    schemaVersion: 1,
+    output: opts.output,
+    headerNote: opts.headerNote,
+    aliases,
+    classes,
+    luaHooks,
+  };
+}
+
+function nominalTokensFromLuaReturnString(retLua: string): readonly string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const segment of retLua.split('|')) {
+    const s = segment.trim();
+    if (!/^[A-Za-z_]\w*$/.test(s)) {
+      continue;
+    }
+    if (isLuaTypeAtom(s)) {
+      continue;
+    }
+    if (seen.has(s)) {
+      continue;
+    }
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function unwrapOutputBaseForAlias(schema: z.ZodTypeAny): z.ZodTypeAny {
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment -- Zod internal unwrap chain */
+  let cur: z.ZodTypeAny = schema;
+  for (;;) {
+    if (cur instanceof z.ZodOptional || cur instanceof z.ZodNullable) {
+      cur = cur.unwrap();
+      continue;
+    }
+    if (cur instanceof z.ZodDefault) {
+      cur = cur.removeDefault();
+      continue;
+    }
+    if (cur instanceof z.ZodReadonly) {
+      cur = cur.unwrap();
+      continue;
+    }
+    if (cur instanceof z.ZodEffects) {
+      cur = cur.innerType();
+      continue;
+    }
+    if (cur instanceof z.ZodPipeline) {
+      cur = cur._def.out as z.ZodTypeAny;
+      continue;
+    }
+    break;
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+  return cur;
+}
+
+function inferLuaTypeAliasesFromHostSpec(spec: HostSurfaceSpec): readonly ManifestAlias[] {
+  const byName = new Map<string, string>();
+
+  for (const bridgeName of Object.keys(spec)) {
+    const methods = spec[bridgeName]!;
+    for (const methodName of Object.keys(methods)) {
+      const entry = methods[methodName]!;
+
+      const luaParams = entry.lua?.paramTypes;
+      if (luaParams !== undefined) {
+        const baseInput = unwrapInputSchema(entry.input);
+        if (baseInput instanceof z.ZodObject) {
+          const shape = baseInput.shape as Record<string, z.ZodTypeAny>;
+          for (const [key, L] of Object.entries(luaParams)) {
+            if (typeof L !== 'string') {
+              continue;
+            }
+            if (!/^[A-Za-z_]\w*$/.test(L) || isLuaTypeAtom(L)) {
+              continue;
+            }
+            const field = shape[key];
+            if (field === undefined) {
+              continue;
+            }
+            const def = zodToLuaTypeRef(field);
+            if (L !== def) {
+              byName.set(L, def);
+            }
+          }
+        }
+      }
+
+      const retLua = entry.lua?.returns;
+      if (typeof retLua === 'string' && retLua.length > 0) {
+        for (const T of nominalTokensFromLuaReturnString(retLua)) {
+          const baseOut = unwrapOutputBaseForAlias(entry.output);
+          const def = zodToLuaTypeRef(baseOut);
+          if (T !== def) {
+            byName.set(T, def);
+          }
+        }
+      }
+    }
+  }
+
+  return [...byName.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, definition]) => ({ name, definition }));
+}
+
+function zodInputToManifestParams(
+  input: z.ZodTypeAny,
+  luaParamTypes: Partial<Record<string, string>> | undefined,
+): ManifestParam[] | undefined {
+  const base = unwrapInputSchema(input);
+  if (base instanceof z.ZodObject) {
+    const shape = base.shape as Record<string, z.ZodTypeAny>;
+    return Object.keys(shape).map((name) => ({
+      name,
+      luaType: luaParamTypes?.[name] ?? zodToLuaTypeRef(shape[name]!),
+    }));
+  }
+  return [{ name: 'value', luaType: luaParamTypes?.value ?? zodToLuaTypeRef(base) }];
+}
+
+function unwrapInputSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
+  let cur: z.ZodTypeAny = schema;
+  if (cur instanceof z.ZodEffects) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ZodEffects.innerType()
+    cur = cur.innerType();
+  }
+  if (cur instanceof z.ZodPipeline) {
+    cur = cur._def.in as z.ZodTypeAny;
+  }
+  return cur;
+}

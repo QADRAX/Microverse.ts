@@ -19,5 +19,7 @@ export {
   createHostWorkflowHub,
   HostWorkflowHub,
   type HostWorkflowHubConfig,
+  type InferWorkflowHooksFromHost,
   type InferWorkflowHooksFromSurface,
+  type TaggedWorkflowHost,
 } from './infrastructure/facade/hostWorkflowHub.js';

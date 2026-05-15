@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { luaGlobalHookName } from './luaGlobalHook';
+import { luaGlobalHookName } from './luaGlobalHook.js';
 
 describe('luaGlobalHookName', () => {
   it('prefixes PascalCase kind with on', () => {
@@ -9,6 +9,7 @@ describe('luaGlobalHookName', () => {
   });
 
   it('rejects unsafe kinds', () => {
-    expect(() => luaGlobalHookName('bad;drop' as 'bad;drop')).toThrow(/unsafe Lua identifier/);
+    const unsafe = 'bad;drop';
+    expect(() => luaGlobalHookName(unsafe)).toThrow(/unsafe Lua identifier/);
   });
 });

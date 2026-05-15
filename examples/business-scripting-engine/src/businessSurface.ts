@@ -1,30 +1,12 @@
 import { cap, defineHostSurfaceFor, fn } from '@luarizer/luarizer';
 import { z } from 'zod';
 
-import type { BusinessEngineHost, OrderRecord } from './integrations.js';
+import type { BusinessEngineHost } from './services/businessEngineHost.js';
+import type { OrderRecord } from './domain/models/orderRecord.js';
+import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
+import { chargeResult, orderDto } from './schemas/surface/bridgePayloads.js';
 
-const orderDto = z.object({
-  id: z.string(),
-  customerId: z.string(),
-  totalCents: z.number(),
-});
-
-const chargeResult = z.object({
-  ok: z.boolean(),
-});
-
-/** Zod payloads for workflow Lua hooks (`onOrderPlaced`, …); drives `.d.lua` + LuaLS in `lua/workflows`. */
-export const businessWorkflowHooks = {
-  OrderPlaced: z.object({
-    orderId: z.string(),
-    amountCents: z.number(),
-    customerId: z.string(),
-  }),
-  InventoryLow: z.object({
-    sku: z.string(),
-    unitsLeft: z.number(),
-  }),
-} as const;
+export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
 
 /**
  * Host surface exposed to Lua: domain integrations with Zod + capabilities.

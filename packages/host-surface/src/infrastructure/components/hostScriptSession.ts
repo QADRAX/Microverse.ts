@@ -15,13 +15,10 @@ import {
   type TimeoutPolicy,
 } from '@luarizer/runtime-core';
 
-import { augmentHostWithCapabilityRegistry } from '../domain/capabilityRegistrySymbol.js';
-import {
-  buildBridgeMergeEnvForHost,
-  type HostSurface,
-  type HostWorkflowHooksSpec,
-} from './defineHostSurface.js';
-import type { LuaGlobalHookName } from './luaGlobalHook.js';
+import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry.js';
+import { buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv.js';
+import type { HostSurface, HostWorkflowHooksSpec } from '../../domain/hostSurfaceTypes.js';
+import type { LuaGlobalHookName } from '../../domain/luaGlobalHook.js';
 
 /**
  * Tuple accepted by {@link HostScriptSession.invokeGlobalHookIfPresent} when the session is specialised with

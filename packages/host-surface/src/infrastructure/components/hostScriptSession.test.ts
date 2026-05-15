@@ -7,8 +7,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { cap, defineHostSurface, fn } from './defineHostSurface';
-import { HostScriptSession } from './hostScriptSession';
+import { cap, defineHostSurface, fn } from '../builders/defineHostSurfaceFacade.js';
+import { HostScriptSession } from './hostScriptSession.js';
 
 type H = { readonly tag: string };
 

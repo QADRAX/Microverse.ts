@@ -11,6 +11,31 @@ import type { CapabilityId } from '@luarizer/runtime-capabilities';
 import { createLuaEnvSlotKey, type SandboxRuntime } from '@luarizer/runtime-core';
 import { createWasmSandboxRuntime } from '@luarizer/runtime-wasm';
 
+/** Phantom key: optional on the host **type** so {@link InferWorkflowHooksFromHost} can recover workflow Zod map typing. Never set at runtime. */
+declare const WORKFLOW_HOOKS_TYPE: unique symbol;
+
+/**
+ * Intersects `TBase` with an optional phantom field carrying `THooks` for {@link HostWorkflowHub} / {@link createHostWorkflowHub} inference.
+ *
+ * @example
+ * ```ts
+ * type MyHost = TaggedWorkflowHost<typeof myWorkflowHooks, { readonly clock: Clock }>;
+ * ```
+ */
+export type TaggedWorkflowHost<
+  THooks extends HostWorkflowHooksSpec,
+  TBase = unknown,
+> = TBase & { readonly [WORKFLOW_HOOKS_TYPE]?: THooks };
+
+/**
+ * Reads workflow hook typing from a host built with {@link TaggedWorkflowHost}.
+ */
+export type InferWorkflowHooksFromHost<THost> = THost extends TaggedWorkflowHost<infer H, infer _Rest>
+  ? H extends HostWorkflowHooksSpec
+    ? H
+    : undefined
+  : undefined;
+
 /**
  * Reads workflow hook typing from a {@link HostSurface} that was built with a `workflowHooks` field.
  */
@@ -19,9 +44,14 @@ export type InferWorkflowHooksFromSurface<S extends HostSurfaceCore> =
     ? H
     : undefined;
 
+type EffectiveWorkflowHooks<THost extends object, TSurface extends HostSurfaceCore> =
+  [InferWorkflowHooksFromHost<THost>] extends [undefined]
+    ? InferWorkflowHooksFromSurface<TSurface>
+    : InferWorkflowHooksFromHost<THost>;
+
 export type HostWorkflowHubConfig<
-  THost,
-  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  THost extends object = object,
+  THooks extends HostWorkflowHooksSpec | undefined = InferWorkflowHooksFromHost<THost>,
 > = {
   readonly host: THost;
   /** From {@link defineHostSurface} / {@link defineHostSurfaceFor}; hooks live on `surface.workflowHooks` when present. */
@@ -43,10 +73,12 @@ type EmitToAllWorkflowsFn<THooks extends HostWorkflowHooksSpec | undefined> = TH
  * Owns one {@link SandboxRuntime}, a map of {@link HostScriptSession}s keyed by `workflowId`, and helpers to
  * register Lua + emit workflow hooks across all sessions — intended as the default host integration surface
  * instead of wiring `createSandbox` / `slotKey` / `Map` by hand.
+ *
+ * @typeParam THost - Use {@link TaggedWorkflowHost} so `emitToAllWorkflows` narrows to your workflow Zod map without a second generic.
  */
 export class HostWorkflowHub<
-  THost,
-  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  THost extends object = object,
+  THooks extends HostWorkflowHooksSpec | undefined = InferWorkflowHooksFromHost<THost>,
 > {
   private readonly runtime: SandboxRuntime;
 
@@ -128,18 +160,16 @@ export class HostWorkflowHub<
 }
 
 /**
- * Creates a {@link HostWorkflowHub}. `THooks` is inferred from `surface.workflowHooks` when the surface was
- * built with {@link defineHostSurface} / {@link defineHostSurfaceFor} — pass only `host` and `surface`.
+ * Creates a {@link HostWorkflowHub}. Prefer typing `host` with {@link TaggedWorkflowHost} so the hub is
+ * {@link HostWorkflowHub}`<THost>` only. If the host omits the tag, hook typing falls back to `surface.workflowHooks`.
  */
-export function createHostWorkflowHub<THost, const TSurface extends HostSurfaceCore>(
-  config: {
-    readonly host: THost;
-    readonly surface: TSurface;
-    readonly runtime?: SandboxRuntime | undefined;
-    readonly envSlotScope?: string | undefined;
-  },
-): HostWorkflowHub<THost, InferWorkflowHooksFromSurface<TSurface>> {
-  type H = InferWorkflowHooksFromSurface<TSurface>;
+export function createHostWorkflowHub<THost extends object, const TSurface extends HostSurfaceCore>(config: {
+  readonly host: THost;
+  readonly surface: TSurface;
+  readonly runtime?: SandboxRuntime | undefined;
+  readonly envSlotScope?: string | undefined;
+}): HostWorkflowHub<THost, EffectiveWorkflowHooks<THost, TSurface>> {
+  type H = EffectiveWorkflowHooks<THost, TSurface>;
   return new HostWorkflowHub<THost, H>({
     host: config.host,
     surface: config.surface as unknown as HostSurface<H>,

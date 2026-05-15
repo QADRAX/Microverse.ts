@@ -7,13 +7,14 @@ import {
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { createHostWorkflowHub } from './hostWorkflowHub.js';
+import { createHostWorkflowHub, type TaggedWorkflowHost } from './hostWorkflowHub.js';
 
 type H = { readonly n: number };
 
 describe('createHostWorkflowHub', () => {
   it('registers a workflow and runs typed emitToAllWorkflows', async () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
+    type Host = TaggedWorkflowHost<typeof hooks, H>;
 
     const surface = defineHostSurface(
       {
@@ -30,7 +31,7 @@ describe('createHostWorkflowHub', () => {
     );
 
     const hub = createHostWorkflowHub({
-      host: { n: 0 },
+      host: { n: 0 } satisfies Host,
       surface,
       runtime: createStubSandboxRuntime({
         adapter: new StubRuntimeAdapter(),
