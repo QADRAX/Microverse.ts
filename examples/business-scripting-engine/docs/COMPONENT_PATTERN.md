@@ -7,7 +7,7 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 | Capa | Responsabilidad |
 |------|-----------------|
 | `@microverse/host-surface` | Superficie Zod, capabilities, `mergeEnv`, hooks `workflow:extend()` |
-| Tu motor (p. ej. `BusinessScriptingEngine`) | Cuándo cargar chunks, qué allowlist por workflow |
+| Tu motor (p. ej. `BusinessScriptingEngine`) | Cuándo cargar chunks, qué allowlist por script (`surface.pickCapabilities`) |
 | Este documento | Cómo componer Lua y dónde vive el “estado” |
 
 ## Props
@@ -27,16 +27,22 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 
 ## Subrutinas / librería compartida
 
-- Prefer **`sharedLuaChunks` al crear el motor** (una vez por hub; cada workflow la recibe en su slot antes de su script):
+- Prefer **`sharedLuaChunks` al crear el motor** (una vez por microverse; cada script la recibe en su slot antes de su chunk):
 
   ```ts
+  import surface from './businessSurface.js';
+
   new BusinessScriptingEngine(host, {
     sharedLuaChunks: [readWorkflowLua('lib/math_helpers.lua')],
   });
-  await engine.registerWorkflow('my-wf', readWorkflowLua('workflows/order_with_math_prelude.lua'), […]);
+  await engine.registerScript(
+    'my-script',
+    readWorkflowLua('workflows/order_with_math_prelude.lua'),
+    surface.pickCapabilities('audit:record'),
+  );
   ```
 
 - Librerías Lua en runtime: `lua/lib/*.lua` con EmmyLua; tipos de bridges/DTOs en `src/schemas/surface/bridgePayloads.ts` vía `luaType('OrderDto', z.object({…}))` → `generated/businessSurface.d.lua` (CLI).
-- **`injectLuaChunks` por workflow** solo para preludes exclusivos de ese workflow (se ejecutan después del shared).
+- **`injectLuaChunks` por script** solo para preludes exclusivos de ese slot (se ejecutan después del shared).
 
 Tras cambiar APIs en `@microverse/microverse`, hay que **reconstruir** ese paquete (`pnpm --filter @microverse/microverse build`): el ejemplo importa su `dist/`.

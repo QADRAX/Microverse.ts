@@ -11,7 +11,7 @@ export const businessWorkflowHooks = {
     sku: z.string(),
     unitsLeft: z.number(),
   }),
-  /** Fired from TypeScript when async host work completes (see `emitWorkflowHook`). */
+  /** Fired from TypeScript when async host work completes (see {@link BusinessScriptingEngine.emitHook}). */
   JobDone: z.object({
     jobId: z.string(),
     result: z.number(),

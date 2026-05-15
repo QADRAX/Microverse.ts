@@ -1,4 +1,4 @@
-import type { TaggedWorkflowHost } from '@microverse/microverse';
+import type { TaggedLuaMicroverseHost } from '@microverse/microverse';
 
 import type { OrderRecord } from '../domain/models/orderRecord.js';
 import type { BusinessWorkflowHooksSpec } from '../schemas/workflows/businessWorkflowHooks.js';
@@ -21,10 +21,10 @@ type BusinessEngineServices = {
 
 /**
  * Host services object passed into {@link BusinessScriptingEngine} and into every `fn<BusinessEngineHost, …>` handler
- * in {@link businessSurface.js}. Carries workflow hook typing for {@link HostWorkflowHub} via {@link TaggedWorkflowHost}
- * (hooks are methods on the handler table from `workflow:extend()`, typed as `Workflow`).
+ * in {@link businessSurface.js}. Carries hook typing for {@link createLuaMicroverse} via {@link TaggedLuaMicroverseHost}
+ * (hooks are methods on the handler table from `workflow:extend()`, typed as `Workflow` in `.d.lua`).
  */
-export type BusinessEngineHost = TaggedWorkflowHost<BusinessWorkflowHooksSpec, BusinessEngineServices>;
+export type BusinessEngineHost = TaggedLuaMicroverseHost<BusinessWorkflowHooksSpec, BusinessEngineServices>;
 
 export function createDefaultBusinessHost(
   seedOrders: readonly OrderRecord[],

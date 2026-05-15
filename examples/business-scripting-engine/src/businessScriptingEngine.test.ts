@@ -1,10 +1,10 @@
-import { cap } from '@microverse/microverse';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
+import surface from './businessSurface.js';
 import { createDefaultBusinessHost, readWorkflowLua } from './services/index.js';
 
 const MATH_LIB = readWorkflowLua('lib/math_helpers.lua');
@@ -23,11 +23,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     ]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerWorkflow('promotions', readWorkflowLua('workflows/promotions.lua'), [
-      cap('orders:read'),
-      cap('billing:charge'),
-      cap('notifications:send'),
-    ]);
+    await engine.registerScript(
+      'promotions',
+      readWorkflowLua('workflows/promotions.lua'),
+      surface.pickCapabilities('orders:read', 'billing:charge', 'notifications:send'),
+    );
 
     await engine.dispatch({
       kind: 'OrderPlaced',
@@ -55,9 +55,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const host = createDefaultBusinessHost([{ id: 'o-echo', customerId: 'c-x', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerWorkflow('echo', readWorkflowLua('workflows/order_echo.lua'), [
-      cap('notifications:send'),
-    ]);
+    await engine.registerScript(
+      'echo',
+      readWorkflowLua('workflows/order_echo.lua'),
+      surface.pickCapabilities('notifications:send'),
+    );
 
     await engine.dispatch({
       kind: 'OrderPlaced',
@@ -79,9 +81,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const host = createDefaultBusinessHost([{ id: 'o-2', customerId: 'c-2', totalCents: 5000 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerWorkflow('no-billing-cap', readWorkflowLua('workflows/billing_denied.lua'), [
-      cap('orders:read'),
-    ]);
+    await engine.registerScript(
+      'no-billing-cap',
+      readWorkflowLua('workflows/billing_denied.lua'),
+      surface.pickCapabilities('orders:read'),
+    );
 
     await expect(
       engine.dispatch({
@@ -95,13 +99,21 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('dispatches the same OrderPlaced hook to every workflow (separate Lua slots, separate allowlists)', async () => {
+  it('dispatches the same OrderPlaced hook to every script (separate Lua slots, separate allowlists)', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-multi', customerId: 'c-m', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    const auditCap = cap('audit:record');
+    const auditCaps = surface.pickCapabilities('audit:record');
 
-    await engine.registerWorkflow('audit-a', readWorkflowLua('workflows/order_audit_alpha.lua'), [auditCap]);
-    await engine.registerWorkflow('audit-b', readWorkflowLua('workflows/order_audit_beta.lua'), [auditCap]);
+    await engine.registerScript(
+      'audit-a',
+      readWorkflowLua('workflows/order_audit_alpha.lua'),
+      auditCaps,
+    );
+    await engine.registerScript(
+      'audit-b',
+      readWorkflowLua('workflows/order_audit_beta.lua'),
+      auditCaps,
+    );
 
     await engine.dispatch({
       kind: 'OrderPlaced',
@@ -117,13 +129,13 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('dispatches InventoryLow to two workflows that share inventory + audit bridges', async () => {
+  it('dispatches InventoryLow to two scripts that share inventory + audit bridges', async () => {
     const host = createDefaultBusinessHost([], { GADGET: 42 });
     const engine = new BusinessScriptingEngine(host);
-    const caps = [cap('inventory:read'), cap('audit:record')];
+    const caps = surface.pickCapabilities('inventory:read', 'audit:record');
 
-    await engine.registerWorkflow('inv-a', readWorkflowLua('workflows/inventory_low_audit_a.lua'), caps);
-    await engine.registerWorkflow('inv-b', readWorkflowLua('workflows/inventory_low_audit_b.lua'), caps);
+    await engine.registerScript('inv-a', readWorkflowLua('workflows/inventory_low_audit_a.lua'), caps);
+    await engine.registerScript('inv-b', readWorkflowLua('workflows/inventory_low_audit_b.lua'), caps);
 
     await engine.dispatch({ kind: 'InventoryLow', sku: 'GADGET', unitsLeft: 2 });
 
@@ -134,12 +146,20 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('fails the whole emit when one workflow is missing a capability its script uses', async () => {
+  it('fails the whole emit when one script is missing a capability its chunk uses', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-cap', customerId: 'c-c', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerWorkflow('has-audit', readWorkflowLua('workflows/order_audit_alpha.lua'), [cap('audit:record')]);
-    await engine.registerWorkflow('no-audit', readWorkflowLua('workflows/order_audit_beta.lua'), []);
+    await engine.registerScript(
+      'has-audit',
+      readWorkflowLua('workflows/order_audit_alpha.lua'),
+      surface.pickCapabilities('audit:record'),
+    );
+    await engine.registerScript(
+      'no-audit',
+      readWorkflowLua('workflows/order_audit_beta.lua'),
+      surface.pickCapabilities(),
+    );
 
     await expect(
       engine.dispatch({
@@ -153,13 +173,13 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('hub sharedLuaChunks: every workflow sees the shared library without per-workflow prelude', async () => {
+  it('sharedLuaChunks: every script sees the shared library without per-script prelude', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-pre', customerId: 'c-p', totalCents: 1 }]);
     const engine = createEngineWithSharedMathLib(host);
-    await engine.registerWorkflow(
+    await engine.registerScript(
       'prelude-demo',
       readWorkflowLua('workflows/order_with_math_prelude.lua'),
-      [cap('audit:record')],
+      surface.pickCapabilities('audit:record'),
     );
     await engine.dispatch({
       kind: 'OrderPlaced',
@@ -171,18 +191,22 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('two workflows on the same hub both use sharedLuaChunks without repeating registration', async () => {
+  it('two scripts on the same microverse both use sharedLuaChunks without repeating registration', async () => {
     const host = createDefaultBusinessHost([
       { id: 'o-a', customerId: 'c-a', totalCents: 1 },
       { id: 'o-b', customerId: 'c-b', totalCents: 1 },
     ]);
     const engine = createEngineWithSharedMathLib(host);
-    await engine.registerWorkflow('wf-a', readWorkflowLua('workflows/order_with_math_prelude.lua'), [
-      cap('audit:record'),
-    ]);
-    await engine.registerWorkflow('wf-b', readWorkflowLua('workflows/order_with_math_prelude.lua'), [
-      cap('audit:record'),
-    ]);
+    await engine.registerScript(
+      'wf-a',
+      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      surface.pickCapabilities('audit:record'),
+    );
+    await engine.registerScript(
+      'wf-b',
+      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      surface.pickCapabilities('audit:record'),
+    );
     await engine.dispatch({
       kind: 'OrderPlaced',
       orderId: 'o-a',
@@ -193,13 +217,13 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('registerWorkflow injectLuaChunks runs a per-workflow prelude in the slot', async () => {
+  it('registerScript injectLuaChunks runs a per-script prelude in the slot', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-inj', customerId: 'c-i', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerWorkflow(
+    await engine.registerScript(
       'inject-prelude',
       readWorkflowLua('workflows/order_with_math_prelude.lua'),
-      [cap('audit:record')],
+      surface.pickCapabilities('audit:record'),
       { injectLuaChunks: [MATH_LIB] },
     );
     await engine.dispatch({
@@ -215,10 +239,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('async bridge: Lua uses :await() on asyncio:tick handle', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-io', customerId: 'c-io', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerWorkflow('asyncio-demo', readWorkflowLua('workflows/order_asyncio_tick.lua'), [
-      cap('audit:record'),
-      cap('asyncio:tick'),
-    ]);
+    await engine.registerScript(
+      'asyncio-demo',
+      readWorkflowLua('workflows/order_asyncio_tick.lua'),
+      surface.pickCapabilities('audit:record', 'asyncio:tick'),
+    );
     await engine.dispatch({
       kind: 'OrderPlaced',
       orderId: 'o-io',
@@ -229,13 +254,14 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('async partner pattern: sync jobs:create then host emitWorkflowHook(JobDone)', async () => {
+  it('async partner pattern: sync jobs:create then host emitHook(JobDone)', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-async', customerId: 'c-a', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerWorkflow('job-partner', readWorkflowLua('workflows/job_async_partner.lua'), [
-      cap('audit:record'),
-      cap('jobs:create'),
-    ]);
+    await engine.registerScript(
+      'job-partner',
+      readWorkflowLua('workflows/job_async_partner.lua'),
+      surface.pickCapabilities('audit:record', 'jobs:create'),
+    );
     await engine.dispatch({
       kind: 'OrderPlaced',
       orderId: 'o-async',
@@ -246,7 +272,7 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     expect(linesAfterOrder.some((l) => l === 'job-started:job-1:order:o-async')).toBe(true);
 
     await new Promise((r) => setTimeout(r, 5));
-    await engine.emitWorkflowHook('JobDone', { jobId: 'job-1', result: 99 });
+    await engine.emitHook('JobDone', { jobId: 'job-1', result: 99 });
 
     expect(host.audit.getLines().some((l) => l === 'job-finished:job-1:result:99')).toBe(true);
     await engine.dispose();
@@ -255,7 +281,11 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('stateful Lua component pattern: local state across hook invocations in one slot', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-c1', customerId: 'c-c', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerWorkflow('counter', readWorkflowLua('components/stateful_counter.lua'), [cap('audit:record')]);
+    await engine.registerScript(
+      'counter',
+      readWorkflowLua('components/stateful_counter.lua'),
+      surface.pickCapabilities('audit:record'),
+    );
     await engine.dispatch({
       kind: 'OrderPlaced',
       orderId: 'o-c1',

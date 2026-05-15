@@ -7,14 +7,14 @@ import {
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { createHostWorkflowHub, type TaggedWorkflowHost } from './hostWorkflowHub.js';
+import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicroverse.js';
 
 type H = { readonly n: number };
 
-describe('createHostWorkflowHub', () => {
-  it('registers a workflow and runs typed emitToAllWorkflows', async () => {
+describe('createLuaMicroverse', () => {
+  it('registers a script and runs typed emitToAllScripts', async () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
-    type Host = TaggedWorkflowHost<typeof hooks, H>;
+    type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
     const surface = defineHostSurface(
       {
@@ -30,7 +30,7 @@ describe('createHostWorkflowHub', () => {
       hooks,
     );
 
-    const hub = createHostWorkflowHub({
+    const microverse = createLuaMicroverse({
       host: { n: 0 } satisfies Host,
       surface,
       runtime: createStubMicroverseRuntime({
@@ -39,13 +39,13 @@ describe('createHostWorkflowHub', () => {
       }),
     });
 
-    await hub.registerWorkflow({
-      workflowId: 'w1',
+    await microverse.registerScript({
+      scriptId: 's1',
       script: '-- stub',
-      allowedCapabilities: [cap('demo:tick')],
+      capabilities: surface.pickCapabilities('demo:tick'),
     });
 
-    await hub.emitToAllWorkflows('Ping', { x: 1 });
-    await hub.dispose();
+    await microverse.emitToAllScripts('Ping', { x: 1 });
+    await microverse.dispose();
   });
 });

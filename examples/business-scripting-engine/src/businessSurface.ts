@@ -17,7 +17,7 @@ export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks
 
 /**
  * Host surface exposed to Lua: domain integrations with Zod + capabilities.
- * Each workflow session declares only the capabilities it needs in its allowlist.
+ * Each script registers a subset via `surface.pickCapabilities(…)` (see {@link BusinessScriptingEngine.registerScript}).
  *
  * Default-exported for `microverse generate-defs --surface ...` (see package.json).
  * LuaCATS names (`OrderDto`, `OrderId`, …) come from {@link luaType} on schemas in `bridgePayloads.ts`.

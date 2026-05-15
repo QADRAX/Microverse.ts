@@ -2,7 +2,9 @@ import { type DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
 import type { z } from 'zod';
 
 import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
-import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
+import type { CapabilityId } from '@microverse/runtime-capabilities';
+
+import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
 
 function isThenable(value: unknown): value is Promise<unknown> {
@@ -32,12 +34,13 @@ export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSu
       createApi: (host, slotKey) => {
         const api: Record<string, (payload: unknown) => unknown> = {};
         for (const methodName of Object.keys(methods)) {
-          const entry = methods[methodName]!;
+          const entry = methods[methodName]! as AnyHostSurfaceMethod;
           api[methodName] = (...args: unknown[]) => {
             const payload = args.length >= 2 ? args[1] : args[0];
             const registry = host[MICROVERSE_CAPABILITY_REGISTRY];
-            if (!registry.isAllowed(entry.capability)) {
-              throw new Error(`capability denied: ${String(entry.capability)}`);
+            const capability: CapabilityId = entry.capability;
+            if (!registry.isAllowed(capability)) {
+              throw new Error(`capability denied: ${String(capability)}`);
             }
             const parsedIn = schemaValidation.validateWithZodSchema(entry.input as z.ZodType<unknown>, payload);
             if (parsedIn._tag === 'err') {

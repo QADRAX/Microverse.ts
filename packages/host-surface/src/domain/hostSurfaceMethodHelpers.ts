@@ -1,5 +1,4 @@
-import type { CapabilityId } from '@microverse/runtime-capabilities';
-import { createCapabilityId } from '@microverse/runtime-capabilities';
+import { createCapabilityId, type CapabilityId } from '@microverse/runtime-capabilities';
 
 import type { HostSurfaceMethodEntry } from './hostSurfaceTypes.js';
 
@@ -9,8 +8,8 @@ import type { HostSurfaceMethodEntry } from './hostSurfaceTypes.js';
  *
  * @param id - Branded capability string, e.g. `` `orders:read` ``.
  */
-export function cap(id: `${string}:${string}`): CapabilityId {
-  return createCapabilityId(id);
+export function cap<const T extends `${string}:${string}`>(id: T): CapabilityId & T {
+  return createCapabilityId(id) as CapabilityId & T;
 }
 
 function inferMethodAsync(def: {
@@ -31,7 +30,9 @@ function inferMethodAsync(def: {
  * Preserves inference for `THost`, `TIn`, and `TOut` at the call site. Sets {@link HostSurfaceMethodEntry.async}
  * when the handler is an `async function` (or when `async: true` is set explicitly).
  */
-export function fn<THost, TIn, TOut>(def: HostSurfaceMethodEntry<THost, TIn, TOut>): HostSurfaceMethodEntry<THost, TIn, TOut> {
+export function fn<THost, TIn, TOut, TCap extends CapabilityId = CapabilityId>(
+  def: HostSurfaceMethodEntry<THost, TIn, TOut, TCap>,
+): HostSurfaceMethodEntry<THost, TIn, TOut, TCap> {
   return {
     ...def,
     async: inferMethodAsync(def),

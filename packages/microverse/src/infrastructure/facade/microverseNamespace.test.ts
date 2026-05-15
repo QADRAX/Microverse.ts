@@ -7,7 +7,7 @@ describe('Microverse namespace', () => {
     expect(typeof Microverse.createWasmRuntime).toBe('function');
   });
 
-  it('exposes createHostWorkflowHub', () => {
-    expect(typeof Microverse.createHostWorkflowHub).toBe('function');
+  it('exposes createLuaMicroverse', () => {
+    expect(typeof Microverse.createLuaMicroverse).toBe('function');
   });
 });

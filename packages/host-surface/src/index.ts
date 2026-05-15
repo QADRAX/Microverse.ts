@@ -38,3 +38,5 @@ export { luaType } from './domain/zodLuaType.js';
 export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef.js';
 export { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
 export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';
+export type { InferSurfaceCapabilities, SurfaceCapabilityString } from './domain/surfaceCapabilities.js';
+export { collectCapabilitiesFromHostSurfaceSpec, pickSurfaceCapabilities } from './domain/surfaceCapabilities.js';

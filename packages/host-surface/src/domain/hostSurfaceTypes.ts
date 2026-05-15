@@ -3,6 +3,7 @@ import type { DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
 import type { CapabilityId } from '@microverse/runtime-capabilities';
 import type { z } from 'zod';
 
+import type { SurfaceCapabilityString } from './surfaceCapabilities.js';
 import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol.js';
 
 /**
@@ -23,10 +24,16 @@ export type HostFnContext<THost> = {
  * @typeParam THost - Host type available as `ctx.host` inside `handler`.
  * @typeParam TIn - Payload type after Zod `input` parsing (Lua calls the bridge with one table argument).
  * @typeParam TOut - Return type validated by Zod `output` before crossing back to Lua.
+ * @typeParam TCap - Capability id for this method (preserved when using {@link cap} at the call site).
  */
-export type HostSurfaceMethodEntry<THost, TIn, TOut> = {
+export type HostSurfaceMethodEntry<
+  THost,
+  TIn,
+  TOut,
+  TCap extends CapabilityId = CapabilityId,
+> = {
   /** Capability required to invoke this method; checked against the session registry before the handler runs. */
-  readonly capability: CapabilityId;
+  readonly capability: TCap;
   /** Zod schema for the single payload object from Lua (e.g. `z.object({ id: z.string() })`). */
   readonly input: z.ZodType<TIn>;
   /** Zod schema for the value returned to Lua. */
@@ -62,7 +69,7 @@ export type AnyHostSurfaceMethod = {
   readonly capability: CapabilityId;
   readonly input: z.ZodTypeAny;
   readonly output: z.ZodTypeAny;
-  readonly handler: (ctx: HostFnContext<unknown>, input: unknown) => unknown;
+  readonly handler: (ctx: HostFnContext<any>, input: any) => unknown; // eslint-disable-line @typescript-eslint/no-explicit-any -- erased spec entry
   readonly async?: boolean | undefined;
   readonly description?: string | undefined;
   readonly lua?: {
@@ -77,7 +84,7 @@ export type AnyHostSurfaceMethod = {
  */
 /* eslint-disable @typescript-eslint/no-explicit-any -- spec tree uses erased method entries */
 export type HostSurfaceSpec = Readonly<
-  Record<string, Readonly<Record<string, AnyHostSurfaceMethod | HostSurfaceMethodEntry<any, any, any>>>>
+  Record<string, Readonly<Record<string, AnyHostSurfaceMethod | HostSurfaceMethodEntry<any, any, any, any>>>>
 >;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -88,7 +95,7 @@ export type HostSurfaceSpec = Readonly<
 /* eslint-disable @typescript-eslint/no-explicit-any -- per-method host typing uses independent in/out */
 export type HostSurfaceSpecForHost<THost> = Readonly<{
   readonly [bridge: string]: Readonly<{
-    readonly [method: string]: HostSurfaceMethodEntry<THost, any, any>;
+    readonly [method: string]: HostSurfaceMethodEntry<THost, any, any, any>;
   }>;
 }>;
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -103,8 +110,10 @@ export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
 
 /**
  * Bridge + manifest API shared by every {@link HostSurface} (with or without workflow hooks).
+ *
+ * @typeParam TCapabilities - Union of capability ids declared on the surface spec (see {@link InferSurfaceCapabilities}).
  */
-export type HostSurfaceCore = {
+export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> = {
   /**
    * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
    * The host must satisfy {@link WithMicroverseCapabilityRegistry} (see {@link HostScriptSession}).
@@ -127,6 +136,14 @@ export type HostSurfaceCore = {
      */
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   }) => LuaDefManifest;
+  /** Every capability id referenced by a method on this surface (deduplicated). */
+  readonly capabilities: readonly TCapabilities[];
+  /**
+   * Subset allowlist for a script session. Only capabilities declared on this surface are accepted.
+   */
+  pickCapabilities<const T extends readonly SurfaceCapabilityString<TCapabilities>[]>(
+    ...capabilities: T
+  ): ReadonlyArray<Extract<T[number], TCapabilities>>;
 };
 
 /**
@@ -134,10 +151,14 @@ export type HostSurfaceCore = {
  *
  * @typeParam THooks - When you pass `workflowHooks` to {@link defineHostSurface}, the returned surface includes
  * `workflowHooks` so callers can type workflow events from the surface object alone.
+ * @typeParam TCapabilities - Capability ids declared on the surface (for script allowlists).
  */
-export type HostSurface<THooks extends HostWorkflowHooksSpec | undefined = undefined> = [undefined] extends [THooks]
-  ? HostSurfaceCore
-  : HostSurfaceCore & { readonly workflowHooks: THooks };
+export type HostSurface<
+  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  TCapabilities extends CapabilityId = CapabilityId,
+> = [undefined] extends [THooks]
+  ? HostSurfaceCore<TCapabilities>
+  : HostSurfaceCore<TCapabilities> & { readonly workflowHooks: THooks };
 
 /** Options passed to {@link HostSurfaceCore.toLuaDefManifest}. */
 export type LuaDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuaDefManifest']>[0];

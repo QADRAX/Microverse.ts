@@ -1,17 +1,14 @@
 import { compileHostSurface, compileHostSurfaceFor } from '../../application/useCases/compileHostSurface.js';
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
-import type {
-  HostSurface,
-  HostSurfaceSpec,
-  HostSurfaceSpecForHost,
-  HostWorkflowHooksSpec,
-} from '../../domain/hostSurfaceTypes.js';
+import type { HostSurface, HostSurfaceSpec, HostWorkflowHooksSpec } from '../../domain/hostSurfaceTypes.js';
 
 import { createZodSchemaValidationPort } from '../adapters/zodSchemaValidationAdapter.js';
 
 const defaultPorts: readonly [SchemaValidationPort] = [createZodSchemaValidationPort()];
 
 export { cap, fn } from '../../domain/hostSurfaceMethodHelpers.js';
+export type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
+import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
 
 export type {
   AnyHostSurfaceMethod,
@@ -49,15 +46,20 @@ export type {
  * });
  * ```
  */
-export function defineHostSurface<const TSpec extends HostSurfaceSpec>(spec: TSpec): HostSurface<undefined>;
+export function defineHostSurface<const TSpec extends HostSurfaceSpec>(
+  spec: TSpec,
+): HostSurface<undefined, InferSurfaceCapabilities<TSpec>>;
 export function defineHostSurface<
   const TSpec extends HostSurfaceSpec,
   const THooks extends HostWorkflowHooksSpec,
->(spec: TSpec, workflowHooks: THooks): HostSurface<THooks>;
+>(
+  spec: TSpec,
+  workflowHooks: THooks,
+): HostSurface<THooks, InferSurfaceCapabilities<TSpec>>;
 export function defineHostSurface<const TSpec extends HostSurfaceSpec>(
   spec: TSpec,
   workflowHooks?: HostWorkflowHooksSpec,
-): HostSurface<undefined> | HostSurface<HostWorkflowHooksSpec> {
+): HostSurface<undefined, InferSurfaceCapabilities<TSpec>> | HostSurface<HostWorkflowHooksSpec, InferSurfaceCapabilities<TSpec>> {
   return workflowHooks === undefined
     ? compileHostSurface(defaultPorts, spec)
     : compileHostSurface(defaultPorts, spec, workflowHooks);
@@ -75,11 +77,13 @@ export function defineHostSurface<const TSpec extends HostSurfaceSpec>(
  * each `fn<YourHost, …>`), or pass both: `defineHostSurfaceFor<YourHost, typeof hooks>(spec, hooks)`.
  */
 export function defineHostSurfaceFor<
-  THost,
+  const TSpec extends HostSurfaceSpec,
   const THooks extends HostWorkflowHooksSpec | undefined = undefined,
 >(
-  spec: HostSurfaceSpecForHost<THost>,
+  spec: TSpec,
   workflowHooks?: THooks,
-): THooks extends HostWorkflowHooksSpec ? HostSurface<THooks> : HostSurface<undefined> {
+): THooks extends HostWorkflowHooksSpec
+  ? HostSurface<THooks, InferSurfaceCapabilities<TSpec>>
+  : HostSurface<undefined, InferSurfaceCapabilities<TSpec>> {
   return compileHostSurfaceFor(defaultPorts, spec, workflowHooks);
 }

@@ -1,6 +1,6 @@
 /**
  * Minimal job id factory for demos (sync bridge). Async completion is modeled by the host calling
- * {@link BusinessScriptingEngine.emitWorkflowHook} with `JobDone` after I/O finishes.
+ * {@link BusinessScriptingEngine.emitHook} with `JobDone` after I/O finishes.
  */
 export function createJobsService() {
   let seq = 0;

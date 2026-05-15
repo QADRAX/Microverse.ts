@@ -1,8 +1,7 @@
 import {
-  createHostWorkflowHub,
+  createLuaMicroverse,
   fixedTimeout,
-  type CapabilityId,
-  type HostWorkflowHub,
+  type LuaMicroverse,
   type TimeoutPolicy,
 } from '@microverse/microverse';
 
@@ -14,27 +13,34 @@ import type { z } from 'zod';
 
 export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
 
+/** Capability ids declared on {@link default} `businessSurface` (for script allowlists). */
+export type BusinessSurfaceCapabilities = (typeof surface.capabilities)[number];
+
 export type BusinessScriptingEngineOptions = {
   /** Per-chunk wall-clock limit (default 30s). Combine with Wasm instruction budget in `@microverse/runtime-wasm`. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   /**
-   * Lua library chunks loaded into **every** workflow slot (same `_ENV`, before each workflow script).
-   * Prefer this over concatenating preludes per `registerWorkflow`.
+   * Lua library chunks loaded into **every** script slot (same `_ENV`, before each script's main chunk).
+   * Prefer this over concatenating preludes per `registerScript`.
    */
   readonly sharedLuaChunks?: readonly string[] | undefined;
 };
 
 /**
- * Thin façade: {@link createHostWorkflowHub} with this package’s default surface (Lua uses `workflow:extend()` per slot; many workflows run as separate hub sessions).
+ * Thin façade: {@link createLuaMicroverse} with this package's default surface.
+ * Script capabilities come from `surface.pickCapabilities(…)` — see {@link businessSurface.ts}.
  */
 export class BusinessScriptingEngine {
-  private readonly hub: HostWorkflowHub<BusinessEngineHost>;
+  private readonly microverse: LuaMicroverse<BusinessEngineHost>;
+
+  /** Host surface used for bridges, LuaCATS, and capability allowlists. */
+  readonly surface = surface;
 
   constructor(
     readonly host: BusinessEngineHost,
     options: BusinessScriptingEngineOptions = {},
   ) {
-    this.hub = createHostWorkflowHub({
+    this.microverse = createLuaMicroverse({
       host,
       surface,
       defaultTimeout: options.defaultTimeout ?? fixedTimeout(30_000),
@@ -42,48 +48,46 @@ export class BusinessScriptingEngine {
     });
   }
 
-  readonly registerWorkflow = async (
-    workflowId: string,
+  readonly registerScript = async (
+    scriptId: string,
     luaSource: string,
-    allowedCapabilities: readonly CapabilityId[],
+    capabilities: readonly BusinessSurfaceCapabilities[],
     options?: {
-      /** Extra prelude for this workflow only (runs after hub `sharedLuaChunks`). */
+      /** Extra prelude for this script only (runs after microverse `sharedLuaChunks`). */
       readonly injectLuaChunks?: readonly string[] | undefined;
     },
   ): Promise<void> => {
-    await this.hub.registerWorkflow({
-      workflowId,
+    await this.microverse.registerScript({
+      scriptId,
       script: luaSource,
-      allowedCapabilities,
+      capabilities,
       injectLuaChunks: options?.injectLuaChunks,
     });
   };
 
   /**
-   * Host → Lua: emit a workflow hook defined on the surface (e.g. `JobDone` when completion is **not** modeled as a bridge return).
-   * For async tied to one bridge call, prefer `async fn` handlers and explicit Lua `:await()` or `onComplete`; hooks are for host-pushed events (see job_async_partner.lua).
-   * Payload fields must be JSON-serializable literals accepted by `emitToAllWorkflows`.
+   * Host → Lua: emit a domain hook to every registered script (e.g. `JobDone` when completion is host-driven).
    */
-  readonly emitWorkflowHook = async <K extends keyof typeof businessWorkflowHooks>(
+  readonly emitHook = async <K extends keyof typeof businessWorkflowHooks>(
     kind: K,
     payload: Readonly<z.infer<(typeof businessWorkflowHooks)[K]>>,
   ): Promise<void> => {
-    await this.hub.emitToAllWorkflows(kind, payload);
+    await this.microverse.emitToAllScripts(kind, payload);
   };
 
   readonly dispatch = async (event: BusinessDomainEvent): Promise<void> => {
     if (event.kind === 'OrderPlaced') {
-      await this.hub.emitToAllWorkflows('OrderPlaced', {
+      await this.microverse.emitToAllScripts('OrderPlaced', {
         orderId: event.orderId,
         amountCents: event.amountCents,
         customerId: event.customerId,
       });
       return;
     }
-    await this.hub.emitToAllWorkflows('InventoryLow', { sku: event.sku, unitsLeft: event.unitsLeft });
+    await this.microverse.emitToAllScripts('InventoryLow', { sku: event.sku, unitsLeft: event.unitsLeft });
   };
 
   readonly dispose = async (): Promise<void> => {
-    await this.hub.dispose();
+    await this.microverse.dispose();
   };
 }

@@ -1,6 +1,6 @@
 import { createWasmMicroverseRuntime } from '@microverse/runtime-wasm';
 
-import { createHostWorkflowHub } from './hostWorkflowHub.js';
+import { createLuaMicroverse } from './luaMicroverse.js';
 
 /**
  * Small **namespace** of factory helpers for hosts that prefer `Microverse.*` instead of deep imports.
@@ -15,7 +15,7 @@ export const Microverse = {
    */
   createWasmRuntime: createWasmMicroverseRuntime,
   /**
-   * Same as {@link createHostWorkflowHub} — one shared VM, typed workflow sessions, no manual `Map`/`slotKey` wiring.
+   * One shared Lua/Wasm VM with typed script sessions — see {@link createLuaMicroverse}.
    */
-  createHostWorkflowHub,
+  createLuaMicroverse,
 } as const;
