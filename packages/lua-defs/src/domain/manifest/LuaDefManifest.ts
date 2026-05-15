@@ -59,7 +59,7 @@ export type ManifestGlobal = {
   readonly fields: readonly ManifestGlobalField[];
 };
 
-/** Optional global workflow hooks: legacy `onOrderPlaced(evt)` stubs; host-surface workflow hooks document `Workflow` (abstract) and `workflow:extend()` in `classes` instead. */
+/** Optional global workflow hooks as `onOrderPlaced(evt)` stubs; host-surface workflow hooks document `Workflow` (abstract) and `workflow:extend()` in `classes` instead. */
 export type ManifestLuaHook = {
   readonly name: string;
   readonly paramName: string;
@@ -82,6 +82,6 @@ export type LuaDefManifest = {
   readonly aliases?: readonly ManifestAlias[] | undefined;
   readonly classes?: readonly ManifestClass[] | undefined;
   readonly globals?: readonly ManifestGlobal[] | undefined;
-  /** Legacy global `function onX(evt) end` stubs. Host-surface workflow hooks document `Workflow` (abstract) and the `workflow` helper in `classes` instead. */
+  /** Global `function onX(evt) end` stubs. Host-surface workflow hooks document `Workflow` (abstract) and the `workflow` helper in `classes` instead. */
   readonly luaHooks?: readonly ManifestLuaHook[] | undefined;
 };

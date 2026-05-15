@@ -7,9 +7,6 @@ import {
 
 const BIN = 'microverse';
 
-/** @deprecated Use {@link GENERATE_LUA_DEFS_COMMAND}. */
-const LEGACY_GENERATE_DEFS = 'generate-defs';
-
 type CliCommand = {
   readonly name: string;
   readonly description: string;
@@ -74,12 +71,6 @@ function parseArgs(argv: readonly string[]): {
 }
 
 function resolveCommand(name: string): CliCommand | undefined {
-  if (name === LEGACY_GENERATE_DEFS) {
-    process.stderr.write(
-      `Warning: \`${LEGACY_GENERATE_DEFS}\` is deprecated; use \`${GENERATE_LUA_DEFS_COMMAND}\` instead.\n`,
-    );
-    return COMMANDS.get(GENERATE_LUA_DEFS_COMMAND);
-  }
   return COMMANDS.get(name);
 }
 

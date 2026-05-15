@@ -39,7 +39,7 @@ type InvokeGlobalHookIfPresentFn<THooks extends HostWorkflowHooksSpec | undefine
 /**
  * Options for {@link HostScriptSession}: one Wasm (or other) slot, a surface, host services, and a capability allowlist.
  *
- * @typeParam THost - Your engine context; must match the `THost` used in {@link defineHostSurfaceFor} (or {@link defineHostSurface}) / {@link fn}.
+ * @typeParam THost - Your engine context; must match the `THost` used in {@link defineHostSurfaceFor} (or {@link defineHostSurface}).
  * @typeParam THooks - When the surface was built with workflow hooks, pass the same `THooks` so {@link HostScriptSession.invokeGlobalHookIfPresent} narrows to those payloads (match `surface`’s `workflowHooks` typing).
  */
 export type HostScriptSessionOptions<

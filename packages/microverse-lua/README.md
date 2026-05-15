@@ -1,6 +1,6 @@
 # `@microverse/microverse-lua`
 
-**Lua microverse** facade for TypeScript applications: `MicroverseLua.create`, Wasm VM, script slots, and re-exports for host surfaces and bridges.
+**Lua microverse** facade for TypeScript applications: `MicroverseLua.create`, Wasm VM, script slots, and the fluent host surface builder.
 
 Monorepo overview: [root README](../../README.md).
 
@@ -39,32 +39,25 @@ Workspace: `"@microverse/microverse-lua": "workspace:*"`.
 ## Quick start
 
 ```ts
-import {
-  MicroverseLua,
-  defineHostSurfaceFor,
-  fn,
-  cap,
-  fixedTimeout,
-} from '@microverse/microverse-lua';
+import { MicroverseLua, defineHostSurfaceFor } from '@microverse/microverse-lua';
 import { z } from 'zod';
 
 type MyHost = { appName: string };
 
-const surface = defineHostSurfaceFor({
-  greet: {
-    hello: fn<MyHost, { name: string }, string>({
-      capability: cap('demo:greet'),
-      input: z.object({ name: z.string() }),
-      output: z.string(),
-      handler: ({ host }, { name }) => `Hello, ${name} from ${host.appName}`,
-    }),
-  },
-});
+const surface = defineHostSurfaceFor<MyHost>()
+  .bridge('greet')
+  .method('hello', {
+    requires: 'demo:greet',
+    input: z.object({ name: z.string() }),
+    output: z.string(),
+    handler: ({ host }, { name }) => `Hello, ${name} from ${host.appName}`,
+  })
+  .build();
 
 const microverse = MicroverseLua.create({
   host: { appName: 'Acme' },
   surface,
-  defaultTimeout: fixedTimeout(30_000),
+  defaultTimeoutMs: 30_000,
 });
 
 await microverse.registerScript({
@@ -83,9 +76,7 @@ await microverse.dispose();
 | `MicroverseLua.create` | Create a Lua microverse (Wasm VM included). |
 | `registerScript` | New slot + optional preludes + main chunk. |
 | `emitToAllScripts` | Call `on{Kind}` on every script (workflow hooks). |
-| `defineHostSurface`, `defineHostSurfaceFor`, `fn`, `cap` | Surface builders (from `@microverse/host-surface`). |
-
-See [`@microverse/host-surface`](../host-surface/README.md) for surface authoring.
+| `defineHostSurfaceFor`, `defineHostSurface` | Fluent surface builder (`bridge` → `method` → `build`). |
 
 ## IDE stubs
 
@@ -94,7 +85,7 @@ pnpm add -D @microverse/cli
 pnpm exec microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
-Requires `export default` on the surface module. Details: [`@microverse/cli`](../cli/README.md).
+Requires `export default` on the surface module (typically the result of `.build()`). Details: [`@microverse/cli`](../cli/README.md).
 
 ## Reference example
 

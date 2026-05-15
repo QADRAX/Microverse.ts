@@ -8,10 +8,10 @@ export {
   buildBridgeMergeEnvForHost,
 } from './infrastructure/builders/bridgeMergeEnv.js';
 export {
-  cap,
+  BridgeBuilder,
   defineHostSurface,
   defineHostSurfaceFor,
-  fn,
+  SurfaceBuilder,
   type AnyHostSurfaceMethod,
   type HostFnContext,
   type HostSurface,
@@ -21,6 +21,7 @@ export {
   type HostSurfaceSpecForHost,
   type HostWorkflowHooksSpec,
   type LuaDefManifestGeneratorOpts,
+  type SurfaceMethodDef,
 } from './infrastructure/builders/defineHostSurfaceFacade.js';
 export {
   compileHostSurface,

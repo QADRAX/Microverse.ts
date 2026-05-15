@@ -5,51 +5,48 @@ Declare a **host surface** in TypeScript: Zod schemas, capabilities, and handler
 1. **Runtime bridge tables** for `mergeEnv` (what Lua calls at execution time).
 2. A **`LuaDefManifest`** for `@microverse/lua-defs` (`.d.lua` stubs for LuaLS).
 
-Most applications import surface builders from **`@microverse/microverse-lua`** instead of this package directly. Use `@microverse/host-surface` when you need `HostScriptSession`, custom runtime wiring, or you are building on top of Microverse without the Lua facade.
+Most applications import **`defineHostSurfaceFor`** from **`@microverse/microverse-lua`** instead of this package directly. Use `@microverse/host-surface` when you need `HostScriptSession` or custom runtime wiring.
 
 Monorepo overview: [root README](../../README.md). Lua microverse lifecycle: [`@microverse/microverse-lua`](../microverse-lua/README.md).
 
 ## Defining a surface
 
 ```ts
-import { cap, defineHostSurfaceFor, fn } from '@microverse/host-surface';
+import { defineHostSurfaceFor } from '@microverse/microverse-lua';
 import { z } from 'zod';
 
-export default defineHostSurfaceFor(
-  {
-    orders: {
-      get: fn<MyHost, { orderId: string }, OrderDto | undefined>({
-        capability: cap('orders:read'),
-        input: z.object({ orderId: z.string() }),
-        output: orderDto,
-        description: 'Load order by id',
-        handler: ({ host }, { orderId }) => host.orders.get(orderId),
-      }),
-    },
-  },
-  workflowHooks, // optional: Zod map → on* hooks in Lua
-);
+export default defineHostSurfaceFor<MyHost>()
+  .bridge('orders')
+  .method('get', {
+    requires: 'orders:read',
+    input: z.object({ orderId: z.string() }),
+    output: orderDto,
+    description: 'Load order by id',
+    handler: ({ host }, { orderId }) => host.orders.get(orderId),
+  })
+  .workflowHooks(workflowHooks) // optional
+  .build();
 ```
 
-### Building blocks
+| Step | Role |
+|------|------|
+| `defineHostSurfaceFor<THost>()` | Start builder; `handler` receives typed `host`. |
+| `.bridge('orders')` | Lua global table name. |
+| `.method('get', { … })` | One bridge method: `requires`, `input`, `output`, `handler`. |
+| `.workflowHooks(…)` | Optional Zod map → `on*` hooks in Lua. |
+| `.build()` | Compiled {@link HostSurface}. |
 
-| Helper | Role |
-|--------|------|
-| `fn<THost, TIn, TOut>({ … })` | One bridge method: `capability`, `input`, `output`, `handler`. `async` is inferred from `async function` handlers. |
-| `cap('domain:action')` | Capability id (must contain `:`). Aggregated on `surface.capabilities`. |
-| `surface.pickCapabilities(…)` | Subset allowlist for `registerScript`. |
-| `surface.toBridgeDeclarations()` | Runtime declarative bridge metadata. |
-| `surface.toLuaDefManifest({ output, headerNote })` | Build-time manifest for `.d.lua`. |
+`requires` is a `domain:action` capability string. `async` is inferred from `async function` handlers.
 
-Top-level keys become **Lua global tables** (`orders`, `billing`, …). Do not use `workflow` as a bridge name when workflow hooks are enabled—that name is reserved for the injected `workflow:extend()` helper.
+Bridge names become **Lua global tables** (`orders`, `billing`, …). Do not use `workflow` as a bridge name when workflow hooks are enabled—that name is reserved for the injected `workflow:extend()` helper.
 
 ### Host object
 
-The **host** is your engine context (services, repos, config). It is not generated here—you construct it in your app and pass it to `MicroverseLua.create({ host, surface })` or `HostScriptSession`. Use `defineHostSurfaceFor` so every `fn<THost, …>` shares the same host type.
+The **host** is your engine context (services, repos, config). It is not generated here—you construct it in your app and pass it to `MicroverseLua.create({ host, surface })` or `HostScriptSession`.
 
 ### Workflow hooks
 
-Second argument: `{ OrderPlaced: z.object({ … }), … }`.
+Call `.workflowHooks({ OrderPlaced: z.object({ … }), … })` before `.build()`.
 
 - TypeScript emits via `emitToAllScripts('OrderPlaced', payload)`.
 - Lua implements `onOrderPlaced` on the table from `workflow:extend()`.
@@ -79,7 +76,7 @@ await session.runChunk(luaSource);
 microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
-Requires `export default` of the compiled surface. See [`@microverse/cli`](../cli/README.md) and [`@microverse/lua-defs`](../lua-defs/README.md).
+Requires `export default` of the compiled surface (`.build()` result). See [`@microverse/cli`](../cli/README.md) and [`@microverse/lua-defs`](../lua-defs/README.md).
 
 Optional **Lua type names** on Zod schemas (`luaType('OrderDto', z.object({ … }))`) improve stub names—see `examples/business-scripting-engine/src/schemas/surface/bridgePayloads.ts`.
 

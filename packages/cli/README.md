@@ -24,7 +24,6 @@ pnpm exec microverse generate-lua-defs --help
 | Command | Description |
 |---------|-------------|
 | `generate-lua-defs` | Emit a single LuaCATS `.d.lua` file for **Lua** microverse host surfaces or JSON manifests. |
-| `generate-defs` | **Deprecated** — alias of `generate-lua-defs` (prints a warning). |
 
 Future runtimes might add e.g. `generate-<runtime>-defs` without changing the top-level binary name.
 

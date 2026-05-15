@@ -18,7 +18,7 @@ export type ZodToLuaTypeRefOptions = {
  *
  * @remarks
  * Register nominal types with {@link luaType} on shared Zod schemas (e.g. `orderDto`, `orderId`).
- * Prefer that over per-method `lua.paramTypes` / `lua.returns` on {@link fn}.
+ * Prefer that over per-method `lua.paramTypes` / `lua.returns` escape hatches on bridge methods.
  */
 export function zodToLuaTypeRef(schema: z.ZodTypeAny, options?: ZodToLuaTypeRefOptions): string {
   const emitAliasNames = options?.emitAliasNames !== false;

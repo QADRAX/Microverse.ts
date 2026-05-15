@@ -8,7 +8,12 @@ import {
   type HostWorkflowHooksSpec,
 } from '@microverse/host-surface';
 import type { CapabilityId } from '@microverse/runtime-capabilities';
-import { createLuaEnvSlotKey, type MicroverseRuntime, type TimeoutPolicy } from '@microverse/runtime-core';
+import {
+  createLuaEnvSlotKey,
+  fixedTimeout,
+  type MicroverseRuntime,
+  type TimeoutPolicy,
+} from '@microverse/runtime-core';
 import { createWasmMicroverseRuntime } from '@microverse/runtime-wasm';
 
 /** Phantom key: optional on the host **type** so {@link InferScriptHooksFromHost} can recover hook Zod map typing. Never set at runtime. */
@@ -22,20 +27,11 @@ export type TaggedLuaMicroverseHost<
   TBase = unknown,
 > = TBase & { readonly [SCRIPT_HOOKS_TYPE]?: THooks };
 
-/** @deprecated Use {@link TaggedLuaMicroverseHost}. */
-export type TaggedWorkflowHost<
-  THooks extends HostWorkflowHooksSpec,
-  TBase = unknown,
-> = TaggedLuaMicroverseHost<THooks, TBase>;
-
 export type InferScriptHooksFromHost<THost> = THost extends TaggedLuaMicroverseHost<infer H, unknown>
   ? H extends HostWorkflowHooksSpec
     ? H
     : undefined
   : undefined;
-
-/** @deprecated Use {@link InferScriptHooksFromHost}. */
-export type InferWorkflowHooksFromHost<THost> = InferScriptHooksFromHost<THost>;
 
 export type InferScriptHooksFromSurface<S extends HostSurfaceCore> =
   S extends HostSurfaceCore<CapabilityId> & { readonly workflowHooks: infer H extends HostWorkflowHooksSpec }
@@ -43,9 +39,6 @@ export type InferScriptHooksFromSurface<S extends HostSurfaceCore> =
     : S extends HostSurface<infer H extends HostWorkflowHooksSpec, CapabilityId>
       ? H
       : undefined;
-
-/** @deprecated Use {@link InferScriptHooksFromSurface}. */
-export type InferWorkflowHooksFromSurface<S extends HostSurfaceCore> = InferScriptHooksFromSurface<S>;
 
 export type InferSurfaceCapabilitiesFromSurface<S extends HostSurfaceCore> = S extends HostSurfaceCore<
   infer C extends CapabilityId
@@ -72,17 +65,29 @@ export type LuaMicroverseConfig<
   /** Wall-clock limit per `runChunk` / hook invocation (Wasm adapter + session forwarding). */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   /**
+   * Shorthand for {@link defaultTimeout} as `fixedTimeout(ms)`. Ignored when `defaultTimeout` is set.
+   */
+  readonly defaultTimeoutMs?: number | undefined;
+  /**
    * Lua sources run in **every** script slot after {@link HostScriptSession.openSession} and before that
    * script's main chunk. Define shared helpers/libraries here once instead of per {@link registerScript}.
    */
   readonly sharedLuaChunks?: readonly string[] | undefined;
 };
 
-/** @deprecated Use {@link LuaMicroverseConfig}. */
-export type HostWorkflowHubConfig<
-  THost extends object = object,
-  THooks extends HostWorkflowHooksSpec | undefined = InferScriptHooksFromHost<THost>,
-> = LuaMicroverseConfig<THost, THooks>;
+function resolveDefaultTimeout<
+  THost extends object,
+  THooks extends HostWorkflowHooksSpec | undefined,
+  TCapabilities extends CapabilityId,
+>(config: LuaMicroverseConfig<THost, THooks, TCapabilities>): TimeoutPolicy | undefined {
+  if (config.defaultTimeout !== undefined) {
+    return config.defaultTimeout;
+  }
+  if (config.defaultTimeoutMs !== undefined) {
+    return fixedTimeout(config.defaultTimeoutMs);
+  }
+  return undefined;
+}
 
 type EmitToAllScriptsFn<THooks extends HostWorkflowHooksSpec | undefined> = THooks extends HostWorkflowHooksSpec
   ? <const K extends keyof THooks & string>(kind: K, payload: Readonly<z.infer<THooks[K]>>) => Promise<void>
@@ -119,10 +124,10 @@ export class LuaMicroverse<
   constructor(private readonly config: LuaMicroverseConfig<THost, THooks, TCapabilities>) {
     this.host = config.host;
     this.surface = config.surface;
-    this.defaultTimeout = config.defaultTimeout;
+    this.defaultTimeout = resolveDefaultTimeout(config);
     this.sharedLuaChunks = config.sharedLuaChunks ?? [];
     this.runtime = createWasmMicroverseRuntime(
-      config.defaultTimeout !== undefined ? { defaultTimeout: config.defaultTimeout } : {},
+      this.defaultTimeout !== undefined ? { defaultTimeout: this.defaultTimeout } : {},
     );
     this.envSlotScope = config.envSlotScope ?? 'script';
   }
@@ -206,16 +211,9 @@ export class LuaMicroverse<
   };
 }
 
-/** @deprecated Use {@link LuaMicroverse}. */
-export type HostWorkflowHub<
-  THost extends object = object,
-  THooks extends HostWorkflowHooksSpec | undefined = InferScriptHooksFromHost<THost>,
-  TCapabilities extends CapabilityId = CapabilityId,
-> = LuaMicroverse<THost, THooks, TCapabilities>;
-
 /**
  * Creates a {@link LuaMicroverse} with a **built-in** Wasm Lua VM (Wasmoon). Type `host` with
- * {@link TaggedLuaMicroverseHost} so hook emits narrow correctly. Prefer {@link MicroverseLua.create} for the same API.
+ * {@link TaggedLuaMicroverseHost} so hook emits narrow correctly.
  */
 export function createLuaMicroverse<
   THost extends object,
@@ -225,6 +223,7 @@ export function createLuaMicroverse<
   readonly surface: TSurface;
   readonly envSlotScope?: string | undefined;
   readonly defaultTimeout?: TimeoutPolicy | undefined;
+  readonly defaultTimeoutMs?: number | undefined;
   readonly sharedLuaChunks?: readonly string[] | undefined;
 }): LuaMicroverse<THost, EffectiveScriptHooks<THost, TSurface>, InferSurfaceCapabilitiesFromSurface<TSurface>> {
   type H = EffectiveScriptHooks<THost, TSurface>;
@@ -234,9 +233,7 @@ export function createLuaMicroverse<
     surface: config.surface as unknown as HostSurface<H, C>,
     envSlotScope: config.envSlotScope,
     defaultTimeout: config.defaultTimeout,
+    defaultTimeoutMs: config.defaultTimeoutMs,
     sharedLuaChunks: config.sharedLuaChunks,
   });
 }
-
-/** @deprecated Use {@link createLuaMicroverse}. */
-export const createHostWorkflowHub = createLuaMicroverse;

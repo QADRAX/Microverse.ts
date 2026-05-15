@@ -20,7 +20,7 @@ Microverse is a pnpm monorepo for embedding **user-defined behavior** in your pr
 flowchart TB
   subgraph app [Your application]
     Host[Host services object]
-    Surface[Host surface spec Zod + fn + cap]
+    Surface[Host surface fluent builder]
   end
 
   subgraph facade ["@microverse/microverse-lua"]
@@ -67,7 +67,7 @@ pnpm test
 **Consumer entry point** (applications depend on this package only):
 
 ```ts
-import { MicroverseLua, defineHostSurfaceFor, fn, cap } from '@microverse/microverse-lua';
+import { MicroverseLua, defineHostSurfaceFor } from '@microverse/microverse-lua';
 ```
 
 **Generate IDE stubs** (dev dependency):
@@ -97,7 +97,7 @@ pnpm --filter @microverse-examples/business-scripting-engine test
 | Path | Role |
 |------|------|
 | [`packages/microverse-lua`](packages/microverse-lua/README.md) | **Lua facade** — `MicroverseLua`, re-exports, plug-and-play Lua microverse. |
-| [`packages/host-surface`](packages/host-surface/README.md) | `defineHostSurface`, `fn`, `cap`, manifest → bridges + `.d.lua`. |
+| [`packages/host-surface`](packages/host-surface/README.md) | Fluent `defineHostSurfaceFor`, manifest → bridges + `.d.lua`. |
 | [`packages/lua-defs`](packages/lua-defs/README.md) | Manifest → LuaCATS file (library / plugins). |
 | [`packages/cli`](packages/cli/README.md) | `microverse` CLI (`generate-lua-defs`, …). |
 | `packages/runtime-core` | Runtime ports, slots, timeouts, script execution. |

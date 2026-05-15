@@ -9,7 +9,7 @@ import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbo
 /**
  * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
  *
- * @typeParam THost - Host services / world object you declare for `fn` handlers.
+ * @typeParam THost - Host services / world object you declare for bridge handlers.
  */
 export type HostFnContext<THost> = {
   readonly host: THost;
@@ -18,13 +18,13 @@ export type HostFnContext<THost> = {
 };
 
 /**
- * Strongly typed description of one bridge method. Pass this object to {@link fn} so TypeScript
- * checks `handler` against `input` / `output` schemas.
+ * Strongly typed description of one bridge method (produced by the fluent `.method(…)` builder).
+ * TypeScript checks `handler` against `input` / `output` schemas.
  *
  * @typeParam THost - Host type available as `ctx.host` inside `handler`.
  * @typeParam TIn - Payload type after Zod `input` parsing (Lua calls the bridge with one table argument).
  * @typeParam TOut - Return type validated by Zod `output` before crossing back to Lua.
- * @typeParam TCap - Capability id for this method (preserved when using {@link cap} at the call site).
+ * @typeParam TCap - Capability id for this method (from fluent `requires: 'domain:action'`).
  */
 export type HostSurfaceMethodEntry<
   THost,
@@ -45,7 +45,7 @@ export type HostSurfaceMethodEntry<
   readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut | Promise<TOut>;
   /**
    * When true, manifest and Lua runtime treat this method as async (`MethodHandle` + optional `onComplete`).
-   * Set automatically by {@link fn} for `async function` handlers.
+   * Set automatically for `async function` handlers in the fluent builder.
    */
   readonly async?: boolean | undefined;
   /** Optional description emitted into the LuaCATS manifest. */
@@ -53,7 +53,7 @@ export type HostSurfaceMethodEntry<
   /**
    * Advanced escape hatch for manifest emission. Prefer registering Zod schemas with {@link luaType}
    * (see `bridgePayloads` in the business example) so `.d.lua` stays inferred from `input` / `output`.
-   * Does not replace async bridge typing (`async` on {@link fn} emits handle + `onComplete`).
+   * Does not replace async bridge typing (`async: true` emits handle + `onComplete` in `.d.lua`).
    * `paramTypes` keys must match `input` object keys (or `value` for non-object inputs).
    */
   readonly lua?: {
@@ -63,7 +63,7 @@ export type HostSurfaceMethodEntry<
 };
 
 /**
- * Erased method entry stored inside a {@link HostSurfaceSpec}. Use {@link fn} for typed entries; assignability widens at the spec boundary.
+ * Erased method entry stored inside a {@link HostSurfaceSpec}. Assignability widens at the spec boundary.
  */
 export type AnyHostSurfaceMethod = {
   readonly capability: CapabilityId;
@@ -89,7 +89,7 @@ export type HostSurfaceSpec = Readonly<
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
- * Surface spec where every `fn<THost, …>(…)` entry must use the same host type as your engine context
+ * Surface spec where every method entry uses the same host type as your engine context
  * (the `THost` you pass as `host` into {@link HostScriptSession}).
  */
 /* eslint-disable @typescript-eslint/no-explicit-any -- per-method host typing uses independent in/out */

@@ -1,10 +1,10 @@
-import { createAllowlist, InMemoryCapabilityRegistry } from '@microverse/runtime-capabilities';
+import { createAllowlist, createCapabilityId, InMemoryCapabilityRegistry } from '@microverse/runtime-capabilities';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { normalizeMethodDef } from '../../domain/surfaceMethodDef.js';
 import { augmentHostWithCapabilityRegistry } from '../../infrastructure/adapters/augmentHostWithCapabilityRegistry.js';
 import { createZodSchemaValidationPort } from '../../infrastructure/adapters/zodSchemaValidationAdapter.js';
-import { cap, fn } from '../../domain/hostSurfaceMethodHelpers.js';
 import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec.js';
 
 describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
@@ -12,15 +12,16 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
     const schemaValidation = createZodSchemaValidationPort();
     const decls = createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, {
       demo: {
-        bump: fn<{ n: number }, { x: number }, { y: number }>({
-          capability: cap('demo:bump'),
+        bump: normalizeMethodDef({
+          requires: 'demo:bump',
           input: z.object({ x: z.number() }),
           output: z.object({ y: z.number() }),
           handler: async (_ctx, { x }) => ({ y: x + 1 }),
         }),
       },
     });
-    const registry = new InMemoryCapabilityRegistry(createAllowlist([cap('demo:bump')]));
+    const capId = createCapabilityId('demo:bump');
+    const registry = new InMemoryCapabilityRegistry(createAllowlist([capId]));
     const host = augmentHostWithCapabilityRegistry({ n: 0 }, registry);
     const api = decls[0]!.createApi(host, 'slot-a') as { bump: (payload: { x: number }) => Promise<{ y: number }> };
     const out = api.bump({ x: 41 });
@@ -32,15 +33,16 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
     const schemaValidation = createZodSchemaValidationPort();
     const decls = createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, {
       demo: {
-        bad: fn<Record<string, never>, Record<string, never>, { y: number }>({
-          capability: cap('demo:bad'),
+        bad: normalizeMethodDef({
+          requires: 'demo:bad',
           input: z.object({}),
           output: z.object({ y: z.number() }),
           handler: async () => ({ y: 'oops' }) as unknown as { y: number },
         }),
       },
     });
-    const registry = new InMemoryCapabilityRegistry(createAllowlist([cap('demo:bad')]));
+    const capId = createCapabilityId('demo:bad');
+    const registry = new InMemoryCapabilityRegistry(createAllowlist([capId]));
     const host = augmentHostWithCapabilityRegistry({}, registry);
     const api = decls[0]!.createApi(host, 'slot-b') as { bad: (payload: Record<string, never>) => Promise<{ y: number }> };
     const out = api.bad({});

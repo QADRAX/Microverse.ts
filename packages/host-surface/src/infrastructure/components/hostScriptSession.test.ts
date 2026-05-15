@@ -7,23 +7,22 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { cap, defineHostSurface, fn } from '../builders/defineHostSurfaceFacade.js';
+import { defineHostSurface } from '../builders/defineHostSurfaceFacade.js';
 import { HostScriptSession } from './hostScriptSession.js';
 
 type H = { readonly tag: string };
 
 describe('HostScriptSession', () => {
   it('openSession then dispose does not throw (stub runtime)', async () => {
-    const surface = defineHostSurface({
-      ping: {
-        go: fn<H, Record<string, never>, string>({
-          capability: cap('demo:ping'),
-          input: z.object({}),
-          output: z.string(),
-          handler: ({ host }) => host.tag,
-        }),
-      },
-    });
+    const surface = defineHostSurface()
+      .bridge('ping')
+      .method('go', {
+        requires: 'demo:ping',
+        input: z.object({}),
+        output: z.string(),
+        handler: ({ host }) => host.tag,
+      })
+      .build();
 
     const session = new HostScriptSession({
       runtime: createStubMicroverseRuntime({
@@ -33,7 +32,7 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-1'),
-      allowedCapabilities: [cap('demo:ping')],
+      allowedCapabilities: surface.pickCapabilities('demo:ping'),
     });
 
     await session.openSession();
@@ -49,19 +48,16 @@ describe('HostScriptSession', () => {
       OrderPlaced: z.object({ orderId: z.string(), amountCents: z.number() }),
     } as const;
 
-    const surface = defineHostSurface(
-      {
-        ping: {
-          go: fn<H, Record<string, never>, string>({
-            capability: cap('demo:ping'),
-            input: z.object({}),
-            output: z.string(),
-            handler: ({ host }) => host.tag,
-          }),
-        },
-      },
-      workflowHooks,
-    );
+    const surface = defineHostSurface()
+      .bridge('ping')
+      .method('go', {
+        requires: 'demo:ping',
+        input: z.object({}),
+        output: z.string(),
+        handler: ({ host }) => host.tag,
+      })
+      .workflowHooks(workflowHooks)
+      .build();
 
     const session = new HostScriptSession<H, typeof workflowHooks>({
       runtime: createStubMicroverseRuntime({
@@ -71,7 +67,7 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-hooks'),
-      allowedCapabilities: [cap('demo:ping')],
+      allowedCapabilities: surface.pickCapabilities('demo:ping'),
     });
 
     await session.openSession();

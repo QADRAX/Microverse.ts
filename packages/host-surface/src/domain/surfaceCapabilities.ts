@@ -12,7 +12,7 @@ type InferBridgeCapabilities<B> = B extends Readonly<Record<string, unknown>>
 
 /**
  * Union of every {@link CapabilityId} declared on methods in a {@link HostSurfaceSpec}
- * (via `cap('domain:action')` on each `fn(…)` entry).
+ * (via `requires: 'domain:action'` on each fluent `.method(…)` entry).
  */
 export type InferSurfaceCapabilities<TSpec extends HostSurfaceSpec> = InferBridgeCapabilities<
   TSpec[keyof TSpec]
@@ -68,7 +68,7 @@ export function pickSurfaceCapabilities<
   return capabilities as unknown as ReadonlyArray<Extract<TSurface[number], CapabilityId>>;
 }
 
-/** Helper type for method entries that preserve literal capability strings through {@link cap}. */
+/** Helper type for method entries that preserve a specific capability literal. */
 export type SurfaceCapabilityEntry<TCap extends CapabilityId> = HostSurfaceMethodEntry<
   unknown,
   unknown,

@@ -2,24 +2,21 @@ import { buildLuaCatsDocument } from '@microverse/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { cap, fn } from './hostSurfaceMethodHelpers.js';
+import { normalizeMethodDef } from './surfaceMethodDef.js';
 import { buildLuaDefManifestFromHostSurfaceSpec } from './hostSurfaceManifest.js';
 
 describe('buildLuaDefManifestFromHostSurfaceSpec', () => {
-  it('emits async handle + onComplete for async fn handlers', () => {
-    const spec = {
-      asyncio: {
-        tick: fn<unknown, { delayMs: number; seed: number }, { value: number }>({
-          capability: cap('asyncio:tick'),
-          input: z.object({ delayMs: z.number(), seed: z.number() }),
-          output: z.object({ value: z.number() }),
-          handler: async () => ({ value: 1 }),
-        }),
-      },
-    };
+  it('emits async handle + onComplete for async handlers', () => {
+    const tick = normalizeMethodDef({
+      requires: 'asyncio:tick',
+      input: z.object({ delayMs: z.number(), seed: z.number() }),
+      output: z.object({ value: z.number() }),
+      handler: async () => ({ value: 1 }),
+    });
+    const spec = { asyncio: { tick } };
     const manifest = buildLuaDefManifestFromHostSurfaceSpec(spec, { output: 'out.d.lua' });
     const doc = buildLuaCatsDocument(manifest);
-    expect(spec.asyncio.tick.async).toBe(true);
+    expect(tick.async).toBe(true);
     expect(doc).toContain('---@class AsyncioTickHandle');
     expect(doc).toContain('---@field await fun(self: AsyncioTickHandle): { value: number }');
     expect(doc).not.toContain('function AsyncioTickHandle:await()');

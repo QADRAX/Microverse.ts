@@ -1,4 +1,4 @@
-import { cap, defineHostSurface, fn } from '@microverse/microverse-lua';
+import { defineHostSurface } from '@microverse/microverse-lua';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
@@ -11,19 +11,16 @@ describe('createLuaMicroverse', () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
-    const surface = defineHostSurface(
-      {
-        demo: {
-          tick: fn<H, Record<string, never>, number>({
-            capability: cap('demo:tick'),
-            input: z.object({}),
-            output: z.number(),
-            handler: ({ host }) => host.n,
-          }),
-        },
-      },
-      hooks,
-    );
+    const surface = defineHostSurface()
+      .bridge('demo')
+      .method('tick', {
+        requires: 'demo:tick',
+        input: z.object({}),
+        output: z.number(),
+        handler: ({ host }) => host.n,
+      })
+      .workflowHooks(hooks)
+      .build();
 
     const microverse = createLuaMicroverse({
       host: { n: 0 } satisfies Host,
