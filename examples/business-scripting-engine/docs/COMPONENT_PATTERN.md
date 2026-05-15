@@ -27,7 +27,16 @@ Este ejemplo **no** añade React al núcleo: solo documenta convenciones que pue
 
 ## Subrutinas / librería compartida
 
-- Prefer **`registerWorkflow(..., { injectLuaChunks: […] })`** en el motor: el hub ejecuta cada prelude en el mismo slot **antes** del chunk del workflow (misma semántica que un único chunk compuesto).
-- Alternativa manual: [`composeLuaChunk`](../src/patterns/composeLuaChunk.ts) concatena strings en un solo `runChunk`. Ejemplo: `workflows/order_with_math_prelude.lua` + `lib/math_helpers.lua`.
+- Prefer **`sharedLuaChunks` al crear el motor** (una vez por hub; cada workflow la recibe en su slot antes de su script):
+
+  ```ts
+  new BusinessScriptingEngine(host, {
+    sharedLuaChunks: [readWorkflowLua('lib/math_helpers.lua')],
+  });
+  await engine.registerWorkflow('my-wf', readWorkflowLua('workflows/order_with_math_prelude.lua'), […]);
+  ```
+
+- Librerías Lua: tabla con nombre y anotaciones EmmyLua en `lua/lib/*.lua` (`---@global`, `---@class`); `generated/` queda solo para `businessSurface.d.lua` (CLI).
+- **`injectLuaChunks` por workflow** solo para preludes exclusivos de ese workflow (se ejecutan después del shared).
 
 Tras cambiar APIs en `@luarizer/luarizer`, hay que **reconstruir** ese paquete (`pnpm --filter @luarizer/luarizer build`): el ejemplo importa su `dist/`.

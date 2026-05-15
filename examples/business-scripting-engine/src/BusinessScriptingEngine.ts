@@ -17,6 +17,11 @@ export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js
 export type BusinessScriptingEngineOptions = {
   /** Per-chunk wall-clock limit (default 30s). Combine with Wasm instruction budget in `@luarizer/runtime-wasm`. */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
+  /**
+   * Lua library chunks loaded into **every** workflow slot (same `_ENV`, before each workflow script).
+   * Prefer this over concatenating preludes per `registerWorkflow`.
+   */
+  readonly sharedLuaChunks?: readonly string[] | undefined;
 };
 
 /**
@@ -33,6 +38,7 @@ export class BusinessScriptingEngine {
       host,
       surface,
       defaultTimeout: options.defaultTimeout ?? fixedTimeout(30_000),
+      sharedLuaChunks: options.sharedLuaChunks,
     });
   }
 
@@ -40,7 +46,10 @@ export class BusinessScriptingEngine {
     workflowId: string,
     luaSource: string,
     allowedCapabilities: readonly CapabilityId[],
-    options?: { readonly injectLuaChunks?: readonly string[] | undefined },
+    options?: {
+      /** Extra prelude for this workflow only (runs after hub `sharedLuaChunks`). */
+      readonly injectLuaChunks?: readonly string[] | undefined;
+    },
   ): Promise<void> => {
     await this.hub.registerWorkflow({
       workflowId,

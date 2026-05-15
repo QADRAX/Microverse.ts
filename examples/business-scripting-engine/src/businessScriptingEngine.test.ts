@@ -5,8 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
-import { composeLuaChunk } from './patterns/composeLuaChunk.js';
 import { createDefaultBusinessHost, readWorkflowLua } from './services/index.js';
+
+const MATH_LIB = readWorkflowLua('lib/math_helpers.lua');
+
+function createEngineWithSharedMathLib(host: ReturnType<typeof createDefaultBusinessHost>) {
+  return new BusinessScriptingEngine(host, { sharedLuaChunks: [MATH_LIB] });
+}
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const generatedDefsPath = join(packageRoot, 'generated', 'businessSurface.d.lua');
@@ -148,14 +153,14 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('composeLuaChunk prepends a Lua prelude (shared helpers) before a workflow', async () => {
+  it('hub sharedLuaChunks: every workflow sees the shared library without per-workflow prelude', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-pre', customerId: 'c-p', totalCents: 1 }]);
-    const engine = new BusinessScriptingEngine(host);
-    const script = composeLuaChunk([
-      readWorkflowLua('lib/math_helpers.lua'),
+    const engine = createEngineWithSharedMathLib(host);
+    await engine.registerWorkflow(
+      'prelude-demo',
       readWorkflowLua('workflows/order_with_math_prelude.lua'),
-    ]);
-    await engine.registerWorkflow('prelude-demo', script, [cap('audit:record')]);
+      [cap('audit:record')],
+    );
     await engine.dispatch({
       kind: 'OrderPlaced',
       orderId: 'o-pre',
@@ -166,14 +171,36 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('registerWorkflow injectLuaChunks runs lib prelude before the workflow (no composeLuaChunk)', async () => {
+  it('two workflows on the same hub both use sharedLuaChunks without repeating registration', async () => {
+    const host = createDefaultBusinessHost([
+      { id: 'o-a', customerId: 'c-a', totalCents: 1 },
+      { id: 'o-b', customerId: 'c-b', totalCents: 1 },
+    ]);
+    const engine = createEngineWithSharedMathLib(host);
+    await engine.registerWorkflow('wf-a', readWorkflowLua('workflows/order_with_math_prelude.lua'), [
+      cap('audit:record'),
+    ]);
+    await engine.registerWorkflow('wf-b', readWorkflowLua('workflows/order_with_math_prelude.lua'), [
+      cap('audit:record'),
+    ]);
+    await engine.dispatch({
+      kind: 'OrderPlaced',
+      orderId: 'o-a',
+      amountCents: 10,
+      customerId: 'c-a',
+    });
+    expect(host.audit.getLines().filter((l) => l.includes('prelude-sum:11:order:o-a')).length).toBe(2);
+    await engine.dispose();
+  });
+
+  it('registerWorkflow injectLuaChunks runs a per-workflow prelude in the slot', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-inj', customerId: 'c-i', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
     await engine.registerWorkflow(
       'inject-prelude',
       readWorkflowLua('workflows/order_with_math_prelude.lua'),
       [cap('audit:record')],
-      { injectLuaChunks: [readWorkflowLua('lib/math_helpers.lua')] },
+      { injectLuaChunks: [MATH_LIB] },
     );
     await engine.dispatch({
       kind: 'OrderPlaced',

@@ -54,7 +54,7 @@ Opciones **genéricas** sin `require` de ficheros en el VM por defecto:
 - Tablas Lua `props` / `state` inyectadas vía `_ENV` (segundo chunk o `rawset` desde un bridge `component:init` que definas tú).
 - “Hooks” de estado: **Lua puro** (closures/tablas) o bridges adicionales si necesitas persistencia en el host.
 
-Ver el ejemplo en `examples/business-scripting-engine/docs/COMPONENT_PATTERN.md` y `src/patterns/composeLuaChunk.ts`.
+Ver el ejemplo en `examples/business-scripting-engine/docs/COMPONENT_PATTERN.md`.
 
 ## 5. Scripts simples vs modelado rico
 

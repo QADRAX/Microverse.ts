@@ -62,6 +62,11 @@ export type HostWorkflowHubConfig<
   readonly envSlotScope?: string | undefined;
   /** Wall-clock limit per `runChunk` / workflow hook invocation (Wasm adapter + session forwarding). */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
+  /**
+   * Lua sources run in **every** workflow slot after {@link HostScriptSession.openSession} and before that
+   * workflow's script. Define shared helpers/libraries here once instead of per {@link registerWorkflow}.
+   */
+  readonly sharedLuaChunks?: readonly string[] | undefined;
 };
 
 type EmitToAllWorkflowsFn<THooks extends HostWorkflowHooksSpec | undefined> = THooks extends HostWorkflowHooksSpec
@@ -95,10 +100,13 @@ export class HostWorkflowHub<
 
   private readonly defaultTimeout: TimeoutPolicy | undefined;
 
+  private readonly sharedLuaChunks: readonly string[];
+
   constructor(private readonly config: HostWorkflowHubConfig<THost, THooks>) {
     this.host = config.host;
     this.surface = config.surface;
     this.defaultTimeout = config.defaultTimeout;
+    this.sharedLuaChunks = config.sharedLuaChunks ?? [];
     this.runtime =
       config.runtime ??
       createWasmSandboxRuntime(
@@ -113,8 +121,8 @@ export class HostWorkflowHub<
   /**
    * Loads one Lua chunk in an isolated env slot; `workflowId` must be unique within this hub.
    *
-   * @param args.injectLuaChunks - Optional Lua sources run in order after `openSession` and before `script`
-   *   (e.g. pure global helpers under `lua/lib/` without string concatenation).
+   * @param args.injectLuaChunks - Optional **per-workflow** Lua run after hub {@link HostWorkflowHubConfig.sharedLuaChunks}
+   *   and before `script` (same slot env; prefer hub-level shared chunks for libraries used by many workflows).
    */
   readonly registerWorkflow = async (args: {
     readonly workflowId: string;
@@ -123,6 +131,7 @@ export class HostWorkflowHub<
     readonly injectLuaChunks?: readonly string[] | undefined;
   }): Promise<void> => {
     const { workflowId, script, allowedCapabilities, injectLuaChunks } = args;
+    const preludeChunks = [...this.sharedLuaChunks, ...(injectLuaChunks ?? [])];
     if (this.sessions.has(workflowId)) {
       throw new Error(`workflow already registered: ${workflowId}`);
     }
@@ -135,7 +144,7 @@ export class HostWorkflowHub<
       defaultTimeout: this.defaultTimeout,
     });
     await session.openSession();
-    for (const chunk of injectLuaChunks ?? []) {
+    for (const [index, chunk] of preludeChunks.entries()) {
       const injected = await session.runChunk(chunk);
       if (injected._tag !== 'ok') {
         await session.dispose();
@@ -143,7 +152,11 @@ export class HostWorkflowHub<
           injected._tag === 'err' && injected.error._tag === 'AdapterError'
             ? injected.error.message
             : JSON.stringify(injected.error);
-        throw new Error(`workflow "${workflowId}" failed injecting prelude: ${detail}`);
+        const which =
+          index < this.sharedLuaChunks.length
+            ? `shared Lua prelude [${index}]`
+            : `workflow injectLuaChunks [${index - this.sharedLuaChunks.length}]`;
+        throw new Error(`workflow "${workflowId}" failed injecting ${which}: ${detail}`);
       }
     }
     const loaded = await session.runChunk(script);
@@ -195,6 +208,7 @@ export function createHostWorkflowHub<THost extends object, const TSurface exten
   readonly runtime?: SandboxRuntime | undefined;
   readonly envSlotScope?: string | undefined;
   readonly defaultTimeout?: TimeoutPolicy | undefined;
+  readonly sharedLuaChunks?: readonly string[] | undefined;
 }): HostWorkflowHub<THost, EffectiveWorkflowHooks<THost, TSurface>> {
   type H = EffectiveWorkflowHooks<THost, TSurface>;
   return new HostWorkflowHub<THost, H>({
@@ -203,5 +217,6 @@ export function createHostWorkflowHub<THost extends object, const TSurface exten
     runtime: config.runtime,
     envSlotScope: config.envSlotScope,
     defaultTimeout: config.defaultTimeout,
+    sharedLuaChunks: config.sharedLuaChunks,
   });
 }
