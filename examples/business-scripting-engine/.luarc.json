@@ -2,6 +2,5 @@
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "LuaJIT",
   "workspace.checkThirdParty": false,
-  "workspace.library": ["${workspaceFolder}/generated"],
-  "diagnostics.globals": ["orders", "billing", "notifications", "onOrderPlaced", "onInventoryLow"]
+  "workspace.library": ["./generated"]
 }

@@ -33,7 +33,7 @@ export type {
  * - Lua calls look like `orders:get({ orderId = "x" })` (or `orders.get({ ... })`) — one payload table per method;
  *   bridges accept both forms (colon passes `self` as the first argument).
  * - Pair with {@link HostScriptSession} or {@link buildBridgeMergeEnvForHost} and an allowlisted registry.
- * - Optional **workflow hooks** (second argument): Zod payloads for `onOrderPlaced`, … — emitted into LuaCATS so `lua/workflows` stay typed; the returned surface includes them as readonly `workflowHooks` on the surface object.
+ * - Optional **workflow hooks** (second argument): Zod payloads per event kind — emitted into LuaCATS as abstract `Workflow` plus a per-slot `workflow:extend()` helper; the returned surface includes them as readonly `workflowHooks` on the surface object. Do not name a TS bridge table `workflow` when hooks are enabled (that name is reserved for the injected Lua helper).
  *
  * @example
  * ```ts

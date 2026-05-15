@@ -6,10 +6,6 @@
 
 ---@alias ChargeResult { ok: boolean }
 
----@alias LuarizerWorkflowEvt_InventoryLow { sku: string; unitsLeft: number }
-
----@alias LuarizerWorkflowEvt_OrderPlaced { orderId: string; amountCents: number; customerId: string }
-
 ---@alias OrderDto { id: string; customerId: string; totalCents: number }
 
 ---@alias OrderId string
@@ -36,10 +32,25 @@ notifications = {}
 ---@return nil
 function notifications:send(payload) end
 
----Workflow hook for InventoryLow (global `onInventoryLow`). Payload type: `LuarizerWorkflowEvt_InventoryLow`.
----@param evt LuarizerWorkflowEvt_InventoryLow
-function onInventoryLow(evt) end
+---Workflow hook payload for `onInventoryLow` (Zod → LuaCATS fields).
+---@class LuarizerWorkflowEvt_InventoryLow
+---@field sku string
+---@field unitsLeft number
 
----Workflow hook for OrderPlaced (global `onOrderPlaced`). Payload type: `LuarizerWorkflowEvt_OrderPlaced`.
----@param evt LuarizerWorkflowEvt_OrderPlaced
-function onOrderPlaced(evt) end
+---Workflow hook payload for `onOrderPlaced` (Zod → LuaCATS fields).
+---@class LuarizerWorkflowEvt_OrderPlaced
+---@field orderId string
+---@field amountCents number
+---@field customerId string
+
+---Abstract workflow handler type. Call `local w = workflow:extend()` then define `function w:onOrderPlaced(evt) … end` (etc.). Each Lua slot has its own `workflow` helper and handler table.
+---@class Workflow
+---@field onInventoryLow fun(self: Workflow, evt: LuarizerWorkflowEvt_InventoryLow) Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires. Payload: `LuarizerWorkflowEvt_InventoryLow`.
+---@field onOrderPlaced fun(self: Workflow, evt: LuarizerWorkflowEvt_OrderPlaced) Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires. Payload: `LuarizerWorkflowEvt_OrderPlaced`.
+
+---Per-slot helper injected by the host (not a TS bridge). Creates the active handler table for this sandbox slot.
+---@class workflow
+workflow = {}
+---Returns a new handler table with default no-op hooks; registers it for host → Lua dispatch in this slot.
+---@return Workflow
+function workflow:extend() end

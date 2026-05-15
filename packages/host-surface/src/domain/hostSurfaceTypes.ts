@@ -83,7 +83,7 @@ export type HostSurfaceSpecForHost<THost> = Readonly<{
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
- * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua global `onOrderPlaced`).
+ * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua method `onOrderPlaced` on the handler from `workflow:extend()`).
  * Passed as the second argument to {@link defineHostSurface} to emit workflow hook typings into `.d.lua`.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any -- workflow hook payloads use open Zod object shapes */

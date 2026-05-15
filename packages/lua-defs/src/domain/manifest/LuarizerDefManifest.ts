@@ -20,6 +20,12 @@ export type ManifestMethod = {
   readonly params?: readonly ManifestParam[] | undefined;
   /** LuaCATS return, e.g. `boolean` or `string|nil` */
   readonly returns?: LuaTypeRef | undefined;
+  /**
+   * How the Lua method is typed for LuaCATS.
+   * - `tablePayload` (default): one argument `payload` as `{ field: type; … }` (bridge style).
+   * - `singleValue`: one argument using the single param’s name and type (e.g. workflow `evt`).
+   */
+  readonly callStyle?: 'tablePayload' | 'singleValue' | undefined;
 };
 
 export type ManifestClassField = {
@@ -34,6 +40,11 @@ export type ManifestClass = {
   /** Campos de la tabla bridge (además de métodos). Opcional. */
   readonly fields?: readonly ManifestClassField[] | undefined;
   readonly methods?: readonly ManifestMethod[] | undefined;
+  /**
+   * When false, LuaCATS omits `ClassName = {}` (abstract / type-only class, e.g. `Workflow`).
+   * Default true.
+   */
+  readonly emitSingleton?: boolean | undefined;
 };
 
 export type ManifestGlobalField = {
@@ -48,7 +59,7 @@ export type ManifestGlobal = {
   readonly fields: readonly ManifestGlobalField[];
 };
 
-/** Optional global workflow hooks: `onOrderPlaced(evt)`, … (LuaCATS stubs for `lua/workflows`). */
+/** Optional global workflow hooks: legacy `onOrderPlaced(evt)` stubs; host-surface workflow hooks document `Workflow` (abstract) and `workflow:extend()` in `classes` instead. */
 export type ManifestLuaHook = {
   readonly name: string;
   readonly paramName: string;
@@ -71,6 +82,6 @@ export type LuarizerDefManifest = {
   readonly aliases?: readonly ManifestAlias[] | undefined;
   readonly classes?: readonly ManifestClass[] | undefined;
   readonly globals?: readonly ManifestGlobal[] | undefined;
-  /** Global `function onX(evt) end` stubs (workflow Lua); param types from Zod at build time. */
+  /** Legacy global `function onX(evt) end` stubs. Host-surface workflow hooks document `Workflow` (abstract) and the `workflow` helper in `classes` instead. */
   readonly luaHooks?: readonly ManifestLuaHook[] | undefined;
 };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Zod payloads for workflow Lua hooks (`onOrderPlaced`, …); drives `.d.lua` + LuaLS in `lua/workflows`. */
+/** Zod payloads for workflow Lua hooks (`onOrderPlaced` on the table from `workflow:extend()`, …); drives `.d.lua` + LuaLS in `lua/workflows`. */
 export const businessWorkflowHooks = {
   OrderPlaced: z.object({
     orderId: z.string(),

@@ -55,7 +55,8 @@
         "name": { "type": "string" },
         "description": { "type": "string" },
         "params": { "type": "array", "items": { "$ref": "#/$defs/param" } },
-        "returns": { "type": "string" }
+        "returns": { "type": "string" },
+        "callStyle": { "type": "string", "enum": ["tablePayload", "singleValue"] }
       }
     },
     "class": {
@@ -66,7 +67,8 @@
         "name": { "type": "string" },
         "description": { "type": "string" },
         "fields": { "type": "array", "items": { "$ref": "#/$defs/globalField" } },
-        "methods": { "type": "array", "items": { "$ref": "#/$defs/method" } }
+        "methods": { "type": "array", "items": { "$ref": "#/$defs/method" } },
+        "emitSingleton": { "type": "boolean" }
       }
     },
     "globalField": {

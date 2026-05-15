@@ -13,6 +13,8 @@ export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks
  * Each workflow session declares only the capabilities it needs in its allowlist.
  *
  * Default-exported for `luarizer generate-defs --surface ...` (see package.json).
+ * Workflow hooks: abstract **`Workflow`** plus injected **`workflow:extend()`** helper (see generated `businessSurface.d.lua`).
+ * For LuaLS, keep `.luarc.json` **`workspace.library`** as `./generated` (relative to that file) so stubs apply when the repo root is the IDE workspace.
  */
 export default defineHostSurfaceFor(
   {

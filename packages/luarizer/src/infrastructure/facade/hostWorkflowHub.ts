@@ -72,7 +72,8 @@ type EmitToAllWorkflowsFn<THooks extends HostWorkflowHooksSpec | undefined> = TH
 /**
  * Owns one {@link SandboxRuntime}, a map of {@link HostScriptSession}s keyed by `workflowId`, and helpers to
  * register Lua + emit workflow hooks across all sessions — intended as the default host integration surface
- * instead of wiring `createSandbox` / `slotKey` / `Map` by hand.
+ * instead of wiring `createSandbox` / `slotKey` / `Map` by hand. Each `workflowId` gets an isolated Lua env slot,
+ * so many workflows run concurrently without sharing handler state.
  *
  * @typeParam THost - Use {@link TaggedWorkflowHost} so `emitToAllWorkflows` narrows to your workflow Zod map without a second generic.
  */

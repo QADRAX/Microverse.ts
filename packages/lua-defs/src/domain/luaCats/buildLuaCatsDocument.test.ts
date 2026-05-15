@@ -87,6 +87,49 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).toContain('orders = {}');
   });
 
+  it('omits class singleton when emitSingleton is false', () => {
+    const manifest: LuarizerDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      classes: [
+        {
+          name: 'AbstractOnly',
+          fields: [{ name: 'x', luaType: 'number', description: 'n' }],
+          emitSingleton: false,
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    expect(lua).toContain('---@class AbstractOnly');
+    expect(lua).toContain('---@field x number');
+    expect(lua).not.toContain('AbstractOnly = {}');
+  });
+
+  it('emits singleValue methods on a class (workflow evt)', () => {
+    const manifest: LuarizerDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      aliases: [{ name: 'Evt', definition: '{ x: number }' }],
+      classes: [
+        {
+          name: 'Workflow',
+          description: 'Hooks',
+          methods: [
+            {
+              name: 'onPing',
+              callStyle: 'singleValue',
+              params: [{ name: 'evt', luaType: 'Evt' }],
+            },
+          ],
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    expect(lua).toContain('---@param evt Evt');
+    expect(lua).toContain('function Workflow:onPing(evt) end');
+    expect(lua).not.toContain('function Workflow:onPing(payload) end');
+  });
+
   it('emits luaHooks after classes', () => {
     const manifest: LuarizerDefManifest = {
       schemaVersion: 1,

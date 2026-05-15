@@ -18,6 +18,15 @@ function emitMethod(className: string, m: ManifestMethod): string {
     lines.push(`---${escComment(m.description)}`);
   }
   const ps = m.params ?? [];
+  if (m.callStyle === 'singleValue' && ps.length === 1) {
+    const p = ps[0]!;
+    lines.push(`---@param ${p.name} ${p.luaType}`);
+    if (m.returns !== undefined) {
+      lines.push(`---@return ${m.returns}`);
+    }
+    lines.push(`function ${className}:${m.name}(${p.name}) end`);
+    return lines.join('\n');
+  }
   if (ps.length === 0) {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);
@@ -59,7 +68,9 @@ function emitClass(c: ManifestClass): string {
     const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
     parts.push(`---@field ${f.name} ${f.luaType}${d}`);
   }
-  parts.push(`${c.name} = {}`);
+  if (c.emitSingleton !== false) {
+    parts.push(`${c.name} = {}`);
+  }
   for (const m of c.methods ?? []) {
     parts.push(emitMethod(c.name, m));
   }

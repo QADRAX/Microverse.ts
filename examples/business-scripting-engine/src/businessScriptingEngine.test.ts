@@ -91,16 +91,30 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 });
 
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
-  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods', () => {
+  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods + workflow hook types', () => {
     const doc = readFileSync(generatedDefsPath, 'utf8');
     expect(doc).toContain('function orders:get(payload) end');
     expect(doc).toContain('function billing:charge(payload) end');
     expect(doc).toContain('function notifications:send(payload) end');
-    expect(doc).toContain('---@alias LuarizerWorkflowEvt_OrderPlaced');
-    expect(doc).toContain('---@alias LuarizerWorkflowEvt_InventoryLow');
-    expect(doc).toContain('function onOrderPlaced(evt) end');
-    expect(doc).toContain('function onInventoryLow(evt) end');
+    expect(doc).toContain('---@class LuarizerWorkflowEvt_OrderPlaced');
+    expect(doc).toContain('---@field orderId string');
+    expect(doc).toContain('---@field amountCents number');
+    expect(doc).toContain('---@field customerId string');
+    expect(doc).toContain('---@class LuarizerWorkflowEvt_InventoryLow');
+    expect(doc).toContain('---@field sku string');
+    expect(doc).toContain('---@field unitsLeft number');
+    expect(doc).toContain('---@class Workflow');
+    expect(doc).not.toContain('Workflow = {}');
+    expect(doc).toContain('---@class workflow');
+    expect(doc).toContain('workflow = {}');
+    expect(doc).toContain('function workflow:extend() end');
+    expect(doc).toContain('---@return Workflow');
+    expect(doc).toContain('---@field onOrderPlaced');
+    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_OrderPlaced)');
+    expect(doc).toContain('---@field onInventoryLow');
+    expect(doc).toContain('fun(self: Workflow, evt: LuarizerWorkflowEvt_InventoryLow)');
     expect(doc).toContain('---@alias OrderId string');
     expect(doc).toContain('orders = {}');
+    expect(doc).not.toContain('function onOrderPlaced(evt) end');
   });
 });

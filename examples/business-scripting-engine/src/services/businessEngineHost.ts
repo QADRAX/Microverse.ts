@@ -15,7 +15,8 @@ type BusinessEngineServices = {
 
 /**
  * Host services object passed into {@link BusinessScriptingEngine} and into every `fn<BusinessEngineHost, …>` handler
- * in {@link businessSurface.js}. Carries workflow hook typing for {@link HostWorkflowHub} via {@link TaggedWorkflowHost}.
+ * in {@link businessSurface.js}. Carries workflow hook typing for {@link HostWorkflowHub} via {@link TaggedWorkflowHost}
+ * (hooks are methods on the handler table from `workflow:extend()`, typed as `Workflow`).
  */
 export type BusinessEngineHost = TaggedWorkflowHost<BusinessWorkflowHooksSpec, BusinessEngineServices>;
 

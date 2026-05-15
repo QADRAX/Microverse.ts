@@ -1,10 +1,12 @@
 /**
- * Lua convention for domain hooks: PascalCase event kind → global `on{Kind}` (e.g. `OrderPlaced` → `onOrderPlaced`).
+ * Lua convention for domain hooks: PascalCase event kind → method name `on{Kind}` on the workflow
+ * handler table from `workflow:extend()` in each Lua slot (e.g. `OrderPlaced` → `onOrderPlaced`).
  */
 export type LuaGlobalHookName<Kind extends string> = `on${Kind}`;
 
 /**
- * Builds the global Lua function name for a PascalCase event `kind` (e.g. `InventoryLow` → `onInventoryLow`).
+ * Builds the `on{Kind}` method name dispatched on the slot’s workflow handler for a PascalCase event `kind`
+ * (e.g. `InventoryLow` → `onInventoryLow`).
  * Throws if `kind` is not a safe Lua identifier fragment.
  */
 export function luaGlobalHookName<const Kind extends string>(kind: Kind): LuaGlobalHookName<Kind> {

@@ -11,7 +11,7 @@ import type { BusinessEngineHost } from './services/businessEngineHost.js';
 export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
 
 /**
- * Thin façade: {@link createHostWorkflowHub} with this package’s default surface (workflow hooks live on the surface).
+ * Thin façade: {@link createHostWorkflowHub} with this package’s default surface (Lua uses `workflow:extend()` per slot; many workflows run as separate hub sessions).
  */
 export class BusinessScriptingEngine {
   private readonly hub: HostWorkflowHub<BusinessEngineHost>;

@@ -2,7 +2,7 @@ import type {
   LuarizerDefManifest,
   ManifestAlias,
   ManifestClass,
-  ManifestLuaHook,
+  ManifestClassField,
   ManifestMethod,
   ManifestParam,
 } from '@luarizer/lua-defs';
@@ -12,6 +12,53 @@ import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.
 import { luaGlobalHookName } from './luaGlobalHook.js';
 import { isLuaTypeAtom } from './luaTypeAtoms.js';
 import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
+
+function buildWorkflowHookManifestFields(
+  kinds: readonly string[],
+  workflowHooks: HostWorkflowHooksSpec,
+  selfType: string,
+  fieldDescriptionSuffix: string,
+): ManifestClassField[] {
+  const out: ManifestClassField[] = [];
+  for (const kind of kinds) {
+    const schema = workflowHooks[kind];
+    if (!(schema instanceof z.ZodObject)) {
+      throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+    }
+    const payloadName = `LuarizerWorkflowEvt_${kind}`;
+    const hookName = luaGlobalHookName(kind);
+    out.push({
+      name: hookName,
+      description: `${fieldDescriptionSuffix} Payload: \`${payloadName}\`.`,
+      luaType: `fun(self: ${selfType}, evt: ${payloadName})`,
+    });
+  }
+  return out;
+}
+
+function pushWorkflowPayloadManifestClasses(
+  kinds: readonly string[],
+  workflowHooks: HostWorkflowHooksSpec,
+  classes: ManifestClass[],
+): void {
+  for (const kind of kinds) {
+    const schema = workflowHooks[kind];
+    if (!(schema instanceof z.ZodObject)) {
+      throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+    }
+    const name = `LuarizerWorkflowEvt_${kind}`;
+    const shape = schema.shape as Record<string, z.ZodTypeAny>;
+    classes.push({
+      name,
+      description: `Workflow hook payload for \`${luaGlobalHookName(kind)}\` (Zod → LuaCATS fields).`,
+      fields: Object.keys(shape).map((k) => ({
+        name: k,
+        luaType: zodToLuaTypeRef(shape[k]!),
+      })),
+      emitSingleton: false,
+    });
+  }
+}
 
 export function buildLuarizerDefManifestFromHostSurfaceSpec(
   spec: HostSurfaceSpec,
@@ -48,29 +95,37 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
     }
   }
 
-  const luaHooks: ManifestLuaHook[] | undefined =
-    workflowHooks === undefined
-      ? undefined
-      : (() => {
-          const kinds = Object.keys(workflowHooks).sort((a, b) => a.localeCompare(b));
-          const out: ManifestLuaHook[] = [];
-          for (const kind of kinds) {
-            const schema = workflowHooks[kind];
-            if (!(schema instanceof z.ZodObject)) {
-              throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
-            }
-            const aliasName = `LuarizerWorkflowEvt_${kind}`;
-            merged.set(aliasName, zodToLuaTypeRef(schema));
-            const hookName = luaGlobalHookName(kind);
-            out.push({
-              name: hookName,
-              paramName: 'evt',
-              payloadLuaType: aliasName,
-              description: `Workflow hook for ${kind} (global \`${hookName}\`). Payload type: \`${aliasName}\`.`,
-            });
-          }
-          return out;
-        })();
+  if (workflowHooks !== undefined) {
+    const kinds = Object.keys(workflowHooks).sort((a, b) => a.localeCompare(b));
+    pushWorkflowPayloadManifestClasses(kinds, workflowHooks, classes);
+    const abstractFields = buildWorkflowHookManifestFields(
+      kinds,
+      workflowHooks,
+      'Workflow',
+      'Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires.',
+    );
+    classes.push({
+      name: 'Workflow',
+      description:
+        'Abstract workflow handler type. Call `local w = workflow:extend()` then define `function w:onOrderPlaced(evt) … end` (etc.). Each Lua slot has its own `workflow` helper and handler table.',
+      fields: abstractFields,
+      emitSingleton: false,
+    });
+    classes.push({
+      name: 'workflow',
+      description:
+        'Per-slot helper injected by the host (not a TS bridge). Creates the active handler table for this sandbox slot.',
+      methods: [
+        {
+          name: 'extend',
+          description:
+            'Returns a new handler table with default no-op hooks; registers it for host → Lua dispatch in this slot.',
+          params: [],
+          returns: 'Workflow',
+        },
+      ],
+    });
+  }
 
   const aliases =
     merged.size === 0
@@ -83,7 +138,6 @@ export function buildLuarizerDefManifestFromHostSurfaceSpec(
     headerNote: opts.headerNote,
     aliases,
     classes,
-    luaHooks,
   };
 }
 
