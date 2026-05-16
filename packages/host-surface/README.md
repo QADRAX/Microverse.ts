@@ -82,10 +82,11 @@ Optional **Lua type names** on Zod schemas (`luaType('OrderDto', z.object({ … 
 
 ## Async bridges and Lua patterns
 
-Bridge handlers are **synchronous at the Lua boundary**; Wasmoon does not auto-resolve `Promise` into Lua values. For async TypeScript work, use the async bridge pattern (`:await()` or `onComplete` callback) documented in:
+Bridge handlers are **synchronous at the Lua boundary**; Wasmoon does not auto-resolve `Promise` into Lua values. For async TypeScript work, use an `async` handler on the surface; Lua calls the bridge with `:await()` or an `onComplete` callback. See:
 
-- [docs/async-subroutines-components.md](docs/async-subroutines-components.md)
-- [examples/business-scripting-engine/docs/COMPONENT_PATTERN.md](../../examples/business-scripting-engine/docs/COMPONENT_PATTERN.md)
+- [Async bridges — `@microverse.ts/microverse-lua`](../microverse-lua/README.md#async-bridges)
+- [Lua authoring (components)](../microverse-lua/README.md#lua-authoring)
+- Example: [`order_asyncio_tick.lua`](../../examples/business-scripting-engine/lua/components/order_asyncio_tick.lua)
 
 ## Reference
 

@@ -317,7 +317,7 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 });
 
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
-  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods + component event types', () => {
+  it('is produced by pnpm run generate:lua-defs (pretest) and documents bridge methods + component event types', () => {
     const doc = readFileSync(generatedDefsPath, 'utf8');
     expect(doc).toContain('---@field get fun(self: Orders, payload: { orderId: OrderId }): OrderDto|nil');
     expect(doc).not.toContain('function Orders:get');
