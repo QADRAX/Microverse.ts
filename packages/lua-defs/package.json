@@ -1,6 +1,6 @@
 {
-  "name": "@microverse/lua-defs",
-  "version": "0.1.0",
+  "name": "@microverse.ts/lua-defs",
+  "version": "0.0.0",
   "type": "module",
   "license": "MIT",
   "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
@@ -33,7 +33,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/shared": "workspace:*"
+    "@microverse.ts/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",

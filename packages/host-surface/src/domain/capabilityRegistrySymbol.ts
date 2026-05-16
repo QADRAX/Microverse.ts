@@ -1,4 +1,4 @@
-import type { CapabilityRegistryPort } from '@microverse/runtime-capabilities';
+import type { CapabilityRegistryPort } from '@microverse.ts/runtime-capabilities';
 
 /**
  * Well-known symbol key used to attach a {@link CapabilityRegistryPort} on the host object

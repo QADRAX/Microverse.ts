@@ -1,6 +1,6 @@
-import type { LuaDefManifest } from '@microverse/lua-defs';
-import type { DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
-import type { CapabilityId } from '@microverse/runtime-capabilities';
+import type { LuaDefManifest } from '@microverse.ts/lua-defs';
+import type { DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
 import type { SurfaceCapabilityString } from './surfaceCapabilityString.js';
@@ -40,7 +40,7 @@ export type HostSurfaceMethodEntry<
   readonly output: z.ZodType<TOut>;
   /**
    * Host logic at the Lua↔JS boundary. May return `Promise<TOut>`; Lua must use `:await()` on the returned handle
-   * or pass an `onComplete` callback as the second argument (see `MICROVERSE_LUA_SLOT_VM_BOOTSTRAP` in `@microverse/runtime-wasm`).
+   * or pass an `onComplete` callback as the second argument (see `MICROVERSE_LUA_SLOT_VM_BOOTSTRAP` in `@microverse.ts/runtime-wasm`).
    */
   readonly handler: (ctx: HostFnContext<THost>, input: TIn) => TOut | Promise<TOut>;
   /**
@@ -122,7 +122,7 @@ export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> =
     DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>
   >;
   /**
-   * Builds a `LuaDefManifest` for `@microverse/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
+   * Builds a `LuaDefManifest` for `@microverse.ts/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
    *
    * @param opts.output - Default `.d.lua` output path recorded in the manifest.
    * @param opts.headerNote - Optional banner comment in the generated file.

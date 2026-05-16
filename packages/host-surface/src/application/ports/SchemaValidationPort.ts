@@ -1,4 +1,4 @@
-import type { Result } from '@microverse/shared';
+import type { Result } from '@microverse.ts/shared';
 import type { z } from 'zod';
 
 /**

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@microverse/shared';
+import { err, ok, type Result } from '@microverse.ts/shared';
 import { LuaFactory } from 'wasmoon';
 
 import type {
@@ -8,7 +8,7 @@ import type {
   RunScriptInput,
   RunScriptResult,
   MicroverseId,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 
 import {
   MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET,

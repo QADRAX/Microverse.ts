@@ -23,7 +23,7 @@ flowchart TB
     Surface[Host surface fluent builder]
   end
 
-  subgraph facade ["@microverse/microverse-lua"]
+  subgraph facade ["@microverse.ts/microverse-lua"]
     ML[MicroverseLua.create]
   end
 
@@ -67,13 +67,13 @@ pnpm test
 **Consumer entry point** (applications depend on this package only):
 
 ```ts
-import { MicroverseLua, defineHostSurfaceFor } from '@microverse/microverse-lua';
+import { MicroverseLua, defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 ```
 
 **Generate IDE stubs** (dev dependency):
 
 ```bash
-pnpm add -D @microverse/cli
+pnpm add -D @microverse.ts/cli
 pnpm exec microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
@@ -89,7 +89,7 @@ See the full walkthrough in [`packages/microverse-lua/README.md`](packages/micro
 - **Engine** — `BusinessScriptingEngine` wraps `MicroverseLua.create`.
 
 ```bash
-pnpm --filter @microverse-examples/business-scripting-engine test
+pnpm --filter @microverse.ts/business-scripting-engine test
 ```
 
 ## Monorepo layout
@@ -135,4 +135,4 @@ Packages follow a **layered** layout (`domain` / `application` / `infrastructure
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Published packages live under the [`@microverse`](https://www.npmjs.com/org/microverse) scope on npm; the consumer entry point is [`@microverse/microverse-lua`](https://www.npmjs.com/package/@microverse/microverse-lua).
+MIT — see [LICENSE](LICENSE). Published packages live under the [`@microverse.ts`](https://www.npmjs.com/org/microverse.ts) scope on npm; the consumer entry point is [`@microverse.ts/microverse-lua`](https://www.npmjs.com/package/@microverse.ts/microverse-lua).

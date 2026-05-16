@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@microverse/shared';
+import { err, ok, type Result } from '@microverse.ts/shared';
 import type { z } from 'zod';
 
 import type { ContractValidatorPort } from '../../application/ports/ContractValidatorPort';

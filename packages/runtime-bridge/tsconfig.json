@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/runtime-bridge/*": ["./src/*"]
+      "@microverse.ts/runtime-bridge/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

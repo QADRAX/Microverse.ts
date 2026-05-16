@@ -1,5 +1,5 @@
-import type { AsyncUseCase } from '@microverse/shared';
-import { err, ok, type Result } from '@microverse/shared';
+import type { AsyncUseCase } from '@microverse.ts/shared';
+import { err, ok, type Result } from '@microverse.ts/shared';
 
 import type { BridgeRegistryPort } from '../ports/BridgeRegistryPort';
 import type { BridgeCapabilityAssertion } from '../../domain/bridge/BridgeCapabilityAssertion';

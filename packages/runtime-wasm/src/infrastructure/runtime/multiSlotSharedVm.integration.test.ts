@@ -3,7 +3,7 @@ import {
   createMicroverseId,
   createMicroverseScript,
   createStubMicroverseRuntime,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 import { describe, expect, it } from 'vitest';
 
 import { WasmoonRuntimeAdapter } from './WasmoonRuntimeAdapter';

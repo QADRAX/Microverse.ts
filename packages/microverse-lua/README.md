@@ -1,4 +1,4 @@
-# `@microverse/microverse-lua`
+# `@microverse.ts/microverse-lua`
 
 **Lua microverse** facade for TypeScript applications: `MicroverseLua.create`, Wasm VM, script slots, and the fluent host surface builder.
 
@@ -31,15 +31,15 @@ One logical scripting universe in your process:
 ## Install
 
 ```bash
-pnpm add @microverse/microverse-lua
+pnpm add @microverse.ts/microverse-lua
 ```
 
-Workspace: `"@microverse/microverse-lua": "workspace:*"`.
+Workspace: `"@microverse.ts/microverse-lua": "workspace:*"`.
 
 ## Quick start
 
 ```ts
-import { MicroverseLua, defineHostSurfaceFor } from '@microverse/microverse-lua';
+import { MicroverseLua, defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
 type MyHost = { appName: string };
@@ -81,11 +81,11 @@ await microverse.dispose();
 ## IDE stubs
 
 ```bash
-pnpm add -D @microverse/cli
+pnpm add -D @microverse.ts/cli
 pnpm exec microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
-Requires `export default` on the surface module (typically the result of `.build()`). Details: [`@microverse/cli`](../cli/README.md).
+Requires `export default` on the surface module (typically the result of `.build()`). Details: [`@microverse.ts/cli`](../cli/README.md).
 
 ## Reference example
 

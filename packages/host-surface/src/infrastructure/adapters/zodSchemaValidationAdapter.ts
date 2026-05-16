@@ -1,4 +1,4 @@
-import { validateWithZodSchema } from '@microverse/runtime-zod';
+import { validateWithZodSchema } from '@microverse.ts/runtime-zod';
 
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
 

@@ -1,4 +1,4 @@
-import { ok, type Result } from '@microverse/shared';
+import { ok, type Result } from '@microverse.ts/shared';
 
 import type { RuntimeAdapter } from '../../domain/runtime/RuntimeAdapter';
 import type { ExecutionContext } from '../../domain/runtime/ExecutionContext';

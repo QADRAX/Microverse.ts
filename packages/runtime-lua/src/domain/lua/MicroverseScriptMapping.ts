@@ -1,4 +1,4 @@
-import type { MicroverseScript } from '@microverse/runtime-core';
+import type { MicroverseScript } from '@microverse.ts/runtime-core';
 
 import type { LuaChunk } from './LuaChunk';
 

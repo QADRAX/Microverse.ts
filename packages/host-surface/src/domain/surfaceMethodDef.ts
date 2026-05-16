@@ -1,4 +1,4 @@
-import { createCapabilityId, type CapabilityId } from '@microverse/runtime-capabilities';
+import { createCapabilityId, type CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
 import { inferMethodAsync } from './inferMethodAsync.js';

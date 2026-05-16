@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/runtime-core/*": ["./src/*"]
+      "@microverse.ts/runtime-core/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

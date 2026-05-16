@@ -1,4 +1,4 @@
-import type { CancellationToken, TimeoutPolicy } from '@microverse/runtime-core';
+import type { CancellationToken, TimeoutPolicy } from '@microverse.ts/runtime-core';
 
 export const MICROVERSE_LUA_DEFAULT_MAX_SCRIPT_CHARS = 512_000;
 

@@ -3,7 +3,7 @@ import {
   createStubMicroverseRuntime,
   type MicroverseRuntime,
   type TimeoutPolicy,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 
 import { WasmoonRuntimeAdapter, type WasmoonRuntimeAdapterOptions } from './WasmoonRuntimeAdapter';
 

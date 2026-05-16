@@ -3,7 +3,7 @@ import {
   createMicroverseScript,
   fixedTimeout,
   neverCancelledToken,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 import { describe, expect, it, vi } from 'vitest';
 
 const { createEngineMock, doStringMock } = vi.hoisted(() => {

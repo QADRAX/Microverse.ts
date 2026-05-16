@@ -1,4 +1,4 @@
-import { defineHostSurfaceFor } from '@microverse/microverse-lua';
+import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
 import type { BusinessEngineHost } from './services/businessEngineHost.js';

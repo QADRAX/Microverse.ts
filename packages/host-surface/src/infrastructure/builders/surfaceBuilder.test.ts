@@ -1,4 +1,4 @@
-import { buildLuaCatsDocument } from '@microverse/lua-defs';
+import { buildLuaCatsDocument } from '@microverse.ts/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

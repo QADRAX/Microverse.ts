@@ -31,7 +31,7 @@ function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
 }
 
 /**
- * Compiles a host surface using the injected schema validation port (tuple matches `UseCase` conventions in `@microverse/shared`).
+ * Compiles a host surface using the injected schema validation port (tuple matches `UseCase` conventions in `@microverse.ts/shared`).
  */
 export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   ports: readonly [SchemaValidationPort],

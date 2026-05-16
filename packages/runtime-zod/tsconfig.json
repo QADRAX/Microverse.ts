@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/runtime-zod/*": ["./src/*"]
+      "@microverse.ts/runtime-zod/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

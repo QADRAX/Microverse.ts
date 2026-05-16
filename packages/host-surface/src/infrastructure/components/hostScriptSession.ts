@@ -2,8 +2,8 @@ import {
   createAllowlist,
   type CapabilityId,
   InMemoryCapabilityRegistry,
-} from '@microverse/runtime-capabilities';
-import type { Result } from '@microverse/shared';
+} from '@microverse.ts/runtime-capabilities';
+import type { Result } from '@microverse.ts/shared';
 import type { z } from 'zod';
 import {
   createMicroverseScript,
@@ -13,7 +13,7 @@ import {
   type MicroverseId,
   type MicroverseRuntime,
   type TimeoutPolicy,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 
 import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry.js';
 import { buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv.js';

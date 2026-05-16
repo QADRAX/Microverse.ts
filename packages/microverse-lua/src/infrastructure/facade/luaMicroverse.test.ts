@@ -1,4 +1,4 @@
-import { defineHostSurfaceFor } from '@microverse/host-surface';
+import { defineHostSurfaceFor } from '@microverse.ts/host-surface';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 

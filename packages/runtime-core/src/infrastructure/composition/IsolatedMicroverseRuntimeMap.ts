@@ -3,7 +3,7 @@ import type { MicroverseInstanceId } from '../../domain/runtime/MicroverseInstan
 
 /**
  * Keeps many {@link MicroverseRuntime} instances keyed by {@link MicroverseInstanceId}.
- * Each entry is typically its own `MicroverseRuntime` (hence its own Wasmoon/Lua VM when using `@microverse/runtime-wasm`).
+ * Each entry is typically its own `MicroverseRuntime` (hence its own Wasmoon/Lua VM when using `@microverse.ts/runtime-wasm`).
  *
  * This type does **not** dispose Lua engines: call `MicroverseSlot.dispose()` on every
  * created sandbox before `unregister`, and dispose any other host resources yourself.

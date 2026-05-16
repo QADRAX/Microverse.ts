@@ -4,20 +4,20 @@
   "commit": false,
   "fixed": [
     [
-      "@microverse/shared",
-      "@microverse/runtime-core",
-      "@microverse/runtime-lua",
-      "@microverse/lua-defs",
-      "@microverse/runtime-capabilities",
-      "@microverse/runtime-bridge",
-      "@microverse/runtime-zod",
-      "@microverse/host-surface",
-      "@microverse/runtime-wasm",
-      "@microverse/microverse-lua"
+      "@microverse.ts/shared",
+      "@microverse.ts/runtime-core",
+      "@microverse.ts/runtime-lua",
+      "@microverse.ts/lua-defs",
+      "@microverse.ts/runtime-capabilities",
+      "@microverse.ts/runtime-bridge",
+      "@microverse.ts/runtime-zod",
+      "@microverse.ts/host-surface",
+      "@microverse.ts/runtime-wasm",
+      "@microverse.ts/microverse-lua"
     ]
   ],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@microverse/cli", "@microverse-examples/business-scripting-engine"]
+  "ignore": ["@microverse.ts/cli", "@microverse.ts/business-scripting-engine"]
 }

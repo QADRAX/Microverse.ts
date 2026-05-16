@@ -1,6 +1,6 @@
 {
-  "name": "@microverse/runtime-lua",
-  "version": "0.1.0",
+  "name": "@microverse.ts/runtime-lua",
+  "version": "0.0.0",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -31,7 +31,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/runtime-core": "workspace:*"
+    "@microverse.ts/runtime-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

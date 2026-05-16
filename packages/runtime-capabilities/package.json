@@ -1,6 +1,6 @@
 {
-  "name": "@microverse/runtime-capabilities",
-  "version": "0.1.0",
+  "name": "@microverse.ts/runtime-capabilities",
+  "version": "0.0.0",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -31,7 +31,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/shared": "workspace:*"
+    "@microverse.ts/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

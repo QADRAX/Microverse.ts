@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/runtime-wasm/*": ["./src/*"]
+      "@microverse.ts/runtime-wasm/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

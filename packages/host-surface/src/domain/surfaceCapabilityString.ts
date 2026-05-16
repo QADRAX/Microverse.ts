@@ -1,4 +1,4 @@
-import type { CapabilityId } from '@microverse/runtime-capabilities';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
 /**
  * Unbranded string literal(s) for capabilities on a surface — use as {@link HostSurfaceCore.pickCapabilities} arguments.

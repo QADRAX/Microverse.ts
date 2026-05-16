@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 /**
- * Vite 8 library build + declaration emit for @microverse/* packages.
+ * Vite 8 library build + declaration emit for @microverse.ts/* packages.
  * @param {string} metaUrl `import.meta.url` from the package's `vite.config.ts`
  */
 export function microverseLibraryViteConfig(metaUrl) {
