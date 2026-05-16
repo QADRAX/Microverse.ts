@@ -6,11 +6,11 @@
   "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QADRAX/Luarizer.ts.git",
+    "url": "git+https://github.com/QADRAX/Microverse.ts.git",
     "directory": "packages/lua-defs"
   },
-  "bugs": "https://github.com/QADRAX/Luarizer.ts/issues",
-  "homepage": "https://github.com/QADRAX/Luarizer.ts/tree/main/packages/lua-defs",
+  "bugs": "https://github.com/QADRAX/Microverse.ts/issues",
+  "homepage": "https://github.com/QADRAX/Microverse.ts/tree/main/packages/lua-defs",
   "publishConfig": {
     "access": "public",
     "provenance": true
