@@ -343,6 +343,8 @@ Include both `sortingSurface.d.lua` (bridges + `*Component`) and `sortingScriptC
 
 See [`examples/sorting-lab/.luarc.json`](../../examples/sorting-lab/.luarc.json) and [`generated/sortingSurface.d.lua`](../../examples/sorting-lab/generated/sortingSurface.d.lua).
 
+**Chess duel (shared board, turn-based):** [`examples/chess-lab`](../examples/chess-lab/README.md) — two `ChessEngine` scripts compete on one `chess.js` board.
+
 Details: [`@microverse.ts/cli`](../cli/README.md), [`@microverse.ts/lua-defs`](../lua-defs/README.md).
 
 ## Integrating a game engine (script profiles)
