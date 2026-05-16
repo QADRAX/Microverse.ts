@@ -1,4 +1,4 @@
-import { defineHostSurfaceFor } from '@microverse/microverse-lua';
+import { defineHostSurfaceFor } from '@microverse/host-surface';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
