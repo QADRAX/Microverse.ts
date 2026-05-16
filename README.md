@@ -135,4 +135,4 @@ Packages follow a **layered** layout (`domain` / `application` / `infrastructure
 
 ## License
 
-Private monorepo (`"private": true` on workspace packages). Adjust before publishing.
+MIT — see [LICENSE](LICENSE). Published packages live under the [`@microverse`](https://www.npmjs.com/org/microverse) scope on npm; the consumer entry point is [`@microverse/microverse-lua`](https://www.npmjs.com/package/@microverse/microverse-lua).

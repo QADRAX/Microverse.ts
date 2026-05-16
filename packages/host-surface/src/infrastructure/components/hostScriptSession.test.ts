@@ -1,3 +1,4 @@
+import type { CapabilityId } from '@microverse/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
@@ -7,14 +8,14 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineHostSurface } from '../builders/defineHostSurfaceFacade.js';
+import { defineHostSurfaceFor } from '../builders/defineHostSurfaceFacade.js';
 import { HostScriptSession } from './hostScriptSession.js';
 
 type H = { readonly tag: string };
 
 describe('HostScriptSession', () => {
   it('openSession then dispose does not throw (stub runtime)', async () => {
-    const surface = defineHostSurface()
+    const surface = defineHostSurfaceFor<H>()
       .bridge('ping')
       .method('go', {
         requires: 'demo:ping',
@@ -32,7 +33,7 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-1'),
-      allowedCapabilities: surface.pickCapabilities('demo:ping'),
+      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
     });
 
     await session.openSession();
@@ -48,7 +49,7 @@ describe('HostScriptSession', () => {
       OrderPlaced: z.object({ orderId: z.string(), amountCents: z.number() }),
     } as const;
 
-    const surface = defineHostSurface()
+    const surface = defineHostSurfaceFor<H>()
       .bridge('ping')
       .method('go', {
         requires: 'demo:ping',
@@ -67,7 +68,7 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-hooks'),
-      allowedCapabilities: surface.pickCapabilities('demo:ping'),
+      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
     });
 
     await session.openSession();

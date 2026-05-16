@@ -1,4 +1,4 @@
-import { defineHostSurface } from '@microverse/microverse-lua';
+import { defineHostSurfaceFor } from '@microverse/microverse-lua';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
@@ -11,7 +11,7 @@ describe('createLuaMicroverse', () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
-    const surface = defineHostSurface()
+    const surface = defineHostSurfaceFor<H>()
       .bridge('demo')
       .method('tick', {
         requires: 'demo:tick',
