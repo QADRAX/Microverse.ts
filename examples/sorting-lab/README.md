@@ -23,7 +23,7 @@ pnpm --filter @microverse.ts/sorting-lab test
 pnpm --filter @microverse.ts/sorting-lab run generate:lua-defs
 ```
 
-Open `lua/*.lua` with LuaLS using `.luarc.json` and `generated/`.
+Open `lua/*.lua` with LuaLS using this package’s `.luarc.json` (not a repo-root config) and `generated/`. Other examples under `examples/` should ship their own `.luarc.json` beside their `generated/` stubs.
 
 ## Layout
 
