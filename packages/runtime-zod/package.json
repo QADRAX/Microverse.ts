@@ -6,11 +6,11 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QADRAX/Luarizer.ts.git",
+    "url": "git+https://github.com/QADRAX/Microverse.ts.git",
     "directory": "packages/runtime-zod"
   },
-  "bugs": "https://github.com/QADRAX/Luarizer.ts/issues",
-  "homepage": "https://github.com/QADRAX/Luarizer.ts/tree/main/packages/runtime-zod",
+  "bugs": "https://github.com/QADRAX/Microverse.ts/issues",
+  "homepage": "https://github.com/QADRAX/Microverse.ts/tree/main/packages/runtime-zod",
   "publishConfig": {
     "access": "public",
     "provenance": true
