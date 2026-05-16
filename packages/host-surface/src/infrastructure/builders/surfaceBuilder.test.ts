@@ -54,7 +54,7 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
     expect(surface.pickCapabilities('engine:time')).toEqual(['engine:time']);
   });
 
-  it('workflowHooks attach to compiled surface', () => {
+  it('componentHooks attach to compiled surface', () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     const surface = defineHostSurfaceFor<ToyHost>()
       .bridge('demo')
@@ -64,10 +64,10 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
         output: z.number(),
         handler: ({ host }) => host.n,
       })
-      .workflowHooks(hooks)
+      .componentHooks(hooks)
       .build();
 
-    expect(surface.workflowHooks).toBe(hooks);
+    expect(surface.componentHooks).toBe(hooks);
   });
 
   it('rejects reserved bridge/method names', () => {

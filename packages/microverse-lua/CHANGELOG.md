@@ -1,5 +1,16 @@
 # @microverse/microverse-lua
 
+## Unreleased
+
+### Minor Changes
+
+- Script catalog and instances: `registerScriptDefinition`, `mountScriptInstance`, `unmountScriptInstance`, props sync (`setInstanceProps`, `patchInstanceProps`, `flushInstanceProps`), and `ScriptInstanceContext` on bridge handlers.
+- `emitToAllInstances` broadcasts domain events to every mounted component instance.
+
+### Breaking Changes
+
+- Surfaces use `.componentHooks()` instead of `.workflowHooks()`. `HostComponentHooksSpec` replaces `HostWorkflowHooksSpec`.
+
 ## 0.1.0
 
 ### Minor Changes

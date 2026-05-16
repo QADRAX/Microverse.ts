@@ -13,7 +13,8 @@ import { createLuaMicroverse } from './luaMicroverse.js';
  *   surface: mySurface,
  *   defaultTimeoutMs: 30_000,
  * });
- * await microverse.registerScript({ scriptId: 'ai', script: lua, capabilities: surface.pickCapabilities('demo:tick') });
+ * microverse.registerScriptDefinition({ scriptId: 'ai', source: lua });
+ * await microverse.mountScriptInstance({ instanceId: 'ai', scriptId: 'ai', capabilities: surface.pickCapabilities('demo:tick') });
  * ```
  */
 export const MicroverseLua = {

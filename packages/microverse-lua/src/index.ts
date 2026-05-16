@@ -29,7 +29,7 @@ export {
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
   type HostSurfaceSpecForHost,
-  type HostWorkflowHooksSpec,
+  type HostComponentHooksSpec,
   type InferSurfaceCapabilities,
   type LuaDefManifestGeneratorOpts,
   type LuaGlobalHookName,
@@ -37,7 +37,7 @@ export {
   type SurfaceCapabilityString,
   type SurfaceMethodDef,
   type WithMicroverseCapabilityRegistry,
-  type WorkflowHookInvokeArgs,
+  type ComponentEventHookInvokeArgs,
   type ZodToLuaTypeRefOptions,
 } from '@microverse.ts/host-surface';
 export * from '@microverse.ts/shared';

@@ -24,33 +24,33 @@ export default defineHostSurfaceFor<MyHost>()
     description: 'Load order by id',
     handler: ({ host }, { orderId }) => host.orders.get(orderId),
   })
-  .workflowHooks(workflowHooks) // optional
+  .componentHooks(componentHooks) // optional
   .build();
 ```
 
 | Step | Role |
 |------|------|
 | `defineHostSurfaceFor<THost>()` | Start builder; `handler` receives typed `host`. |
-| `.bridge('orders')` | Lua global table name. |
+| `.bridge('orders')` | Bridge table on `self.bridges` after `component:extend()`. |
 | `.method('get', { … })` | One bridge method: `requires`, `input`, `output`, `handler`. |
-| `.workflowHooks(…)` | Optional Zod map → `on*` hooks in Lua. |
+| `.componentHooks(…)` | Optional Zod map → `on*` domain events on `Component`. |
 | `.build()` | Compiled {@link HostSurface}. |
 
 `requires` is a `domain:action` capability string. `async` is inferred from `async function` handlers.
 
-Bridge names become **Lua global tables** (`orders`, `billing`, …). Do not use `workflow` as a bridge name when workflow hooks are enabled—that name is reserved for the injected `workflow:extend()` helper.
+Bridges are **not** global in the slot: use `self.bridges.orders:get(…)` from component methods.
 
 ### Host object
 
 The **host** is your engine context (services, repos, config). It is not generated here—you construct it in your app and pass it to `MicroverseLua.create({ host, surface })` or `HostScriptSession`.
 
-### Workflow hooks
+### Component domain events
 
-Call `.workflowHooks({ OrderPlaced: z.object({ … }), … })` before `.build()`.
+Call `.componentHooks({ OrderPlaced: z.object({ … }), … })` before `.build()`.
 
-- TypeScript emits via `emitToAllScripts('OrderPlaced', payload)`.
-- Lua implements `onOrderPlaced` on the table from `workflow:extend()`.
-- Manifest includes `MicroverseWorkflowEvt_*` classes in `.d.lua`.
+- TypeScript emits via `emitToAllInstances('OrderPlaced', payload)`.
+- Lua implements `onOrderPlaced` on the table from `component:extend()`.
+- Manifest includes `MicroverseEvt_*` payload classes and `on*` fields on `Component` in `.d.lua`.
 
 ## `HostScriptSession`
 
@@ -68,7 +68,7 @@ await session.openSession();
 await session.runChunk(luaSource);
 ```
 
-`MicroverseLua` in `@microverse.ts/microverse-lua` wraps this for the common case (shared VM, `registerScript`, broadcast hooks).
+`MicroverseLua` in `@microverse.ts/microverse-lua` wraps this for the common case (shared VM, script catalog + instances, broadcast hooks).
 
 ## Generating `.d.lua`
 

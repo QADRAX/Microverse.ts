@@ -123,6 +123,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@microverse.ts/runtime-wasm':
+        specifier: workspace:*
+        version: link:../runtime-wasm
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -244,6 +247,9 @@ importers:
       '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
     devDependencies:
       typescript:
         specifier: ^5.8.3

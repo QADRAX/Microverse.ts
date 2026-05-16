@@ -87,6 +87,39 @@ describe('buildLuaCatsDocument', () => {
     expect(lua).toContain('orders = {}');
   });
 
+  it('emits @field method signatures when emitSingleton is false (nested bridge access)', () => {
+    const manifest: LuaDefManifest = {
+      schemaVersion: 1,
+      output: 'out.d.lua',
+      classes: [
+        {
+          name: 'notifications',
+          methods: [
+            {
+              name: 'send',
+              params: [
+                { name: 'channel', luaType: 'string' },
+                { name: 'message', luaType: 'string' },
+              ],
+              returns: 'nil',
+            },
+          ],
+          emitSingleton: false,
+        },
+        {
+          name: 'MicroverseBridges',
+          fields: [{ name: 'notifications', luaType: 'notifications' }],
+          emitSingleton: false,
+        },
+      ],
+    };
+    const lua = buildLuaCatsDocument(manifest);
+    expect(lua).toContain(
+      '---@field send fun(self: notifications, payload: { channel: string; message: string }): nil',
+    );
+    expect(lua).not.toContain('notifications = {}');
+  });
+
   it('omits class singleton when emitSingleton is false', () => {
     const manifest: LuaDefManifest = {
       schemaVersion: 1,

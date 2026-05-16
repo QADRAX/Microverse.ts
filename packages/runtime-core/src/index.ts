@@ -24,3 +24,32 @@ export {
   type StubMicroverseRuntimeDeps,
 } from './infrastructure/runtime/StubMicroverseRuntime';
 export { IsolatedMicroverseRuntimeMap } from './infrastructure/composition/IsolatedMicroverseRuntimeMap';
+export type {
+  ScriptPropertyScalar,
+  ScriptPropertyValue,
+  ScriptPropertyBag,
+  MutableScriptPropertyBag,
+} from './domain/scriptProps/ScriptPropertyValue';
+export {
+  assertValidScriptPropertyBag,
+  assertValidScriptPropertyValue,
+  cloneScriptPropertyBag,
+  cloneScriptPropertyValue,
+  DEFAULT_SCRIPT_PROPERTY_LIMITS,
+  type ScriptPropertyLimits,
+} from './domain/scriptProps/scriptPropertyLimits';
+export {
+  applyScriptPropertyChanges,
+  diffScriptProperties,
+  mergeScriptPropertyBags,
+  shallowEqualScriptPropertyValue,
+} from './domain/scriptProps/scriptProperties';
+export type { LuaScriptDefinition, LuaScriptSource } from './domain/script/LuaScriptDefinition';
+export { resolveLuaScriptSource } from './domain/script/LuaScriptDefinition';
+export type {
+  ScriptInstanceContext,
+  ScriptInstanceId,
+  ScriptAuditTags,
+} from './domain/script/ScriptInstanceContext';
+export { createScriptInstanceContext, createScriptInstanceId } from './domain/script/ScriptInstanceContext';
+export type { ScriptAuditEvent } from './domain/script/ScriptAuditEvent';

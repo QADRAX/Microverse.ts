@@ -60,9 +60,13 @@ const microverse = MicroverseLua.create({
   defaultTimeoutMs: 30_000,
 });
 
-await microverse.registerScript({
+microverse.registerScriptDefinition({
   scriptId: 'welcome',
-  script: `local msg = greet:hello({ name = "world" })`,
+  source: `local msg = greet:hello({ name = "world" })`,
+});
+await microverse.mountScriptInstance({
+  instanceId: 'welcome',
+  scriptId: 'welcome',
   capabilities: surface.pickCapabilities('demo:greet'),
 });
 
@@ -74,8 +78,9 @@ await microverse.dispose();
 | Export | Purpose |
 |--------|---------|
 | `MicroverseLua.create` | Create a Lua microverse (Wasm VM included). |
-| `registerScript` | New slot + optional preludes + main chunk. |
-| `emitToAllScripts` | Call `on{Kind}` on every script (workflow hooks). |
+| `registerScriptDefinition` | Catalog entry (source, optional props schema, preludes). |
+| `mountScriptInstance` | New Wasm slot for one instance (capabilities, props, audit). |
+| `emitToAllInstances` | Call `on{Kind}` on every mounted instance (workflow hooks). |
 | `defineHostSurfaceFor`, `defineHostSurface` | Fluent surface builder (`bridge` → `method` → `build`). |
 
 ## IDE stubs

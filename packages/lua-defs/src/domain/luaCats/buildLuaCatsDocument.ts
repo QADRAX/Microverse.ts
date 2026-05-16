@@ -73,6 +73,34 @@ function emitAlias(a: ManifestAlias): string {
   return `---@alias ${a.name} ${a.definition}`;
 }
 
+/** LuaLS resolves `self.bridges.notifications:send` when methods are `@field` on the bridge class, not only global `function` stubs. */
+function methodToFieldLuaType(className: string, m: ManifestMethod): string {
+  const ps = m.params ?? [];
+  const ret = m.returns !== undefined ? `: ${m.returns}` : '';
+  if (m.callStyle === 'singleValue' && ps.length === 1) {
+    const p = ps[0]!;
+    return `fun(self: ${className}, ${p.name}: ${p.luaType})${ret}`;
+  }
+  if (m.callStyle === 'asyncBridge') {
+    const payloadParams = ps.filter((p) => p.name !== 'onComplete');
+    const onComplete = ps.find((p) => p.name === 'onComplete');
+    const argParts: string[] = [`self: ${className}`];
+    if (payloadParams.length > 0) {
+      const recordInner = payloadParams.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join('; ');
+      argParts.push(`payload: { ${recordInner} }`);
+    }
+    if (onComplete !== undefined) {
+      argParts.push(`${onComplete.name}: ${onComplete.luaType}`);
+    }
+    return `fun(${argParts.join(', ')})${ret}`;
+  }
+  if (ps.length === 0) {
+    return `fun(self: ${className})${ret}`;
+  }
+  const recordInner = ps.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join('; ');
+  return `fun(self: ${className}, payload: { ${recordInner} })${ret}`;
+}
+
 function emitClass(c: ManifestClass): string {
   const parts: string[] = [];
   parts.push('');
@@ -83,6 +111,12 @@ function emitClass(c: ManifestClass): string {
   for (const f of c.fields ?? []) {
     const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
     parts.push(`---@field ${f.name} ${f.luaType}${d}`);
+  }
+  const emitMethodFields = c.emitSingleton === false;
+  for (const m of c.methods ?? []) {
+    if (emitMethodFields) {
+      parts.push(`---@field ${m.name} ${methodToFieldLuaType(c.name, m)}`);
+    }
   }
   if (c.emitSingleton !== false) {
     parts.push(`${c.name} = {}`);

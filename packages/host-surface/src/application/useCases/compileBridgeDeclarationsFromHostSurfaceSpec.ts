@@ -2,6 +2,9 @@ import { type DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge
 import type { z } from 'zod';
 
 import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
+import { createScriptInstanceContext } from '@microverse.ts/runtime-core';
+
+import { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from '../../domain/scriptContextSymbol.js';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
 import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
@@ -32,12 +35,13 @@ export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSu
       name: bridgeName,
       perEntity: true,
       createApi: (host, slotKey) => {
+        const hostWithScript = host as WithMicroverseCapabilityRegistry & WithMicroverseScriptContext;
         const api: Record<string, (payload: unknown) => unknown> = {};
         for (const methodName of Object.keys(methods)) {
           const entry = methods[methodName]! as AnyHostSurfaceMethod;
           api[methodName] = (...args: unknown[]) => {
             const payload = args.length >= 2 ? args[1] : args[0];
-            const registry = host[MICROVERSE_CAPABILITY_REGISTRY];
+            const registry = hostWithScript[MICROVERSE_CAPABILITY_REGISTRY];
             const capability: CapabilityId = entry.capability;
             if (!registry.isAllowed(capability)) {
               throw new Error(`capability denied: ${String(capability)}`);
@@ -46,7 +50,17 @@ export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSu
             if (parsedIn._tag === 'err') {
               throw new Error(parsedIn.error);
             }
-            const raw: unknown = entry.handler({ host, slotKey: String(slotKey) }, parsedIn.value);
+            const script =
+              hostWithScript[MICROVERSE_SCRIPT_CONTEXT] ??
+              createScriptInstanceContext({
+                instanceId: String(slotKey),
+                scriptId: 'unknown',
+                slotKey: String(slotKey),
+              });
+            const raw: unknown = entry.handler(
+              { host: hostWithScript as never, slotKey: String(slotKey), script },
+              parsedIn.value,
+            );
             if (isThenable(raw)) {
               return raw.then((resolved) => {
                 const parsedOut = schemaValidation.validateWithZodSchema(

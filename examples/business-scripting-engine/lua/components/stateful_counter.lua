@@ -1,10 +1,12 @@
--- Component-style: Lua-local state survives across host→Lua hook invocations in the same slot.
-local state = { count = 0 }
+-- Component: Lua-local state survives across host→Lua hook invocations in the same slot.
+local C = component:extend()
 
-local W = workflow:extend()
+function C:init()
+  self.state = { count = 0 }
+end
 
----@param evt MicroverseWorkflowEvt_OrderPlaced
-function W:onOrderPlaced(evt)
-  state.count = state.count + 1
-  audit:record({ line = "counter:n=" .. tostring(state.count) .. ":id=" .. evt.orderId })
+---@param evt MicroverseEvt_OrderPlaced
+function C:onOrderPlaced(evt)
+  self.state.count = self.state.count + 1
+  self.bridges.audit:record({ line = "counter:n=" .. tostring(self.state.count) .. ":id=" .. evt.orderId })
 end

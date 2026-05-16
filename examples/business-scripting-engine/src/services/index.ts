@@ -6,7 +6,7 @@ export { createInventoryService } from './inventory/createInventoryService.js';
 export { createJobsService } from './jobs/createJobsService.js';
 export { createInMemoryOrders } from './orders/createInMemoryOrders.js';
 export { createNotificationService } from './notifications/createNotificationService.js';
-export { readWorkflowLua } from './workflows/loadWorkflowScript.js';
+export { readComponentLua } from './components/loadComponentScript.js';
 export type { ChargeRecord } from '../domain/models/chargeRecord.js';
 export type { NotificationEntry } from '../domain/models/notificationEntry.js';
 export type { OrderRecord } from '../domain/models/orderRecord.js';

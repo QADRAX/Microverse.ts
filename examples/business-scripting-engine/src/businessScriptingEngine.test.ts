@@ -3,14 +3,25 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
+import { BusinessScriptingEngine, type BusinessSurfaceCapabilities } from './BusinessScriptingEngine.js';
 import surface from './businessSurface.js';
-import { createDefaultBusinessHost, readWorkflowLua } from './services/index.js';
+import { createDefaultBusinessHost, readComponentLua } from './services/index.js';
 
-const MATH_LIB = readWorkflowLua('lib/math_helpers.lua');
+const MATH_LIB = readComponentLua('lib/math_helpers.lua');
 
 function createEngineWithSharedMathLib(host: ReturnType<typeof createDefaultBusinessHost>) {
   return new BusinessScriptingEngine(host, { sharedLuaChunks: [MATH_LIB] });
+}
+
+async function loadScript(
+  engine: BusinessScriptingEngine,
+  scriptId: string,
+  luaSource: string,
+  capabilities: readonly BusinessSurfaceCapabilities[],
+  options?: { readonly injectLuaChunks?: readonly string[] },
+): Promise<void> {
+  engine.registerScriptDefinition(scriptId, luaSource, options);
+  await engine.mountScriptInstance({ scriptId, capabilities, injectLuaChunks: options?.injectLuaChunks });
 }
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,9 +34,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     ]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerScript(
+    await loadScript(engine,
       'promotions',
-      readWorkflowLua('workflows/promotions.lua'),
+      readComponentLua('components/promotions.lua'),
       surface.pickCapabilities('orders:read', 'billing:charge', 'notifications:send'),
     );
 
@@ -55,9 +66,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const host = createDefaultBusinessHost([{ id: 'o-echo', customerId: 'c-x', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerScript(
+    await loadScript(engine,
       'echo',
-      readWorkflowLua('workflows/order_echo.lua'),
+      readComponentLua('components/order_echo.lua'),
       surface.pickCapabilities('notifications:send'),
     );
 
@@ -81,9 +92,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const host = createDefaultBusinessHost([{ id: 'o-2', customerId: 'c-2', totalCents: 5000 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerScript(
+    await loadScript(engine,
       'no-billing-cap',
-      readWorkflowLua('workflows/billing_denied.lua'),
+      readComponentLua('components/billing_denied.lua'),
       surface.pickCapabilities('orders:read'),
     );
 
@@ -104,14 +115,14 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const engine = new BusinessScriptingEngine(host);
     const auditCaps = surface.pickCapabilities('audit:record');
 
-    await engine.registerScript(
+    await loadScript(engine,
       'audit-a',
-      readWorkflowLua('workflows/order_audit_alpha.lua'),
+      readComponentLua('components/order_audit_alpha.lua'),
       auditCaps,
     );
-    await engine.registerScript(
+    await loadScript(engine,
       'audit-b',
-      readWorkflowLua('workflows/order_audit_beta.lua'),
+      readComponentLua('components/order_audit_beta.lua'),
       auditCaps,
     );
 
@@ -134,8 +145,8 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const engine = new BusinessScriptingEngine(host);
     const caps = surface.pickCapabilities('inventory:read', 'audit:record');
 
-    await engine.registerScript('inv-a', readWorkflowLua('workflows/inventory_low_audit_a.lua'), caps);
-    await engine.registerScript('inv-b', readWorkflowLua('workflows/inventory_low_audit_b.lua'), caps);
+    await loadScript(engine,'inv-a', readComponentLua('components/inventory_low_audit_a.lua'), caps);
+    await loadScript(engine,'inv-b', readComponentLua('components/inventory_low_audit_b.lua'), caps);
 
     await engine.dispatch({ kind: 'InventoryLow', sku: 'GADGET', unitsLeft: 2 });
 
@@ -150,14 +161,14 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     const host = createDefaultBusinessHost([{ id: 'o-cap', customerId: 'c-c', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
 
-    await engine.registerScript(
+    await loadScript(engine,
       'has-audit',
-      readWorkflowLua('workflows/order_audit_alpha.lua'),
+      readComponentLua('components/order_audit_alpha.lua'),
       surface.pickCapabilities('audit:record'),
     );
-    await engine.registerScript(
+    await loadScript(engine,
       'no-audit',
-      readWorkflowLua('workflows/order_audit_beta.lua'),
+      readComponentLua('components/order_audit_beta.lua'),
       surface.pickCapabilities(),
     );
 
@@ -176,9 +187,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('sharedLuaChunks: every script sees the shared library without per-script prelude', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-pre', customerId: 'c-p', totalCents: 1 }]);
     const engine = createEngineWithSharedMathLib(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'prelude-demo',
-      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      readComponentLua('components/order_with_math_prelude.lua'),
       surface.pickCapabilities('audit:record'),
     );
     await engine.dispatch({
@@ -197,14 +208,14 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
       { id: 'o-b', customerId: 'c-b', totalCents: 1 },
     ]);
     const engine = createEngineWithSharedMathLib(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'wf-a',
-      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      readComponentLua('components/order_with_math_prelude.lua'),
       surface.pickCapabilities('audit:record'),
     );
-    await engine.registerScript(
+    await loadScript(engine,
       'wf-b',
-      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      readComponentLua('components/order_with_math_prelude.lua'),
       surface.pickCapabilities('audit:record'),
     );
     await engine.dispatch({
@@ -217,12 +228,12 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
     await engine.dispose();
   });
 
-  it('registerScript injectLuaChunks runs a per-script prelude in the slot', async () => {
+  it('mountScriptInstance injectLuaChunks runs a per-script prelude in the slot', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-inj', customerId: 'c-i', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'inject-prelude',
-      readWorkflowLua('workflows/order_with_math_prelude.lua'),
+      readComponentLua('components/order_with_math_prelude.lua'),
       surface.pickCapabilities('audit:record'),
       { injectLuaChunks: [MATH_LIB] },
     );
@@ -239,9 +250,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('async bridge: Lua uses :await() on asyncio:tick handle', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-io', customerId: 'c-io', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'asyncio-demo',
-      readWorkflowLua('workflows/order_asyncio_tick.lua'),
+      readComponentLua('components/order_asyncio_tick.lua'),
       surface.pickCapabilities('audit:record', 'asyncio:tick'),
     );
     await engine.dispatch({
@@ -257,9 +268,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('async partner pattern: sync jobs:create then host emitHook(JobDone)', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-async', customerId: 'c-a', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'job-partner',
-      readWorkflowLua('workflows/job_async_partner.lua'),
+      readComponentLua('components/job_async_partner.lua'),
       surface.pickCapabilities('audit:record', 'jobs:create'),
     );
     await engine.dispatch({
@@ -281,9 +292,9 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
   it('stateful Lua component pattern: local state across hook invocations in one slot', async () => {
     const host = createDefaultBusinessHost([{ id: 'o-c1', customerId: 'c-c', totalCents: 1 }]);
     const engine = new BusinessScriptingEngine(host);
-    await engine.registerScript(
+    await loadScript(engine,
       'counter',
-      readWorkflowLua('components/stateful_counter.lua'),
+      readComponentLua('components/stateful_counter.lua'),
       surface.pickCapabilities('audit:record'),
     );
     await engine.dispatch({
@@ -306,7 +317,7 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 });
 
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
-  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods + workflow hook types', () => {
+  it('is produced by pnpm run generate:defs (pretest) and documents bridge methods + component event types', () => {
     const doc = readFileSync(generatedDefsPath, 'utf8');
     expect(doc).toContain('function orders:get(payload) end');
     expect(doc).toContain('function billing:charge(payload) end');
@@ -321,30 +332,32 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('function jobs:create(payload) end');
     expect(doc).toContain('---@alias JobCreateResult');
     expect(doc).toContain('---@alias InventoryUnits');
-    expect(doc).toContain('---@class MicroverseWorkflowEvt_OrderPlaced');
+    expect(doc).toContain('---@class MicroverseEvt_OrderPlaced');
     expect(doc).toContain('---@field orderId string');
     expect(doc).toContain('---@field amountCents number');
     expect(doc).toContain('---@field customerId string');
-    expect(doc).toContain('---@class MicroverseWorkflowEvt_InventoryLow');
+    expect(doc).toContain('---@class MicroverseEvt_InventoryLow');
     expect(doc).toContain('---@field sku string');
     expect(doc).toContain('---@field unitsLeft number');
-    expect(doc).toContain('---@class Workflow');
-    expect(doc).not.toContain('Workflow = {}');
-    expect(doc).toContain('---@class workflow');
-    expect(doc).toContain('workflow = {}');
-    expect(doc).toContain('function workflow:extend() end');
-    expect(doc).toContain('---@return Workflow');
+    expect(doc).toContain('---@class Component');
+    expect(doc).not.toContain('---@class Workflow');
+    expect(doc).not.toContain('workflow = {}');
+    expect(doc).toContain('---@class component');
+    expect(doc).toContain('function component:extend() end');
+    expect(doc).toContain('---@return Component');
+    expect(doc).toContain('---@field bridges MicroverseBridges');
     expect(doc).toContain('---@field onOrderPlaced');
-    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_OrderPlaced)');
+    expect(doc).toContain('fun(self: Component, evt: MicroverseEvt_OrderPlaced)');
     expect(doc).toContain('---@field onInventoryLow');
-    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_InventoryLow)');
-    expect(doc).toContain('---@class MicroverseWorkflowEvt_JobDone');
+    expect(doc).toContain('fun(self: Component, evt: MicroverseEvt_InventoryLow)');
+    expect(doc).toContain('---@class MicroverseEvt_JobDone');
     expect(doc).toContain('---@field jobId string');
     expect(doc).toContain('---@field result number');
     expect(doc).toContain('---@field onJobDone');
-    expect(doc).toContain('fun(self: Workflow, evt: MicroverseWorkflowEvt_JobDone)');
+    expect(doc).toContain('fun(self: Component, evt: MicroverseEvt_JobDone)');
+    expect(doc).toContain('---@field onDestroy');
     expect(doc).toContain('---@alias OrderId string');
-    expect(doc).toContain('orders = {}');
+    expect(doc).not.toContain('orders = {}');
     expect(doc).not.toContain('function onOrderPlaced(evt) end');
   });
 });

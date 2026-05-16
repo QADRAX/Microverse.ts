@@ -10,7 +10,7 @@ Microverse is a pnpm monorepo for embedding **user-defined behavior** in your pr
 |------|----------------------|
 | Scriptable business logic | Load Lua chunks per tenant, campaign, or entity. |
 | Safe host APIs | Each bridge method has Zod input/output and a `domain:action` capability; scripts declare an allowlist at registration. |
-| Host → script events | Workflow hooks (`onOrderPlaced`, …) with typed payloads from TypeScript. |
+| Host → script events | Component hooks (`onOrderPlaced`, …) with typed payloads from TypeScript. |
 | Good DX in Lua | Generate [LuaCATS](https://luals.github.io/wiki/annotations/) `.d.lua` stubs from the same surface spec that drives runtime. |
 | No native Lua install | Lua runs via **Wasmoon** in Node or the browser. |
 

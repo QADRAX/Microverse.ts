@@ -8,7 +8,7 @@ import type {
   HostSurface,
   HostSurfaceCore,
   HostSurfaceSpec,
-  HostWorkflowHooksSpec,
+  HostComponentHooksSpec,
 } from '../../domain/hostSurfaceTypes.js';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
 import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec.js';
@@ -16,12 +16,12 @@ import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDecl
 function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
   schemaValidation: SchemaValidationPort,
   spec: TSpec,
-  workflowHooks?: HostWorkflowHooksSpec,
+  componentHooks?: HostComponentHooksSpec,
 ): HostSurfaceCore<InferSurfaceCapabilities<TSpec>> {
   const capabilities = collectCapabilitiesFromHostSurfaceSpec(spec);
   return {
     toBridgeDeclarations: () => createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, spec),
-    toLuaDefManifest: (opts) => buildLuaDefManifestFromHostSurfaceSpec(spec, opts, workflowHooks),
+    toLuaDefManifest: (opts) => buildLuaDefManifestFromHostSurfaceSpec(spec, opts, componentHooks),
     capabilities,
     pickCapabilities: (...picked) =>
       pickSurfaceCapabilities(capabilities, ...picked) as ReadonlyArray<
@@ -39,23 +39,23 @@ export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
 ): HostSurface<undefined, InferSurfaceCapabilities<TSpec>>;
 export function compileHostSurface<
   const TSpec extends HostSurfaceSpec,
-  const THooks extends HostWorkflowHooksSpec,
+  const THooks extends HostComponentHooksSpec,
 >(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
-  workflowHooks: THooks,
+  componentHooks: THooks,
 ): HostSurface<THooks, InferSurfaceCapabilities<TSpec>>;
 export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
-  workflowHooks?: HostWorkflowHooksSpec,
-): HostSurface<undefined, InferSurfaceCapabilities<TSpec>> | HostSurface<HostWorkflowHooksSpec, InferSurfaceCapabilities<TSpec>> {
+  componentHooks?: HostComponentHooksSpec,
+): HostSurface<undefined, InferSurfaceCapabilities<TSpec>> | HostSurface<HostComponentHooksSpec, InferSurfaceCapabilities<TSpec>> {
   const [schemaValidation] = ports;
-  const core = buildHostSurfaceCore(schemaValidation, spec, workflowHooks);
-  if (workflowHooks === undefined) {
+  const core = buildHostSurfaceCore(schemaValidation, spec, componentHooks);
+  if (componentHooks === undefined) {
     return core;
   }
-  return { ...core, workflowHooks };
+  return { ...core, componentHooks };
 }
 
 /**
@@ -63,19 +63,19 @@ export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
  */
 export function compileHostSurfaceFor<
   const TSpec extends HostSurfaceSpec,
-  const THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  const THooks extends HostComponentHooksSpec | undefined = undefined,
 >(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
-  workflowHooks?: THooks,
-): THooks extends HostWorkflowHooksSpec
+  componentHooks?: THooks,
+): THooks extends HostComponentHooksSpec
   ? HostSurface<THooks, InferSurfaceCapabilities<TSpec>>
   : HostSurface<undefined, InferSurfaceCapabilities<TSpec>> {
   return (
-    workflowHooks === undefined
+    componentHooks === undefined
       ? compileHostSurface(ports, spec)
-      : compileHostSurface(ports, spec, workflowHooks)
-  ) as THooks extends HostWorkflowHooksSpec
+      : compileHostSurface(ports, spec, componentHooks)
+  ) as THooks extends HostComponentHooksSpec
     ? HostSurface<THooks, InferSurfaceCapabilities<TSpec>>
     : HostSurface<undefined, InferSurfaceCapabilities<TSpec>>;
 }

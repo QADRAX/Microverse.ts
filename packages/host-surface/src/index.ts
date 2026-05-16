@@ -19,7 +19,7 @@ export {
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
   type HostSurfaceSpecForHost,
-  type HostWorkflowHooksSpec,
+  type HostComponentHooksSpec,
   type LuaDefManifestGeneratorOpts,
   type SurfaceMethodDef,
 } from './infrastructure/builders/defineHostSurfaceFacade.js';
@@ -32,13 +32,21 @@ export type { SchemaValidationPort } from './application/ports/SchemaValidationP
 export {
   HostScriptSession,
   type HostScriptSessionOptions,
-  type WorkflowHookInvokeArgs,
+  type ComponentEventHookInvokeArgs,
 } from './infrastructure/components/hostScriptSession.js';
 export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook.js';
 export { luaType } from './domain/zodLuaType.js';
 export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef.js';
 export { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
 export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';
+export { augmentHostWithScriptContext } from './infrastructure/adapters/augmentHostWithScriptContext.js';
+export { MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE } from './domain/componentSlotPrelude.js';
+export {
+  mergeEnvSinkToScriptPropertyBag,
+  scriptPropertyBagToMergeEnv,
+  scriptPropertyValueToPlain,
+} from './domain/scriptPropertyMergeEnv.js';
+export { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from './domain/scriptContextSymbol.js';
 export type { InferSurfaceCapabilities } from './domain/surfaceCapabilities.js';
 export type { SurfaceCapabilityString } from './domain/surfaceCapabilityString.js';
 export { collectCapabilitiesFromHostSurfaceSpec, pickSurfaceCapabilities } from './domain/surfaceCapabilities.js';

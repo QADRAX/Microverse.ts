@@ -1,6 +1,6 @@
 /**
  * Lua convention for domain hooks: PascalCase event kind → method name `on{Kind}` on the workflow
- * handler table from `workflow:extend()` in each Lua slot (e.g. `OrderPlaced` → `onOrderPlaced`).
+ * component table from `component:extend()` in each Lua slot (e.g. `OrderPlaced` → `onOrderPlaced`).
  */
 export type LuaGlobalHookName<Kind extends string> = `on${Kind}`;
 

@@ -17,7 +17,7 @@ export type {
   HostSurfaceMethodEntry,
   HostSurfaceSpec,
   HostSurfaceSpecForHost,
-  HostWorkflowHooksSpec,
+  HostComponentHooksSpec,
   LuaDefManifestGeneratorOpts,
 } from '../../domain/hostSurfaceTypes.js';
 
