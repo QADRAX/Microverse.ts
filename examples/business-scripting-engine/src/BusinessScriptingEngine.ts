@@ -1,6 +1,5 @@
 import {
   MicroverseLua,
-  type LuaMicroverse,
   type ScriptPropertyBag,
   type TimeoutPolicy,
 } from '@microverse.ts/microverse-lua';
@@ -33,7 +32,7 @@ export type BusinessScriptingEngineOptions = {
  * Script capabilities come from `surface.pickCapabilities(…)` — see {@link businessSurface.ts}.
  */
 export class BusinessScriptingEngine {
-  private readonly microverse: LuaMicroverse<BusinessEngineHost>;
+  private readonly microverse;
 
   /** Host surface used for bridges, LuaCATS, and capability allowlists. */
   readonly surface = surface;
@@ -71,7 +70,7 @@ export class BusinessScriptingEngine {
    */
   readonly mountScriptInstance = async (args: {
     readonly scriptId: string;
-    readonly capabilities: readonly BusinessSurfaceCapabilities[];
+    readonly capabilities: ReturnType<typeof surface.pickCapabilities>;
     readonly instanceId?: string | undefined;
     readonly props?: ScriptPropertyBag | undefined;
     readonly audit?: Readonly<Record<string, string | number | boolean>> | undefined;

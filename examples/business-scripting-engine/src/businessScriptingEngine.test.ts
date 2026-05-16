@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { BusinessScriptingEngine, type BusinessSurfaceCapabilities } from './BusinessScriptingEngine.js';
+import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
 import surface from './businessSurface.js';
 import { createDefaultBusinessHost, readComponentLua } from './services/index.js';
 
@@ -17,7 +17,7 @@ async function loadScript(
   engine: BusinessScriptingEngine,
   scriptId: string,
   luaSource: string,
-  capabilities: readonly BusinessSurfaceCapabilities[],
+  capabilities: ReturnType<typeof surface.pickCapabilities>,
   options?: { readonly injectLuaChunks?: readonly string[] },
 ): Promise<void> {
   engine.registerScriptDefinition(scriptId, luaSource, options);

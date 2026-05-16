@@ -13,7 +13,8 @@ export function scriptPropertyValueToPlain(value: ScriptPropertyValue): unknown 
     return value;
   }
   if (Array.isArray(value)) {
-    return value.map((item) => scriptPropertyValueToPlain(item));
+    const items = value as readonly ScriptPropertyValue[];
+    return items.map((item) => scriptPropertyValueToPlain(item));
   }
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) {
@@ -43,8 +44,8 @@ export function plainToScriptPropertyValue(value: unknown): ScriptPropertyValue 
   if (t === 'string' || t === 'boolean') {
     return value as string | boolean;
   }
-  if (t === 'number' && Number.isFinite(value as number)) {
-    return value as number;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
   }
   if (Array.isArray(value)) {
     const arr: ScriptPropertyValue[] = [];

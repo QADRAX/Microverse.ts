@@ -129,7 +129,7 @@ export class HostScriptSession<
     if (this.opts.propsSchema !== undefined) {
       const parsed = this.opts.propsSchema.parse(bag);
       assertValidScriptPropertyBag(parsed);
-      return parsed as ScriptPropertyBag;
+      return parsed;
     }
     assertValidScriptPropertyBag(bag);
     return bag;
@@ -342,12 +342,14 @@ function luaValueLiteral(value: string | ScriptPropertyValue): string {
     return 'nil';
   }
   if (Array.isArray(value)) {
-    const items = value.map((v) => luaValueLiteral(v)).join(', ');
-    return `{ ${items} }`;
+    const items = value as readonly ScriptPropertyValue[];
+    const luaItems = items.map((v) => luaValueLiteral(v)).join(', ');
+    return `{ ${luaItems} }`;
   }
+  const record = value as { readonly [key: string]: ScriptPropertyValue };
   const parts: string[] = [];
-  for (const [k, v] of Object.entries(value)) {
-    parts.push(`${k} = ${luaValueLiteral(v)}`);
+  for (const k of Object.keys(record)) {
+    parts.push(`${k} = ${luaValueLiteral(record[k]!)}`);
   }
   return `{ ${parts.join(', ')} }`;
 }
