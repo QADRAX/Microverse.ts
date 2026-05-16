@@ -36,17 +36,18 @@ export function assertValidScriptPropertyValue(
 
   const t = typeof value;
   if (t === 'string' || t === 'number' || t === 'boolean') {
-    if (t === 'number' && !Number.isFinite(value as number)) {
+    if (t === 'number' && !Number.isFinite(value)) {
       throw new Error('script property number must be finite');
     }
     return;
   }
 
   if (Array.isArray(value)) {
-    if (value.length > maxArrayLength) {
+    const items = value as readonly unknown[];
+    if (items.length > maxArrayLength) {
       throw new Error(`script property array exceeds max length (${maxArrayLength})`);
     }
-    for (const item of value) {
+    for (const item of items) {
       assertValidScriptPropertyValue(item, limits, depth + 1);
     }
     return;
@@ -88,7 +89,8 @@ export function cloneScriptPropertyValue(value: ScriptPropertyValue): ScriptProp
     return value;
   }
   if (Array.isArray(value)) {
-    return value.map((item) => cloneScriptPropertyValue(item));
+    const items = value as readonly ScriptPropertyValue[];
+    return items.map((item) => cloneScriptPropertyValue(item));
   }
   const out: Record<string, ScriptPropertyValue> = {};
   for (const [k, v] of Object.entries(value)) {

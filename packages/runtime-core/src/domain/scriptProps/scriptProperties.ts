@@ -15,11 +15,13 @@ export function shallowEqualScriptPropertyValue(
   }
 
   if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) {
+    const aItems = a as readonly ScriptPropertyValue[];
+    const bItems = b as readonly ScriptPropertyValue[];
+    if (aItems.length !== bItems.length) {
       return false;
     }
-    for (let i = 0; i < a.length; i++) {
-      if (!shallowEqualScriptPropertyValue(a[i], b[i])) {
+    for (let i = 0; i < aItems.length; i++) {
+      if (!shallowEqualScriptPropertyValue(aItems[i], bItems[i])) {
         return false;
       }
     }
