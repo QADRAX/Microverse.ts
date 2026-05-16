@@ -1,7 +1,7 @@
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
 
 import { createZodSchemaValidationPort } from '../adapters/zodSchemaValidationAdapter.js';
-import { BridgeBuilder, SurfaceBuilder } from './surfaceBuilder.js';
+import { SurfaceBuilder } from './surfaceBuilder.js';
 
 const defaultPorts: readonly [SchemaValidationPort] = [createZodSchemaValidationPort()];
 
