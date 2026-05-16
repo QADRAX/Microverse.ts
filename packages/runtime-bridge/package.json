@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "description": "Bridge registry and invoke coordinator: typed host↔script calls and declarative bridge tables for Microverse runtimes.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

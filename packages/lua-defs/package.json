@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
-  "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
+  "description": "Generate LuaCATS (.d.lua) stubs for LuaLS from a LuaDefManifest—the IDE contract aligned with your host surface.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

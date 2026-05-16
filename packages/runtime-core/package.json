@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "description": "Runtime-agnostic Microverse kernel: MicroverseRuntime slots, script definitions, instance props, and the RuntimeAdapter protocol.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

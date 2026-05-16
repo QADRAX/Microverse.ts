@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "description": "Wasmoon Wasm Lua VM for Microverse: shared VM, per-slot sandboxes, execution limits, and optional Web Worker host.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

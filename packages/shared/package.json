@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "description": "Cross-cutting primitives for Microverse.ts: Result types and use-case typing shared across runtime packages.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",
