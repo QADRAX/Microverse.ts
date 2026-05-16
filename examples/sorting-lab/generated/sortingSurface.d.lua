@@ -6,7 +6,7 @@
 
 ---@alias SortingAlgorithmProps { label: string; slotSide: "A"|"B" }
 
----@alias SortingAlgorithmState { i: integer|nil; j: integer|nil; minJ: integer|nil; done: boolean|nil; low: integer|nil; high: integer|nil; pivot: integer|nil; pIndex: integer|nil; stack: table|nil }
+---@alias SortingAlgorithmState { i: integer|nil; j: integer|nil; minJ: integer|nil; done: boolean|nil; low: integer|nil; high: integer|nil; pivot: integer|nil; pIndex: integer|nil; stack: table|nil; gap: integer|nil; heapSize: integer|nil; swapped: boolean|nil; buf: table|nil }
 
 
 ---@class Array

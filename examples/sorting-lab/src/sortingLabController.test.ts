@@ -49,4 +49,33 @@ describe('SortingLabController', () => {
 
     await controller.dispose();
   }, 60_000);
+
+  it.each([
+    'shell_sort',
+    'heap_sort',
+    'merge_sort',
+    'cocktail_sort',
+    'comb_sort',
+    'gnome_sort',
+    'odd_even_sort',
+  ] as const)('%s completes on a small array', async (algo) => {
+    const controller = new SortingLabController();
+    const values = seededValues(10, 42);
+    await controller.configure({
+      algoA: algo,
+      algoB: 'bubble_sort',
+      values,
+    });
+
+    const maxSteps = values.length * values.length * 20;
+    for (let step = 0; step < maxSteps && !controller.getSnapshot('A').done; step += 1) {
+      await controller.step();
+    }
+
+    expect(controller.getSnapshot('A').done).toBe(true);
+    const sorted = [...values].sort((a, b) => a - b);
+    expect([...controller.getSnapshot('A').values]).toEqual(sorted);
+
+    await controller.dispose();
+  }, 60_000);
 });

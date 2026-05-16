@@ -1,6 +1,7 @@
 import { SortingLabController, seededValues } from './sortingLabController';
 import type { SortingScriptId } from './engine/sortingScriptCatalog';
 import { renderBars } from './ui/renderBars';
+import { updatePanelInstanceUi } from './ui/updatePanelLuaScript';
 
 const algoASelect = document.querySelector<HTMLSelectElement>('#algoA')!;
 const algoBSelect = document.querySelector<HTMLSelectElement>('#algoB')!;
@@ -12,6 +13,14 @@ const messageA = document.querySelector<HTMLElement>('#messageA')!;
 const messageB = document.querySelector<HTMLElement>('#messageB')!;
 const titleA = document.querySelector<HTMLElement>('#titleA')!;
 const titleB = document.querySelector<HTMLElement>('#titleB')!;
+const metaA = document.querySelector<HTMLElement>('#metaA')!;
+const metaB = document.querySelector<HTMLElement>('#metaB')!;
+const noteA = document.querySelector<HTMLElement>('#noteA')!;
+const noteB = document.querySelector<HTMLElement>('#noteB')!;
+const pathA = document.querySelector<HTMLElement>('#pathA')!;
+const pathB = document.querySelector<HTMLElement>('#pathB')!;
+const luaSourceA = document.querySelector<HTMLElement>('#luaSourceA code')!;
+const luaSourceB = document.querySelector<HTMLElement>('#luaSourceB code')!;
 const stepLabel = document.querySelector<HTMLElement>('#stepLabel')!;
 
 const controller = new SortingLabController({
@@ -47,11 +56,25 @@ function currentValues(): number[] {
 
 async function applyConfiguration(): Promise<void> {
   const values = currentValues();
-  titleA.textContent = `Panel A — ${algoASelect.selectedOptions[0]?.textContent ?? ''}`;
-  titleB.textContent = `Panel B — ${algoBSelect.selectedOptions[0]?.textContent ?? ''}`;
+  const algoA = algoASelect.value as SortingScriptId;
+  const algoB = algoBSelect.value as SortingScriptId;
+  const labelA = algoASelect.selectedOptions[0]?.textContent ?? '';
+  const labelB = algoBSelect.selectedOptions[0]?.textContent ?? '';
+  updatePanelInstanceUi(
+    'A',
+    { title: titleA, meta: metaA, note: noteA, path: pathA, source: luaSourceA },
+    algoA,
+    labelA,
+  );
+  updatePanelInstanceUi(
+    'B',
+    { title: titleB, meta: metaB, note: noteB, path: pathB, source: luaSourceB },
+    algoB,
+    labelB,
+  );
   await controller.configure({
-    algoA: algoASelect.value as SortingScriptId,
-    algoB: algoBSelect.value as SortingScriptId,
+    algoA,
+    algoB,
     values,
   });
 }

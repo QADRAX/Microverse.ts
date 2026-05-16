@@ -1,6 +1,6 @@
 # Sorting Lab
 
-Browser sandbox that compares two sorting algorithms implemented as Lua scripts on the Microverse Wasm runtime. Both panels advance on the same tick via the `Tick` hook; bridges mutate per-slot arrays and update bar visualizations.
+Browser demo with **one** `MicroverseLua` Wasm sandbox and **two** mounted script instances (`A` and `B`). Each instance runs a Lua `SortingAlgorithm` component; Play/Step invokes `onTick` and sorts via `array`, `viz`, and `sort` bridges (per-slot host state). TypeScript never sorts.
 
 ## Run
 

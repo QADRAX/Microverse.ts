@@ -34,6 +34,58 @@ body {
 .subtitle {
   margin: 0.25rem 0 0;
   color: var(--muted);
+  max-width: 52rem;
+  line-height: 1.5;
+}
+
+.runtime-diagram {
+  margin: 0 2rem 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid #2d3548;
+}
+
+.runtime-box--sandbox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px dashed #4b5563;
+  background: #12151c;
+}
+
+.runtime-instances {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.runtime-box--instance {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: #0b0d12;
+  border: 1px solid #374151;
+}
+
+.runtime-box-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.runtime-box-detail {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.runtime-caption {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .controls {
@@ -118,8 +170,15 @@ button:hover {
 
 .panel-message {
   min-height: 1.25rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.panel-meta {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
   color: var(--muted);
 }
 
@@ -155,4 +214,72 @@ button:hover {
 
 .bar.done {
   opacity: 0.85;
+}
+
+.page-header .subtitle code,
+.panel-script-note code,
+.panel-script-path code {
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: #0b0d12;
+  color: var(--accent);
+}
+
+.panel-script {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #2d3548;
+}
+
+.panel-script-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel-script-note {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.panel-script-path {
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.panel-script-path-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+}
+
+.panel-script-path code {
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+}
+
+.panel-script-source {
+  margin: 0;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #0b0d12;
+  border: 1px solid #2d3548;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.panel-script-source code {
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  color: #cbd5e1;
+  white-space: pre;
 }

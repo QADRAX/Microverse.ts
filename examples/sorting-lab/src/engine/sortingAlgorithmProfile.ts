@@ -19,6 +19,10 @@ export const SORTING_ALGORITHM_PROFILE = {
     pivot: z.number().int().optional(),
     pIndex: z.number().int().optional(),
     stack: z.array(z.number().int()).optional(),
+    gap: z.number().int().optional(),
+    heapSize: z.number().int().optional(),
+    swapped: z.boolean().optional(),
+    buf: z.array(z.number().int()).optional(),
   }),
   hooks: ['Tick', 'Reset'],
 } as const satisfies ScriptProfileDefInput;

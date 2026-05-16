@@ -6,9 +6,23 @@
 
 ---@alias bubble_sortScriptComponent SortingAlgorithmComponent
 
+---@alias cocktail_sortScriptComponent SortingAlgorithmComponent
+
+---@alias comb_sortScriptComponent SortingAlgorithmComponent
+
+---@alias gnome_sortScriptComponent SortingAlgorithmComponent
+
+---@alias heap_sortScriptComponent SortingAlgorithmComponent
+
 ---@alias insertion_sortScriptComponent SortingAlgorithmComponent
+
+---@alias merge_sortScriptComponent SortingAlgorithmComponent
+
+---@alias odd_even_sortScriptComponent SortingAlgorithmComponent
 
 ---@alias quick_sortScriptComponent SortingAlgorithmComponent
 
 ---@alias selection_sortScriptComponent SortingAlgorithmComponent
+
+---@alias shell_sortScriptComponent SortingAlgorithmComponent
 

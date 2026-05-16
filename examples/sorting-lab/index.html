@@ -10,17 +10,21 @@
   <body>
     <header class="page-header">
       <h1>Sorting Lab</h1>
-      <p class="subtitle">Compare two Lua sorting algorithms tick-by-tick (Wasm Microverse)</p>
+      <p class="subtitle" id="runtimeSummary">
+        One <code>MicroverseLua</code> Wasm sandbox. Two script instances with the
+        <code>SortingAlgorithm</code> profile—each tick calls <code>onTick</code> and sorts through
+        <code>array</code>, <code>viz</code>, and <code>sort</code> bridges. The host never sorts.
+      </p>
     </header>
 
     <section class="controls" aria-label="Simulation controls">
       <div class="control-row">
         <label>
-          Algorithm A
+          Instance A script
           <select id="algoA"></select>
         </label>
         <label>
-          Algorithm B
+          Instance B script
           <select id="algoB"></select>
         </label>
       </div>
@@ -46,14 +50,34 @@
 
     <main class="panels">
       <article class="panel" aria-labelledby="titleA">
-        <h2 id="titleA">Panel A</h2>
+        <h2 id="titleA">Instance A</h2>
+        <p id="metaA" class="panel-meta"></p>
         <p id="messageA" class="panel-message"></p>
         <div id="panelA" class="bar-chart" role="img" aria-label="Array visualization A"></div>
+        <section class="panel-script" aria-labelledby="scriptTitleA">
+          <h3 id="scriptTitleA" class="panel-script-title">Mounted Lua script</h3>
+          <p id="noteA" class="panel-script-note"></p>
+          <p class="panel-script-path">
+            <span class="panel-script-path-label">File</span>
+            <code id="pathA">lua/bubble_sort.lua</code>
+          </p>
+          <pre class="panel-script-source" id="luaSourceA" tabindex="0"><code></code></pre>
+        </section>
       </article>
       <article class="panel" aria-labelledby="titleB">
-        <h2 id="titleB">Panel B</h2>
+        <h2 id="titleB">Instance B</h2>
+        <p id="metaB" class="panel-meta"></p>
         <p id="messageB" class="panel-message"></p>
         <div id="panelB" class="bar-chart" role="img" aria-label="Array visualization B"></div>
+        <section class="panel-script" aria-labelledby="scriptTitleB">
+          <h3 id="scriptTitleB" class="panel-script-title">Mounted Lua script</h3>
+          <p id="noteB" class="panel-script-note"></p>
+          <p class="panel-script-path">
+            <span class="panel-script-path-label">File</span>
+            <code id="pathB">lua/insertion_sort.lua</code>
+          </p>
+          <pre class="panel-script-source" id="luaSourceB" tabindex="0"><code></code></pre>
+        </section>
       </article>
     </main>
 
