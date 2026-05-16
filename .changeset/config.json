@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@microverse/shared",
+      "@microverse/runtime-core",
+      "@microverse/runtime-lua",
+      "@microverse/lua-defs",
+      "@microverse/runtime-capabilities",
+      "@microverse/runtime-bridge",
+      "@microverse/runtime-zod",
+      "@microverse/host-surface",
+      "@microverse/runtime-wasm",
+      "@microverse/microverse-lua"
+    ]
+  ],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@microverse/cli", "@microverse-examples/business-scripting-engine"]
+}

@@ -3,7 +3,7 @@ import type { DeclarativeBridgeDeclaration } from '@microverse/runtime-bridge';
 import type { CapabilityId } from '@microverse/runtime-capabilities';
 import type { z } from 'zod';
 
-import type { SurfaceCapabilityString } from './surfaceCapabilities.js';
+import type { SurfaceCapabilityString } from './surfaceCapabilityString.js';
 import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol.js';
 
 /**

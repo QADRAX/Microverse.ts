@@ -61,9 +61,7 @@ export class SurfaceBuilder<
     ? HostSurface<THooks, InferSurfaceCapabilities<HostSurfaceSpec>>
     : HostSurface<undefined, InferSurfaceCapabilities<HostSurfaceSpec>> {
     const spec = this.spec as HostSurfaceSpec;
-    return compileHostSurfaceFor(this.ports, spec, this.workflowHooksSpec) as THooks extends HostWorkflowHooksSpec
-      ? HostSurface<THooks, InferSurfaceCapabilities<HostSurfaceSpec>>
-      : HostSurface<undefined, InferSurfaceCapabilities<HostSurfaceSpec>>;
+    return compileHostSurfaceFor(this.ports, spec, this.workflowHooksSpec);
   }
 
   /** @internal */

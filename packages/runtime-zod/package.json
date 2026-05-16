@@ -1,16 +1,29 @@
 {
   "name": "@microverse/runtime-zod",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "license": "MIT",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QADRAX/Luarizer.ts.git",
+    "directory": "packages/runtime-zod"
+  },
+  "bugs": "https://github.com/QADRAX/Luarizer.ts/issues",
+  "homepage": "https://github.com/QADRAX/Luarizer.ts/tree/main/packages/runtime-zod",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "lint": "eslint .",

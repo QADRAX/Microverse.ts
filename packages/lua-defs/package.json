@@ -1,16 +1,31 @@
 {
   "name": "@microverse/lua-defs",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "license": "MIT",
   "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QADRAX/Luarizer.ts.git",
+    "directory": "packages/lua-defs"
+  },
+  "bugs": "https://github.com/QADRAX/Luarizer.ts/issues",
+  "homepage": "https://github.com/QADRAX/Luarizer.ts/tree/main/packages/lua-defs",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "schemas", "fixtures"],
+  "files": [
+    "dist",
+    "schemas",
+    "fixtures"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint .",

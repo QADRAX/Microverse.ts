@@ -1,17 +1,33 @@
 {
   "name": "@microverse/microverse-lua",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "license": "MIT",
   "sideEffects": false,
   "description": "Plug-and-play Lua microverse facade: Wasm VM, MicroverseLua, and re-exports for host surfaces and bridges.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QADRAX/Luarizer.ts.git",
+    "directory": "packages/microverse-lua"
+  },
+  "bugs": "https://github.com/QADRAX/Luarizer.ts/issues",
+  "homepage": "https://github.com/QADRAX/Luarizer.ts/tree/main/packages/microverse-lua",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "lint": "eslint .",
