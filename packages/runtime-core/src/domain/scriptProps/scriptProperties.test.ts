@@ -7,6 +7,7 @@ import {
   shallowEqualScriptPropertyValue,
 } from './scriptProperties.js';
 import { assertValidScriptPropertyBag } from './scriptPropertyLimits.js';
+import type { MutableScriptPropertyBag } from './ScriptPropertyValue.js';
 
 describe('scriptProperties', () => {
   it('diffScriptProperties detects scalar and nested changes', () => {
@@ -22,7 +23,7 @@ describe('scriptProperties', () => {
   });
 
   it('applyScriptPropertyChanges updates target', () => {
-    const target: Record<string, unknown> = { a: 1, b: 2 };
+    const target: MutableScriptPropertyBag = { a: 1, b: 2 };
     applyScriptPropertyChanges(target, { a: 10 }, ['a']);
     expect(target.a).toBe(10);
   });
