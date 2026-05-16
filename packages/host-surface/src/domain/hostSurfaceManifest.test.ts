@@ -20,9 +20,10 @@ describe('buildLuaDefManifestFromHostSurfaceSpec', () => {
     expect(doc).toContain('---@class AsyncioTickHandle');
     expect(doc).toContain('---@field await fun(self: AsyncioTickHandle): { value: number }');
     expect(doc).not.toContain('function AsyncioTickHandle:await()');
-    expect(doc).toContain('---@param onComplete fun(result: { value: number })|nil');
-    expect(doc).toContain('---@return AsyncioTickHandle');
-    expect(doc).toContain('---@field tick fun(self: asyncio');
-    expect(doc).not.toContain('function asyncio:tick');
+    expect(doc).toContain(
+      '---@field tick fun(self: Asyncio, payload: { delayMs: number; seed: number }, onComplete: fun(result: { value: number })|nil): AsyncioTickHandle',
+    );
+    expect(doc).not.toContain('function Asyncio:tick');
+    expect(doc).not.toContain('---@param onComplete');
   });
 });
