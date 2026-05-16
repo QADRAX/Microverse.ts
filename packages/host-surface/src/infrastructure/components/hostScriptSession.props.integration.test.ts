@@ -1,3 +1,4 @@
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
@@ -36,7 +37,7 @@ describe('HostScriptSession props (wasm)', () => {
       surface,
       host: { lines: [] },
       slotKey,
-      allowedCapabilities: surface.pickCapabilities('demo:ping'),
+      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
       script: createScriptInstanceContext({
         instanceId: 'i1',
         scriptId: 'writer',
