@@ -22,6 +22,7 @@ describe('buildLuaDefManifestFromHostSurfaceSpec', () => {
     expect(doc).not.toContain('function AsyncioTickHandle:await()');
     expect(doc).toContain('---@param onComplete fun(result: { value: number })|nil');
     expect(doc).toContain('---@return AsyncioTickHandle');
-    expect(doc).toContain('function asyncio:tick(payload, onComplete) end');
+    expect(doc).toContain('---@field tick fun(self: asyncio');
+    expect(doc).not.toContain('function asyncio:tick');
   });
 });

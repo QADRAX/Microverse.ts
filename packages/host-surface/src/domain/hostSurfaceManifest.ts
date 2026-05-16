@@ -19,6 +19,11 @@ function asyncHandleClassName(bridgeName: string, methodName: string): string {
   return `${cap(bridgeName)}${cap(methodName)}Handle`;
 }
 
+/** LuaCATS class for runtime bridge key `audit` → `Audit` (distinct from field name for LuaLS). */
+function bridgeLuaClassName(bridgeTableName: string): string {
+  return bridgeTableName.charAt(0).toUpperCase() + bridgeTableName.slice(1);
+}
+
 function pushMicroverseBridgesClass(bridgeNames: readonly string[], classes: ManifestClass[]): void {
   if (bridgeNames.length === 0) {
     return;
@@ -28,7 +33,7 @@ function pushMicroverseBridgesClass(bridgeNames: readonly string[], classes: Man
     description: 'Capability-scoped host bridges for this component (`self.bridges` after `component:extend()`).',
     fields: bridgeNames.map((name) => ({
       name,
-      luaType: name,
+      luaType: bridgeLuaClassName(name),
     })),
     emitSingleton: false,
   });
@@ -185,7 +190,7 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
       }
     }
     classes.push({
-      name: bridgeName,
+      name: bridgeLuaClassName(bridgeName),
       methods: manifestMethods,
       emitSingleton: false,
     });

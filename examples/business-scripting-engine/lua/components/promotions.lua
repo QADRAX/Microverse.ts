@@ -3,7 +3,6 @@
 
 local C = component:extend()
 
----@param evt MicroverseEvt_OrderPlaced
 function C:onOrderPlaced(evt)
   local o = self.bridges.orders:get({ orderId = evt.orderId })
   if o and o.totalCents >= 1000 then
@@ -13,7 +12,6 @@ function C:onOrderPlaced(evt)
   end
 end
 
----@param evt MicroverseEvt_InventoryLow
 function C:onInventoryLow(evt)
   if evt.unitsLeft <= 2 then
     self.bridges.notifications:send({ channel = "ops", message = "low stock " .. evt.sku })

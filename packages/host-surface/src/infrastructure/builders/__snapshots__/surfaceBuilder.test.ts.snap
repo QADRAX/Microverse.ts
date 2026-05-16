@@ -10,20 +10,17 @@ exports[`SurfaceBuilder (fluent defineHostSurfaceFor) > builds LuaDefManifest fo
 ---@alias EntityId string
 
 
----@class ecs
----@param payload { id: EntityId }
----@return string|nil
-function ecs:getName(payload) end
+---@class Ecs
+---@field getName fun(self: Ecs, payload: { id: EntityId }): string|nil
 
----@class time
+---@class Time
 ---Frame delta seconds
----@return number
-function time:delta() end
+---@field delta fun(self: Time): number
 
 ---Capability-scoped host bridges for this component (\`self.bridges\` after \`component:extend()\`).
 ---@class MicroverseBridges
----@field ecs ecs
----@field time time
+---@field ecs Ecs
+---@field time Time
 
 ---Component instance from \`local C = component:extend()\`. Use \`self.bridges\` for host APIs; define \`on*\` methods for domain events.
 ---@class Component
@@ -39,6 +36,9 @@ function time:delta() end
 component = {}
 ---Returns the component table with \`properties\`, \`state\`, and \`bridges\` wired for this slot.
 ---@return Component
-function component:extend() end
+function component:extend()
+return {}
+---@type Component
+end
 "
 `;

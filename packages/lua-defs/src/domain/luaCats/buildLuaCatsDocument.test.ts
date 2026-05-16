@@ -66,7 +66,7 @@ describe('buildLuaCatsDocument', () => {
       ],
       classes: [
         {
-          name: 'orders',
+          name: 'Orders',
           methods: [
             {
               name: 'get',
@@ -80,11 +80,11 @@ describe('buildLuaCatsDocument', () => {
     const lua = buildLuaCatsDocument(manifest);
     const meta = lua.indexOf('---@meta');
     const aliasOrderId = lua.indexOf('---@alias OrderId string');
-    const classOrders = lua.indexOf('---@class orders');
+    const classOrders = lua.indexOf('---@class Orders');
     expect(meta).toBeGreaterThanOrEqual(0);
     expect(aliasOrderId).toBeGreaterThan(meta);
     expect(classOrders).toBeGreaterThan(aliasOrderId);
-    expect(lua).toContain('orders = {}');
+    expect(lua).toContain('Orders = {}');
   });
 
   it('emits @field method signatures when emitSingleton is false (nested bridge access)', () => {
@@ -93,7 +93,7 @@ describe('buildLuaCatsDocument', () => {
       output: 'out.d.lua',
       classes: [
         {
-          name: 'notifications',
+          name: 'Notifications',
           methods: [
             {
               name: 'send',
@@ -108,16 +108,17 @@ describe('buildLuaCatsDocument', () => {
         },
         {
           name: 'MicroverseBridges',
-          fields: [{ name: 'notifications', luaType: 'notifications' }],
+          fields: [{ name: 'notifications', luaType: 'Notifications' }],
           emitSingleton: false,
         },
       ],
     };
     const lua = buildLuaCatsDocument(manifest);
     expect(lua).toContain(
-      '---@field send fun(self: notifications, payload: { channel: string; message: string }): nil',
+      '---@field send fun(self: Notifications, payload: { channel: string; message: string }): nil',
     );
-    expect(lua).not.toContain('notifications = {}');
+    expect(lua).not.toContain('Notifications = {}');
+    expect(lua).not.toContain('function Notifications:send');
   });
 
   it('omits class singleton when emitSingleton is false', () => {
@@ -170,6 +171,7 @@ describe('buildLuaCatsDocument', () => {
       classes: [
         {
           name: 'asyncio',
+          emitSingleton: false,
           methods: [
             {
               name: 'tick',
@@ -191,9 +193,10 @@ describe('buildLuaCatsDocument', () => {
       ],
     };
     const lua = buildLuaCatsDocument(manifest);
-    expect(lua).toContain('---@param payload { delayMs: integer; seed: number }');
-    expect(lua).toContain('---@param onComplete fun(result: TickResult)|nil');
-    expect(lua).toContain('function asyncio:tick(payload, onComplete) end');
+    expect(lua).toContain(
+      '---@field tick fun(self: asyncio, payload: { delayMs: integer; seed: number }, onComplete: fun(result: TickResult)|nil): AsyncioTickHandle',
+    );
+    expect(lua).not.toContain('function asyncio:tick');
   });
 
   it('emits luaHooks after classes', () => {
@@ -210,13 +213,13 @@ describe('buildLuaCatsDocument', () => {
       ],
       classes: [
         {
-          name: 'orders',
+          name: 'Orders',
           methods: [{ name: 'get', params: [{ name: 'orderId', luaType: 'string' }], returns: 'nil' }],
         },
       ],
     };
     const lua = buildLuaCatsDocument(manifest);
-    const classPos = lua.indexOf('---@class orders');
+    const classPos = lua.indexOf('---@class Orders');
     const hookPos = lua.indexOf('function onOrderPlaced(evt) end');
     expect(classPos).toBeGreaterThanOrEqual(0);
     expect(hookPos).toBeGreaterThan(classPos);

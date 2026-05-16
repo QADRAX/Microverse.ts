@@ -12,7 +12,38 @@ function escComment(s: string): string {
   return s.replace(/\*\//g, '* /');
 }
 
-function emitMethod(className: string, m: ManifestMethod): string {
+/** Multiline stub bodies — inline `---@type Foo|nil end` is invalid Lua (`|` is an operator). */
+function stubMethodBody(returns: string | undefined): string {
+  if (returns === undefined) {
+    return 'end';
+  }
+  if (returns === 'nil') {
+    return 'return nil\nend';
+  }
+  if (!returns.includes('|')) {
+    return `return {}\n---@type ${returns}\nend`;
+  }
+  return 'return {}\nend';
+}
+
+function appendFunctionDeclaration(lines: string[], signature: string, body: string): void {
+  if (body === 'end') {
+    lines.push(`${signature} end`);
+    return;
+  }
+  lines.push(signature);
+  lines.push(body);
+}
+
+function shouldStubMethodReturn(m: ManifestMethod, emitSingleton: boolean | undefined): boolean {
+  if (m.returns === 'Component') {
+    return true;
+  }
+  return emitSingleton === false;
+}
+
+function emitMethod(className: string, m: ManifestMethod, emitSingleton: boolean | undefined): string {
+  const fnEnd = shouldStubMethodReturn(m, emitSingleton) ? stubMethodBody(m.returns) : 'end';
   const lines: string[] = [];
   if (m.description !== undefined && m.description.length > 0) {
     lines.push(`---${escComment(m.description)}`);
@@ -24,7 +55,7 @@ function emitMethod(className: string, m: ManifestMethod): string {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);
     }
-    lines.push(`function ${className}:${m.name}(${p.name}) end`);
+    appendFunctionDeclaration(lines, `function ${className}:${m.name}(${p.name})`, fnEnd);
     return lines.join('\n');
   }
   if (m.callStyle === 'asyncBridge') {
@@ -40,14 +71,14 @@ function emitMethod(className: string, m: ManifestMethod): string {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);
     }
-    lines.push(`function ${className}:${m.name}(payload, onComplete) end`);
+    appendFunctionDeclaration(lines, `function ${className}:${m.name}(payload, onComplete)`, fnEnd);
     return lines.join('\n');
   }
   if (ps.length === 0) {
     if (m.returns !== undefined) {
       lines.push(`---@return ${m.returns}`);
     }
-    lines.push(`function ${className}:${m.name}() end`);
+    appendFunctionDeclaration(lines, `function ${className}:${m.name}()`, fnEnd);
     return lines.join('\n');
   }
   const recordInner = ps.map((p: ManifestParam) => `${p.name}: ${p.luaType}`).join('; ');
@@ -55,7 +86,7 @@ function emitMethod(className: string, m: ManifestMethod): string {
   if (m.returns !== undefined) {
     lines.push(`---@return ${m.returns}`);
   }
-  lines.push(`function ${className}:${m.name}(payload) end`);
+  appendFunctionDeclaration(lines, `function ${className}:${m.name}(payload)`, fnEnd);
   return lines.join('\n');
 }
 
@@ -112,17 +143,20 @@ function emitClass(c: ManifestClass): string {
     const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
     parts.push(`---@field ${f.name} ${f.luaType}${d}`);
   }
-  const emitMethodFields = c.emitSingleton === false;
-  for (const m of c.methods ?? []) {
-    if (emitMethodFields) {
+  const typeOnlyClass = c.emitSingleton === false;
+  if (typeOnlyClass) {
+    for (const m of c.methods ?? []) {
+      if (m.description !== undefined && m.description.length > 0) {
+        parts.push(`---${escComment(m.description)}`);
+      }
       parts.push(`---@field ${m.name} ${methodToFieldLuaType(c.name, m)}`);
     }
   }
-  if (c.emitSingleton !== false) {
+  if (!typeOnlyClass) {
     parts.push(`${c.name} = {}`);
-  }
-  for (const m of c.methods ?? []) {
-    parts.push(emitMethod(c.name, m));
+    for (const m of c.methods ?? []) {
+      parts.push(emitMethod(c.name, m, c.emitSingleton));
+    }
   }
   return parts.join('\n');
 }

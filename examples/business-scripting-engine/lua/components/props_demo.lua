@@ -9,7 +9,6 @@ function C:onPropsChanged(key, newValue)
   self.state.lastValue = newValue
 end
 
----@param evt MicroverseEvt_OrderPlaced
 function C:onOrderPlaced(evt)
   self.state.hits = (self.state.hits or 0) + 1
   local label = self.properties.label or "?"

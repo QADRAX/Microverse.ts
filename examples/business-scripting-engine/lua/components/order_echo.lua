@@ -2,7 +2,6 @@
 
 local C = component:extend()
 
----@param evt MicroverseEvt_OrderPlaced
 function C:onOrderPlaced(evt)
   self.bridges.notifications:send({
     channel = "echo",

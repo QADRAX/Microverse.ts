@@ -319,17 +319,18 @@ describe('BusinessScriptingEngine (Lua files under lua/)', () => {
 describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
   it('is produced by pnpm run generate:defs (pretest) and documents bridge methods + component event types', () => {
     const doc = readFileSync(generatedDefsPath, 'utf8');
-    expect(doc).toContain('function orders:get(payload) end');
-    expect(doc).toContain('function billing:charge(payload) end');
-    expect(doc).toContain('function notifications:send(payload) end');
-    expect(doc).toContain('function audit:record(payload) end');
-    expect(doc).toContain('function inventory:getUnits(payload) end');
-    expect(doc).toContain('---@class asyncio');
+    expect(doc).toContain('---@field get fun(self: Orders, payload: { orderId: OrderId }): OrderDto|nil');
+    expect(doc).not.toContain('function Orders:get');
+    expect(doc).toContain('---@field charge fun(self: Billing');
+    expect(doc).toContain('---@field send fun(self: Notifications');
+    expect(doc).toContain('---@field record fun(self: Audit');
+    expect(doc).toContain('---@field getUnits fun(self: Inventory');
+    expect(doc).toContain('---@class Asyncio');
     expect(doc).toContain('---@class AsyncioTickHandle');
-    expect(doc).toContain('function asyncio:tick(payload, onComplete) end');
+    expect(doc).toContain('---@field tick fun(self: Asyncio');
     expect(doc).toContain('---@alias AsyncioTickResult');
-    expect(doc).toContain('---@class jobs');
-    expect(doc).toContain('function jobs:create(payload) end');
+    expect(doc).toContain('---@class Jobs');
+    expect(doc).toContain('---@field create fun(self: Jobs');
     expect(doc).toContain('---@alias JobCreateResult');
     expect(doc).toContain('---@alias InventoryUnits');
     expect(doc).toContain('---@class MicroverseEvt_OrderPlaced');
@@ -343,7 +344,8 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).not.toContain('---@class Workflow');
     expect(doc).not.toContain('workflow = {}');
     expect(doc).toContain('---@class component');
-    expect(doc).toContain('function component:extend() end');
+    expect(doc).toContain('function component:extend()');
+    expect(doc).toContain('---@type Component');
     expect(doc).toContain('---@return Component');
     expect(doc).toContain('---@field bridges MicroverseBridges');
     expect(doc).toContain('---@field onOrderPlaced');
@@ -357,7 +359,7 @@ describe('Build-time LuaCATS (generated/businessSurface.d.lua)', () => {
     expect(doc).toContain('fun(self: Component, evt: MicroverseEvt_JobDone)');
     expect(doc).toContain('---@field onDestroy');
     expect(doc).toContain('---@alias OrderId string');
-    expect(doc).not.toContain('orders = {}');
+    expect(doc).not.toContain('Orders = {}');
     expect(doc).not.toContain('function onOrderPlaced(evt) end');
   });
 });
