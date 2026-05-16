@@ -24,17 +24,17 @@ import {
   type TimeoutPolicy,
 } from '@microverse.ts/runtime-core';
 
-import { MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE } from '../../domain/componentSlotPrelude.js';
+import { MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE } from '../../domain/componentSlotPrelude';
 import {
   plainToScriptPropertyValue,
   scriptPropertyBagToMergeEnv,
-} from '../../domain/scriptPropertyMergeEnv.js';
-import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry.js';
-import { augmentHostWithScriptContext } from '../adapters/augmentHostWithScriptContext.js';
-import { bridgeNamesFromSurface, buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv.js';
-import type { HostSurface, HostComponentHooksSpec } from '../../domain/hostSurfaceTypes.js';
-import type { LuaGlobalHookName } from '../../domain/luaGlobalHook.js';
-import { luaGlobalHookName } from '../../domain/luaGlobalHook.js';
+} from '../../domain/scriptPropertyMergeEnv';
+import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry';
+import { augmentHostWithScriptContext } from '../adapters/augmentHostWithScriptContext';
+import { bridgeNamesFromSurface, buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv';
+import type { HostSurface, HostComponentHooksSpec } from '../../domain/hostSurfaceTypes';
+import type { LuaGlobalHookName } from '../../domain/luaGlobalHook';
+import { luaGlobalHookName } from '../../domain/luaGlobalHook';
 
 export type ComponentEventHookInvokeArgs<TH extends HostComponentHooksSpec> = {
   [K in keyof TH & string]: readonly [hook: LuaGlobalHookName<K>, payload: Readonly<z.infer<TH[K]>>];

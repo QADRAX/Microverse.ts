@@ -1,8 +1,8 @@
 import { createCapabilityId, type CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
-import { inferMethodAsync } from './inferMethodAsync.js';
-import type { HostFnContext, HostSurfaceMethodEntry } from './hostSurfaceTypes.js';
+import { inferMethodAsync } from './inferMethodAsync';
+import type { HostFnContext, HostSurfaceMethodEntry } from './hostSurfaceTypes';
 
 /**
  * Consumer-facing method definition for the fluent {@link SurfaceBuilder} API.

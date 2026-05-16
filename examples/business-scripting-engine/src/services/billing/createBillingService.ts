@@ -1,4 +1,4 @@
-import type { ChargeRecord } from '../../domain/models/chargeRecord.js';
+import type { ChargeRecord } from '../../domain/models/chargeRecord';
 
 export function createBillingService() {
   const charges: ChargeRecord[] = [];

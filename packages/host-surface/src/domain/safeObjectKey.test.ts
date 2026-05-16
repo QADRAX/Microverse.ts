@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { assertSafeObjectKey } from './safeObjectKey.js';
+import { assertSafeObjectKey } from './safeObjectKey';
 
 describe('assertSafeObjectKey', () => {
   it('rejects prototype-pollution keys', () => {

@@ -2,10 +2,10 @@ import { createAllowlist, createCapabilityId, InMemoryCapabilityRegistry } from 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { normalizeMethodDef } from '../../domain/surfaceMethodDef.js';
-import { augmentHostWithCapabilityRegistry } from '../../infrastructure/adapters/augmentHostWithCapabilityRegistry.js';
-import { createZodSchemaValidationPort } from '../../infrastructure/adapters/zodSchemaValidationAdapter.js';
-import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec.js';
+import { normalizeMethodDef } from '../../domain/surfaceMethodDef';
+import { augmentHostWithCapabilityRegistry } from '../../infrastructure/adapters/augmentHostWithCapabilityRegistry';
+import { createZodSchemaValidationPort } from '../../infrastructure/adapters/zodSchemaValidationAdapter';
+import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec';
 
 describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
   it('returns a Promise that resolves to Zod-validated output when the handler is async', async () => {

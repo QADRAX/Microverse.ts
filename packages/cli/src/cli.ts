@@ -3,7 +3,7 @@ import {
   GENERATE_LUA_DEFS_COMMAND,
   printGenerateLuaDefsHelp,
   runGenerateLuaDefs,
-} from './commands/generate-lua-defs.js';
+} from './commands/generate-lua-defs';
 
 const BIN = 'microverse';
 

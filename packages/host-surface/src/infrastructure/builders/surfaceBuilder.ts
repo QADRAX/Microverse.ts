@@ -1,14 +1,14 @@
-import { compileHostSurfaceFor } from '../../application/useCases/compileHostSurface.js';
-import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
-import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
-import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef.js';
-import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey.js';
+import { compileHostSurfaceFor } from '../../application/useCases/compileHostSurface';
+import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
+import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities';
+import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef';
+import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey';
 import type {
   AnyHostSurfaceMethod,
   HostSurface,
   HostSurfaceSpec,
   HostComponentHooksSpec,
-} from '../../domain/hostSurfaceTypes.js';
+} from '../../domain/hostSurfaceTypes';
 
 type MutableHostSurfaceSpec = Record<string, Record<string, AnyHostSurfaceMethod>>;
 

@@ -4,8 +4,8 @@ import type { DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
-import type { SurfaceCapabilityString } from './surfaceCapabilityString.js';
-import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol.js';
+import type { SurfaceCapabilityString } from './surfaceCapabilityString';
+import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol';
 
 /**
  * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).

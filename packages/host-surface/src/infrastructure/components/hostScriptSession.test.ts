@@ -9,8 +9,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineHostSurfaceFor } from '../builders/defineHostSurfaceFacade.js';
-import { HostScriptSession } from './hostScriptSession.js';
+import { defineHostSurfaceFor } from '../builders/defineHostSurfaceFacade';
+import { HostScriptSession } from './hostScriptSession';
 
 type H = { readonly tag: string };
 

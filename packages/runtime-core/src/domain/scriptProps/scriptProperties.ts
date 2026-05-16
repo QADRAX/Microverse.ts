@@ -1,4 +1,4 @@
-import type { MutableScriptPropertyBag, ScriptPropertyBag, ScriptPropertyValue } from './ScriptPropertyValue.js';
+import type { MutableScriptPropertyBag, ScriptPropertyBag, ScriptPropertyValue } from './ScriptPropertyValue';
 
 export function shallowEqualScriptPropertyValue(
   a: ScriptPropertyValue | undefined,

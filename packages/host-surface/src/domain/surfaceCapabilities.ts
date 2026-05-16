@@ -1,6 +1,6 @@
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
-import type { AnyHostSurfaceMethod, HostSurfaceMethodEntry, HostSurfaceSpec } from './hostSurfaceTypes.js';
+import type { AnyHostSurfaceMethod, HostSurfaceMethodEntry, HostSurfaceSpec } from './hostSurfaceTypes';
 
 type InferMethodCapability<M> = M extends { readonly capability: infer C extends CapabilityId }
   ? C

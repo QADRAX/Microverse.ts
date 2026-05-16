@@ -3,9 +3,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { BusinessScriptingEngine } from './BusinessScriptingEngine.js';
-import surface from './businessSurface.js';
-import { createDefaultBusinessHost, readComponentLua } from './services/index.js';
+import { BusinessScriptingEngine } from './BusinessScriptingEngine';
+import surface from './businessSurface';
+import { createDefaultBusinessHost, readComponentLua } from './services/index';
 
 const MATH_LIB = readComponentLua('lib/math_helpers.lua');
 

@@ -2,7 +2,7 @@ import { defineHostSurfaceFor } from '@microverse.ts/host-surface';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicroverse.js';
+import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicroverse';
 
 type H = { readonly n: number };
 

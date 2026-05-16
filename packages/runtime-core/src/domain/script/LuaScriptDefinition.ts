@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { ScriptPropertyBag } from '../scriptProps/ScriptPropertyValue.js';
+import type { ScriptPropertyBag } from '../scriptProps/ScriptPropertyValue';
 
 export type LuaScriptSource = string | (() => string | Promise<string>);
 

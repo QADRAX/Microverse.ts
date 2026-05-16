@@ -1,1 +1,1 @@
-export * from './infrastructure/publicApi.js';
+export * from './infrastructure/publicApi';

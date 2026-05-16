@@ -48,7 +48,7 @@ export * from '@microverse.ts/runtime-bridge';
 export * from '@microverse.ts/runtime-capabilities';
 export * from '@microverse.ts/runtime-zod';
 
-export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace.js';
+export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace';
 export {
   createLuaMicroverse,
   LuaMicroverse,
@@ -57,4 +57,4 @@ export {
   type InferScriptHooksFromSurface,
   type InferSurfaceCapabilitiesFromSurface,
   type TaggedLuaMicroverseHost,
-} from './infrastructure/facade/luaMicroverse.js';
+} from './infrastructure/facade/luaMicroverse';

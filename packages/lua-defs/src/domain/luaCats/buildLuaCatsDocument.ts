@@ -6,7 +6,7 @@ import type {
   ManifestLuaHook,
   ManifestMethod,
   ManifestParam,
-} from '../manifest/LuaDefManifest.js';
+} from '../manifest/LuaDefManifest';
 
 function escComment(s: string): string {
   return s.replace(/\*\//g, '* /');

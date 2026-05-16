@@ -2,7 +2,7 @@ import { defineHostSurfaceFor } from '@microverse.ts/host-surface';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createLuaMicroverse } from './luaMicroverse.js';
+import { createLuaMicroverse } from './luaMicroverse';
 
 type Host = {
   readonly auditLines: string[];

@@ -1,4 +1,4 @@
-import { createLuaMicroverse } from './luaMicroverse.js';
+import { createLuaMicroverse } from './luaMicroverse';
 
 /**
  * Plug-and-play **Lua microverse** entry point.

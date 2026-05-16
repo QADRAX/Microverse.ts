@@ -1,8 +1,8 @@
 import { buildDeclarativeBridgeTable } from '@microverse.ts/runtime-bridge';
 
-import type { WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
-import type { WithMicroverseScriptContext } from '../../domain/scriptContextSymbol.js';
-import type { HostSurfaceCore } from '../../domain/hostSurfaceTypes.js';
+import type { WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol';
+import type { WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
+import type { HostSurfaceCore } from '../../domain/hostSurfaceTypes';
 
 /**
  * Builds a frozen `mergeEnv` table: bridge name → API object, ready for `MicroverseSlot.run({ mergeEnv })`.

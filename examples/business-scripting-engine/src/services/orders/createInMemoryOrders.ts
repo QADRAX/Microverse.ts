@@ -1,4 +1,4 @@
-import type { OrderRecord } from '../../domain/models/orderRecord.js';
+import type { OrderRecord } from '../../domain/models/orderRecord';
 
 export function createInMemoryOrders(initial: readonly OrderRecord[]) {
   const map = new Map(initial.map((o) => [o.id, o] as const));

@@ -2,8 +2,8 @@ import { buildLuaCatsDocument } from '@microverse.ts/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { normalizeMethodDef } from './surfaceMethodDef.js';
-import { buildLuaDefManifestFromHostSurfaceSpec } from './hostSurfaceManifest.js';
+import { normalizeMethodDef } from './surfaceMethodDef';
+import { buildLuaDefManifestFromHostSurfaceSpec } from './hostSurfaceManifest';
 
 describe('buildLuaDefManifestFromHostSurfaceSpec', () => {
   it('emits async handle + onComplete for async handlers', () => {

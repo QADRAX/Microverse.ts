@@ -4,13 +4,13 @@ import {
   type TimeoutPolicy,
 } from '@microverse.ts/microverse-lua';
 
-import surface from './businessSurface.js';
-import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
-import type { businessComponentHooks } from './schemas/components/businessComponentHooks.js';
-import type { BusinessEngineHost } from './services/businessEngineHost.js';
+import surface from './businessSurface';
+import type { BusinessDomainEvent } from './domain/events/businessDomainEvent';
+import type { businessComponentHooks } from './schemas/components/businessComponentHooks';
+import type { BusinessEngineHost } from './services/businessEngineHost';
 import type { z } from 'zod';
 
-export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
+export type { BusinessDomainEvent } from './domain/events/businessDomainEvent';
 
 /** Capability ids declared on {@link default} `businessSurface` (for script allowlists). */
 export type BusinessSurfaceCapabilities = (typeof surface.capabilities)[number];

@@ -1,13 +1,13 @@
-import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
+import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
 
-import { createZodSchemaValidationPort } from '../adapters/zodSchemaValidationAdapter.js';
-import { SurfaceBuilder } from './surfaceBuilder.js';
+import { createZodSchemaValidationPort } from '../adapters/zodSchemaValidationAdapter';
+import { SurfaceBuilder } from './surfaceBuilder';
 
 const defaultPorts: readonly [SchemaValidationPort] = [createZodSchemaValidationPort()];
 
-export type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
-export type { SurfaceMethodDef } from '../../domain/surfaceMethodDef.js';
-export { BridgeBuilder, SurfaceBuilder } from './surfaceBuilder.js';
+export type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities';
+export type { SurfaceMethodDef } from '../../domain/surfaceMethodDef';
+export { BridgeBuilder, SurfaceBuilder } from './surfaceBuilder';
 
 export type {
   AnyHostSurfaceMethod,
@@ -19,7 +19,7 @@ export type {
   HostSurfaceSpecForHost,
   HostComponentHooksSpec,
   LuaDefManifestGeneratorOpts,
-} from '../../domain/hostSurfaceTypes.js';
+} from '../../domain/hostSurfaceTypes';
 
 function createSurfaceBuilder<THost>(): SurfaceBuilder<THost> {
   return new SurfaceBuilder<THost>(defaultPorts);

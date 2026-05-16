@@ -5,9 +5,9 @@ import {
   diffScriptProperties,
   mergeScriptPropertyBags,
   shallowEqualScriptPropertyValue,
-} from './scriptProperties.js';
-import { assertValidScriptPropertyBag } from './scriptPropertyLimits.js';
-import type { MutableScriptPropertyBag } from './ScriptPropertyValue.js';
+} from './scriptProperties';
+import { assertValidScriptPropertyBag } from './scriptPropertyLimits';
+import type { MutableScriptPropertyBag } from './ScriptPropertyValue';
 
 describe('scriptProperties', () => {
   it('diffScriptProperties detects scalar and nested changes', () => {

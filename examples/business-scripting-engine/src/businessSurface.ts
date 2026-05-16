@@ -1,8 +1,8 @@
 import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
-import type { BusinessEngineHost } from './services/businessEngineHost.js';
-import { businessComponentHooks } from './schemas/components/businessComponentHooks.js';
+import type { BusinessEngineHost } from './services/businessEngineHost';
+import { businessComponentHooks } from './schemas/components/businessComponentHooks';
 import {
   asyncioTickResult,
   chargeResult,
@@ -10,9 +10,9 @@ import {
   jobCreateResult,
   orderDto,
   orderId,
-} from './schemas/surface/bridgePayloads.js';
+} from './schemas/surface/bridgePayloads';
 
-export { businessComponentHooks } from './schemas/components/businessComponentHooks.js';
+export { businessComponentHooks } from './schemas/components/businessComponentHooks';
 
 /**
  * Host surface exposed to Lua: domain integrations with Zod + capabilities.

@@ -27,7 +27,7 @@
     "fixtures"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -38,6 +38,8 @@
   "devDependencies": {
     "@types/node": "^22.15.21",
     "typescript": "^5.8.3",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
     "vitest": "^3.1.4"
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LuaDefManifest } from '../manifest/LuaDefManifest.js';
-import { buildLuaCatsDocument } from './buildLuaCatsDocument.js';
+import type { LuaDefManifest } from '../manifest/LuaDefManifest';
+import { buildLuaCatsDocument } from './buildLuaCatsDocument';
 
 describe('buildLuaCatsDocument', () => {
   it('emits classes and globals', () => {

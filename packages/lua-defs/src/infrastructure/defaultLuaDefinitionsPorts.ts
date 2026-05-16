@@ -1,9 +1,9 @@
-import { buildLuaCatsDocument } from '../domain/luaCats/buildLuaCatsDocument.js';
-import { parseManifestJson } from '../domain/manifest/parseManifestJson.js';
+import { buildLuaCatsDocument } from '../domain/luaCats/buildLuaCatsDocument';
+import { parseManifestJson } from '../domain/manifest/parseManifestJson';
 
-import type { LuaDefinitionsFromManifestFilePorts } from '../application/ports/LuaDefinitionsFromManifestFilePorts.js';
+import type { LuaDefinitionsFromManifestFilePorts } from '../application/ports/LuaDefinitionsFromManifestFilePorts';
 
-import { createNodeFileSystemPort } from './adapters/nodeFileSystemAdapter.js';
+import { createNodeFileSystemPort } from './adapters/nodeFileSystemAdapter';
 
 /**
  * Composición por defecto (Node): `[fs, parseManifest, buildLuaCatsDocument]`.

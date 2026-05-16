@@ -1,14 +1,14 @@
 import { type DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge';
 import type { z } from 'zod';
 
-import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
+import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol';
 import { createScriptInstanceContext } from '@microverse.ts/runtime-core';
 
-import { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from '../../domain/scriptContextSymbol.js';
+import { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
-import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes.js';
-import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
+import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { SchemaValidationPort } from '../ports/SchemaValidationPort';
 
 function isThenable(value: unknown): value is Promise<unknown> {
   if (value === null || value === undefined) {

@@ -1,6 +1,6 @@
-import { generateLuaDefinitionsFile } from '../application/useCases/generateLuaDefinitionsFile.js';
+import { generateLuaDefinitionsFile } from '../application/useCases/generateLuaDefinitionsFile';
 
-import { createDefaultLuaDefinitionsFromManifestFilePorts } from './defaultLuaDefinitionsPorts.js';
+import { createDefaultLuaDefinitionsFromManifestFilePorts } from './defaultLuaDefinitionsPorts';
 
 export type GenerateDefsOptions = {
   readonly cwd: string;

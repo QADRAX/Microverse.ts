@@ -162,7 +162,7 @@ Declare bridges (Lua → host), Zod payloads, capabilities, and optional compone
 ```ts
 // examples/business-scripting-engine/src/businessSurface.ts
 import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
-import { businessComponentHooks } from './schemas/components/businessComponentHooks.js';
+import { businessComponentHooks } from './schemas/components/businessComponentHooks';
 
 export default defineHostSurfaceFor<BusinessEngineHost>()
   .bridge('orders')
@@ -208,7 +208,7 @@ Map your domain events to `emitToAllInstances` (see `dispatch` in the example).
 Keep scripts in `.lua` files and register by `scriptId`:
 
 ```ts
-import { readComponentLua } from './services/components/loadComponentScript.js';
+import { readComponentLua } from './services/components/loadComponentScript';
 
 engine.registerScriptDefinition('order_echo', readComponentLua('components/order_echo.lua'));
 ```

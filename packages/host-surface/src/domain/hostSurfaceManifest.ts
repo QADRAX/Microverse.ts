@@ -8,11 +8,11 @@ import type {
 } from '@microverse.ts/lua-defs';
 import { z } from 'zod';
 
-import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes.js';
-import { luaGlobalHookName } from './luaGlobalHook.js';
-import { isLuaTypeAtom } from './luaTypeAtoms.js';
-import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType.js';
-import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
+import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes';
+import { luaGlobalHookName } from './luaGlobalHook';
+import { isLuaTypeAtom } from './luaTypeAtoms';
+import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType';
+import { zodToLuaTypeRef } from './zodToLuaTypeRef';
 
 function asyncHandleClassName(bridgeName: string, methodName: string): string {
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

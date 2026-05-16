@@ -13,7 +13,7 @@ import type {
 import {
   MICROVERSE_LUA_DEFAULT_INSTRUCTION_BUDGET,
   MICROVERSE_LUA_SLOT_VM_BOOTSTRAP,
-} from './microverseLuaSlotVmBootstrap.js';
+} from './microverseLuaSlotVmBootstrap';
 import { toLuaLongStringLiteral } from './luaLongString';
 import {
   assertNotCancelled,

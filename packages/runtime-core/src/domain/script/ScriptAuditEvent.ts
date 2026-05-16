@@ -1,4 +1,4 @@
-import type { ScriptInstanceContext } from './ScriptInstanceContext.js';
+import type { ScriptInstanceContext } from './ScriptInstanceContext';
 
 export type ScriptAuditEvent =
   | {

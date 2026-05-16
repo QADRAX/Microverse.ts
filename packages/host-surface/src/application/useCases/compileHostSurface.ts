@@ -1,17 +1,17 @@
-import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest.js';
+import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest';
 import {
   collectCapabilitiesFromHostSurfaceSpec,
   pickSurfaceCapabilities,
   type InferSurfaceCapabilities,
-} from '../../domain/surfaceCapabilities.js';
+} from '../../domain/surfaceCapabilities';
 import type {
   HostSurface,
   HostSurfaceCore,
   HostSurfaceSpec,
   HostComponentHooksSpec,
-} from '../../domain/hostSurfaceTypes.js';
-import type { SchemaValidationPort } from '../ports/SchemaValidationPort.js';
-import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec.js';
+} from '../../domain/hostSurfaceTypes';
+import type { SchemaValidationPort } from '../ports/SchemaValidationPort';
+import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec';
 
 function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
   schemaValidation: SchemaValidationPort,

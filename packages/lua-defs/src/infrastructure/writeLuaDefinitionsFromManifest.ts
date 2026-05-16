@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import { buildLuaCatsDocument } from '../domain/luaCats/buildLuaCatsDocument.js';
-import type { LuaDefManifest } from '../domain/manifest/LuaDefManifest.js';
+import { buildLuaCatsDocument } from '../domain/luaCats/buildLuaCatsDocument';
+import type { LuaDefManifest } from '../domain/manifest/LuaDefManifest';
 
 export type WriteLuaDefinitionsFromManifestOptions = {
   readonly cwd: string;

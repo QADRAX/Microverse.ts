@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mergeEnvSinkToScriptPropertyBag } from './scriptPropertyMergeEnv.js';
+import { mergeEnvSinkToScriptPropertyBag } from './scriptPropertyMergeEnv';
 
 describe('scriptPropertyMergeEnv', () => {
   it('converts mergeEnv sink to ScriptPropertyBag', () => {

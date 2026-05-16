@@ -2,7 +2,7 @@ import type {
   MutableScriptPropertyBag,
   ScriptPropertyBag,
   ScriptPropertyValue,
-} from './ScriptPropertyValue.js';
+} from './ScriptPropertyValue';
 
 export type ScriptPropertyLimits = {
   readonly maxDepth?: number | undefined;
