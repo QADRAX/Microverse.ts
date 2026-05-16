@@ -4,8 +4,10 @@
 
 1. **npm organization** — Create the [`@microverse`](https://www.npmjs.com/org/create) scope on npmjs.com (or ensure your account can publish scoped public packages).
 
-2. **GitHub secret** — In the repository settings (**Settings → Secrets and variables → Actions**), add:
+2. **GitHub secret (environment `PROD`)** — **Settings → Environments → PROD → Environment secrets**, add:
    - `NPM_TOKEN` — npm access token with **Publish** permission for the `@microverse` scope (type **Automation** recommended).
+
+   The **Release** workflow sets `environment: PROD`, so the token is only available when that job runs (optionally with required reviewers on the environment).
 
 3. **Branch protection (recommended)** — Require the **CI** workflow to pass on pull requests targeting `main`.
 
