@@ -431,8 +431,6 @@ export class HostScriptSession<
     Object.assign(this.hostProps, cloned);
   };
 
-  readonly getActiveComponentType = (): string | undefined => this.getActiveProfileName();
-
   readonly getHostProfileApplied = (): boolean => this.hostProfileApplied;
 }
 

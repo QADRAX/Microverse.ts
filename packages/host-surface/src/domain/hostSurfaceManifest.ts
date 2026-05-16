@@ -9,13 +9,13 @@ import type {
 import { z } from 'zod';
 
 import {
-  componentTypeBridgesClassName,
-  componentTypeClassName,
-  componentTypePropsAlias,
-  componentTypeStateAlias,
-  type ResolvedComponentTypeProfile,
-  type ResolvedComponentTypeRegistry,
-} from './componentTypeSpec';
+  scriptProfileBridgesClassName,
+  scriptProfileComponentClassName,
+  scriptProfilePropsAlias,
+  scriptProfileStateAlias,
+  type ResolvedScriptProfile,
+  type ResolvedScriptProfileRegistry,
+} from './scriptProfileSpec';
 import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes';
 import { luaGlobalHookName } from './luaGlobalHook';
 import { isLuaTypeAtom } from './luaTypeAtoms';
@@ -107,7 +107,7 @@ function pushProfileBridgesClass(typeName: string, bridgeNames: readonly string[
   if (bridgeNames.length === 0) {
     return;
   }
-  const bridgesName = componentTypeBridgesClassName(typeName);
+  const bridgesName = scriptProfileBridgesClassName(typeName);
   classes.push({
     name: bridgesName,
     description: `Host bridges for \`${typeName}\` components (\`self.bridges\` after \`${typeName}:extend()\`).`,
@@ -123,20 +123,20 @@ function pushComponentTypeManifest(
   classes: ManifestClass[],
   aliases: Map<string, string>,
   typeName: string,
-  profile: ResolvedComponentTypeProfile,
+  profile: ResolvedScriptProfile,
   componentHooks: HostComponentHooksSpec | undefined,
 ): void {
-  const propsAlias = componentTypePropsAlias(typeName);
-  const stateAlias = componentTypeStateAlias(typeName);
+  const propsAlias = scriptProfilePropsAlias(typeName);
+  const stateAlias = scriptProfileStateAlias(typeName);
   aliases.set(propsAlias, zodToLuaTypeRef(profile.props));
   aliases.set(stateAlias, zodToLuaTypeRef(profile.state));
 
   pushProfileBridgesClass(typeName, profile.bridgeNames, classes);
 
-  const componentClass = componentTypeClassName(typeName);
-  const bridgesClass = profile.bridgeNames.length > 0 ? componentTypeBridgesClassName(typeName) : 'table';
+  const componentClass = scriptProfileComponentClassName(typeName);
+  const bridgesClass = profile.bridgeNames.length > 0 ? scriptProfileBridgesClassName(typeName) : 'table';
   const extendsClass =
-    profile.extends !== undefined ? componentTypeClassName(profile.extends) : 'Component';
+    profile.extends !== undefined ? scriptProfileComponentClassName(profile.extends) : 'Component';
 
   const fields: ManifestClassField[] = [
     { name: 'properties', luaType: propsAlias, description: 'Host-synced props (proxy).' },
@@ -193,7 +193,7 @@ function pushComponentTypeManifest(
 function pushComponentManifestClasses(
   classes: ManifestClass[],
   aliases: Map<string, string>,
-  componentTypes: ResolvedComponentTypeRegistry,
+  componentTypes: ResolvedScriptProfileRegistry,
   componentHooks?: HostComponentHooksSpec,
 ): void {
   const eventKinds =
@@ -218,7 +218,7 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   },
   componentHooks?: HostComponentHooksSpec,
-  componentTypes?: ResolvedComponentTypeRegistry,
+  componentTypes?: ResolvedScriptProfileRegistry,
 ): LuaDefManifest {
   const classes: ManifestClass[] = [];
   const bridgeNames = Object.keys(spec).sort((a, b) => a.localeCompare(b));

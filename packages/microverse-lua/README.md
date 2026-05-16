@@ -46,7 +46,7 @@ Workspace: `"@microverse.ts/microverse-lua": "workspace:*"`.
 | **Component type** | Declared profile: props/state Zod schemas, capability set, hook subset. Lua fixes the type with `OrderEcho:extend()` → `OrderEchoComponent`. |
 | **Bridge** | A named group of host methods exposed in Lua as `self.bridges.<name>:<method>(payload)` when the active type’s capabilities include that method. **Not** a global in the script slot. |
 | **Capability** | A `domain:action` string on each bridge method (`requires`) and on each `.componentType(…)` profile. Runtime includes only matching bridges on `self.bridges`. |
-| **Script definition** | Catalog entry: `scriptId`, Lua source, optional `injectLuaChunks`, optional `componentType` hint, optional props schema / defaults. |
+| **Script definition** | Catalog entry: `scriptId`, Lua source, optional `injectLuaChunks`, optional `profileId`, optional props schema / defaults. |
 | **Script instance** | A mounted slot: `instanceId`, `scriptId`, props, and the component table from `YourType:extend()` in the script chunk. |
 | **Component** | Lua table from `YourType:extend()` with typed `properties`, `state`, narrowed `bridges`, lifecycle (`init`, `onDestroy`, `onPropsChanged`), and domain `on*` hooks. |
 

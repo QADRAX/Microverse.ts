@@ -16,8 +16,6 @@ export type LuaScriptDefinition = {
   readonly profileId?: string | undefined;
   /** Inline profile when not registered on the surface (advanced). */
   readonly profile?: ScriptProfileDefInput | undefined;
-  /** @deprecated Use `profileId`. */
-  readonly componentType?: string | undefined;
   readonly propsSchema?: z.ZodObject<z.ZodRawShape> | undefined;
   readonly defaultProps?: ScriptPropertyBag | undefined;
   readonly description?: string | undefined;
@@ -25,7 +23,7 @@ export type LuaScriptDefinition = {
 };
 
 export function resolveLuaScriptProfileId(def: LuaScriptDefinition): string | undefined {
-  return def.profileId ?? def.componentType;
+  return def.profileId;
 }
 
 export async function resolveLuaScriptSource(source: LuaScriptSource): Promise<string> {

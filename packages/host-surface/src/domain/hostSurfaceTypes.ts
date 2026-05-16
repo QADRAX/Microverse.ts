@@ -5,7 +5,10 @@ import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
 import type { SurfaceCapabilityString } from './surfaceCapabilityString';
-import type { ResolvedComponentTypeProfile, ResolvedComponentTypeRegistry } from './componentTypeSpec';
+import type {
+  ResolvedScriptProfile,
+  ResolvedScriptProfileRegistry,
+} from './scriptProfileSpec';
 import type { WithMicroverseScriptContext } from './scriptContextSymbol';
 
 /**
@@ -126,10 +129,10 @@ export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> =
   readonly toBridgeDeclarations: () => ReadonlyArray<
     DeclarativeBridgeDeclaration<WithMicroverseScriptContext, string>
   >;
-  /** Resolved component type profiles declared via `.componentType()`. */
-  readonly componentTypes: ResolvedComponentTypeRegistry;
-  /** Lookup a component type profile by name (throws if unknown). */
-  readonly getComponentType: (name: string) => ResolvedComponentTypeProfile;
+  /** Resolved script profiles declared via `.componentType()`. */
+  readonly componentTypes: ResolvedScriptProfileRegistry;
+  /** Lookup a script profile by name (throws if unknown). */
+  readonly getComponentType: (name: string) => ResolvedScriptProfile;
   /**
    * Builds a `LuaDefManifest` for `@microverse.ts/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
    *

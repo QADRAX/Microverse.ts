@@ -2,64 +2,50 @@ import { createCapabilityId } from '@microverse.ts/runtime-capabilities';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { HostSurfaceSpec } from './hostSurfaceTypes';
 import {
-  bridgeNamesForCapabilities,
-  buildResolvedComponentTypeRegistry,
-  resolveComponentTypeProfile,
-  validateComponentTypeRegistry,
-} from './componentTypeSpec';
-import { normalizeMethodDef } from './surfaceMethodDef';
+  buildResolvedScriptProfileRegistry,
+  resolveScriptProfile,
+  validateScriptProfileRegistry,
+} from './scriptProfileSpec';
+import { validateComponentTypeRegistry, type ComponentTypeDefRegistry } from './componentTypeSpec';
 
 describe('componentTypeSpec', () => {
-  const spec = {
-    audit: {
-      record: normalizeMethodDef({
-        requires: 'audit:record',
-        input: z.object({ line: z.string() }),
-        output: z.undefined(),
-        handler: () => undefined,
-      }),
-    },
+  const spec: HostSurfaceSpec = {
     billing: {
-      charge: normalizeMethodDef({
-        requires: 'billing:charge',
-        input: z.object({ orderId: z.string(), amountCents: z.number() }),
+      charge: {
+        capability: createCapabilityId('billing:charge'),
+        input: z.object({ orderId: z.string() }),
         output: z.object({ ok: z.boolean() }),
         handler: () => ({ ok: true }),
-      }),
+      },
     },
   };
 
-  const registry = {
-    AuditOnly: {
-      capabilities: ['audit:record'] as const,
+  const registry: ComponentTypeDefRegistry = {
+    Billing: {
+      capabilities: ['billing:charge'],
       props: z.object({}),
       state: z.object({}),
     },
-    Billing: {
-      extends: 'AuditOnly',
-      capabilities: ['billing:charge'] as const,
-      props: z.object({ label: z.string().optional() }),
+    AuditOnly: {
+      extends: 'Billing',
+      capabilities: [],
+      props: z.object({}),
       state: z.object({}),
     },
   };
 
-  it('merges inherited capabilities and props', () => {
+  it('validateComponentTypeRegistry delegates to script profile validation', () => {
     validateComponentTypeRegistry(registry, spec);
-    const profile = resolveComponentTypeProfile(registry, 'Billing', spec);
-    expect(profile.capabilities.map(String)).toEqual(['billing:charge', 'audit:record']);
-    expect(profile.bridgeNames).toEqual(['audit', 'billing']);
-    expect(profile.props.safeParse({ label: 'x' }).success).toBe(true);
+    const profile = resolveScriptProfile(registry, 'Billing', spec);
+    expect(profile.capabilities.map(String)).toEqual(['billing:charge']);
+    expect(profile.bridgeNames).toEqual(['billing']);
   });
 
-  it('bridgeNamesForCapabilities omits bridges without allowed methods', () => {
-    const names = bridgeNamesForCapabilities(spec, [createCapabilityId('audit:record')]);
-    expect(names).toEqual(['audit']);
-  });
-
-  it('buildResolvedComponentTypeRegistry resolves all types', () => {
-    validateComponentTypeRegistry(registry, spec);
-    const resolved = buildResolvedComponentTypeRegistry(registry, spec);
+  it('buildResolvedScriptProfileRegistry resolves all types', () => {
+    validateScriptProfileRegistry(registry, spec);
+    const resolved = buildResolvedScriptProfileRegistry(registry, spec);
     expect(Object.keys(resolved).sort()).toEqual(['AuditOnly', 'Billing']);
   });
 });

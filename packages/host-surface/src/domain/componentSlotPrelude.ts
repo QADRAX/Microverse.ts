@@ -1,4 +1,4 @@
-import type { ResolvedComponentTypeRegistry } from './componentTypeSpec';
+import type { ResolvedScriptProfileRegistry } from './scriptProfileSpec';
 
 /** @see MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE */
 export const MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE = `
@@ -94,7 +94,7 @@ export function profileBridgeNamesMergeEnvKey(typeName: string): string {
 }
 
 export function buildComponentTypeBridgeNamesPreludeLua(
-  componentTypes: ResolvedComponentTypeRegistry,
+  componentTypes: ResolvedScriptProfileRegistry,
 ): string {
   const lines: string[] = [];
   for (const typeName of Object.keys(componentTypes).sort((a, b) => a.localeCompare(b))) {

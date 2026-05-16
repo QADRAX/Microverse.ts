@@ -1,9 +1,9 @@
 import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest';
+import type { ComponentTypeDefRegistry } from '../../domain/componentTypeSpec';
 import {
-  buildResolvedComponentTypeRegistry,
-  type ComponentTypeDefRegistry,
-  validateComponentTypeRegistry,
-} from '../../domain/componentTypeSpec';
+  buildResolvedScriptProfileRegistry,
+  validateScriptProfileRegistry,
+} from '../../domain/scriptProfileSpec';
 import {
   collectCapabilitiesFromHostSurfaceSpec,
   pickSurfaceCapabilities,
@@ -24,8 +24,10 @@ function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
   componentTypeRegistry: ComponentTypeDefRegistry,
   componentHooks?: HostComponentHooksSpec,
 ): HostSurfaceCore<InferSurfaceCapabilities<TSpec>> {
-  validateComponentTypeRegistry(componentTypeRegistry, spec, componentHooks);
-  const componentTypes = buildResolvedComponentTypeRegistry(componentTypeRegistry, spec);
+  validateScriptProfileRegistry(componentTypeRegistry, spec, componentHooks, {
+    requireAtLeastOne: false,
+  });
+  const componentTypes = buildResolvedScriptProfileRegistry(componentTypeRegistry, spec);
   const capabilities = collectCapabilitiesFromHostSurfaceSpec(spec);
 
   return {
