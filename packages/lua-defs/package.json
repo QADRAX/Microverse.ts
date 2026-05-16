@@ -1,6 +1,6 @@
 {
   "name": "@microverse.ts/lua-defs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "description": "Programmatic LuaCATS (.d.lua) generation from a Lua def manifest (no CLI).",
