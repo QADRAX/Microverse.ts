@@ -36,6 +36,8 @@ export type ManifestClassField = {
 
 export type ManifestClass = {
   readonly name: string;
+  /** LuaCATS base class, e.g. `Component` or `AuditOnlyComponent`. */
+  readonly extendsClass?: string | undefined;
   readonly description?: string | undefined;
   /** Campos de la tabla bridge (además de métodos). Opcional. */
   readonly fields?: readonly ManifestClassField[] | undefined;

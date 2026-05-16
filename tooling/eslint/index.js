@@ -68,7 +68,7 @@ export const microverseEslintConfig = tseslint.config(
     },
   },
   {
-    files: ['**/examples/business-scripting-engine/src/businessSurface.ts'],
+    files: ['**/examples/sorting-lab/src/engine/sortingSurface.ts'],
     rules: {
       'import-x/no-default-export': 'off',
       'no-restricted-syntax': 'off',

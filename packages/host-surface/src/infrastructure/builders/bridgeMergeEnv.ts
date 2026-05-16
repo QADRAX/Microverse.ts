@@ -1,25 +1,21 @@
 import { buildDeclarativeBridgeTable } from '@microverse.ts/runtime-bridge';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
-import type { WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol';
 import type { WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
-import type { HostSurfaceCore } from '../../domain/hostSurfaceTypes';
+import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
+import { createFilteredBridgeDeclarations } from './filterBridgeDeclarations';
 
 /**
- * Builds a frozen `mergeEnv` table: bridge name → API object, ready for `MicroverseSlot.run({ mergeEnv })`.
- *
- * @param host - Your host context, already extended with the capability registry symbol from `@microverse.ts/host-surface`.
- * @param slotKey - Same slot key passed to `buildDeclarativeBridgeTable` (string form of `MicroverseId` is fine).
- * @param surface - Result of {@link defineHostSurface} (implements {@link HostSurfaceCore}).
+ * Builds a frozen bridge table for a component profile capability set.
  */
-export function buildBridgeMergeEnvForHost<THost>(
-  host: THost & WithMicroverseCapabilityRegistry & WithMicroverseScriptContext,
+export function buildBridgeMergeEnvForProfile<THost>(
+  schemaValidation: SchemaValidationPort,
+  host: THost & WithMicroverseScriptContext,
   slotKey: string,
-  surface: HostSurfaceCore,
+  spec: HostSurfaceSpec,
+  capabilities: readonly CapabilityId[],
 ): Readonly<Record<string, unknown>> {
-  return buildDeclarativeBridgeTable(host, slotKey, [...surface.toBridgeDeclarations()]);
-}
-
-/** Bridge table names for `__microverse_bridge_names` in the slot env. */
-export function bridgeNamesFromSurface(surface: HostSurfaceCore): readonly string[] {
-  return surface.toBridgeDeclarations().map((d) => d.name);
+  const filtered = createFilteredBridgeDeclarations(schemaValidation, spec, capabilities);
+  return buildDeclarativeBridgeTable(host, slotKey, [...filtered]);
 }

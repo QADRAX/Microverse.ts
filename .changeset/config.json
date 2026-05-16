@@ -19,5 +19,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@microverse.ts/cli", "@microverse.ts/business-scripting-engine"]
+  "ignore": ["@microverse.ts/cli", "@microverse.ts/sorting-lab"]
 }

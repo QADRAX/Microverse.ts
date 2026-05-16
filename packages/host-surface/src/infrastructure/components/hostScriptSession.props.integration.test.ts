@@ -1,4 +1,3 @@
-import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
@@ -17,6 +16,11 @@ type H = { readonly lines: string[] };
 describe('HostScriptSession props (wasm)', () => {
   it('flushDirtyProps returns Lua-written values', async () => {
     const surface = defineHostSurfaceFor<H>()
+      .componentType('Writer', {
+        capabilities: ['demo:ping'],
+        props: z.object({ score: z.number().optional() }),
+        state: z.object({}),
+      })
       .bridge('audit')
       .method('record', {
         requires: 'demo:ping',
@@ -37,7 +41,6 @@ describe('HostScriptSession props (wasm)', () => {
       surface,
       host: { lines: [] },
       slotKey,
-      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
       script: createScriptInstanceContext({
         instanceId: 'i1',
         scriptId: 'writer',
@@ -46,7 +49,7 @@ describe('HostScriptSession props (wasm)', () => {
     });
 
     await session.openSession();
-    await session.runChunk(`local C = component:extend()\nfunction C:init() end\n`);
+    await session.runChunk(`local C = Writer:extend()\nfunction C:init() end\n`);
     await session.runChunk(`
 local impl = rawget(_ENV, "__microverse_lua_ComponentImpl")
 impl.properties.score = 7

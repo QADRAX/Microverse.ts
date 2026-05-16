@@ -64,11 +64,14 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
 
-  examples/business-scripting-engine:
+  examples/sorting-lab:
     dependencies:
       '@microverse.ts/microverse-lua':
         specifier: workspace:*
         version: link:../../packages/microverse-lua
+      wasmoon:
+        specifier: ^1.15.0
+        version: 1.16.0
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -76,9 +79,18 @@ importers:
       '@microverse.ts/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@microverse.ts/lua-defs':
+        specifier: workspace:*
+        version: link:../../packages/lua-defs
+      tsx:
+        specifier: ^4.19.4
+        version: 4.22.0
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vite:
+        specifier: ^8.0.13
+        version: 8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
       vitest:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)

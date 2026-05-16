@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "LuaJIT",
   "workspace.checkThirdParty": false,
-  "workspace.library": ["examples/business-scripting-engine/generated"],
+  "workspace.library": ["examples/sorting-lab/generated"],
   "diagnostics.globals": [
     "orders",
     "billing",

@@ -1,5 +1,10 @@
 import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest';
 import {
+  buildResolvedComponentTypeRegistry,
+  type ComponentTypeDefRegistry,
+  validateComponentTypeRegistry,
+} from '../../domain/componentTypeSpec';
+import {
   collectCapabilitiesFromHostSurfaceSpec,
   pickSurfaceCapabilities,
   type InferSurfaceCapabilities,
@@ -16,13 +21,27 @@ import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDecl
 function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
   schemaValidation: SchemaValidationPort,
   spec: TSpec,
+  componentTypeRegistry: ComponentTypeDefRegistry,
   componentHooks?: HostComponentHooksSpec,
 ): HostSurfaceCore<InferSurfaceCapabilities<TSpec>> {
+  validateComponentTypeRegistry(componentTypeRegistry, spec, componentHooks);
+  const componentTypes = buildResolvedComponentTypeRegistry(componentTypeRegistry, spec);
   const capabilities = collectCapabilitiesFromHostSurfaceSpec(spec);
+
   return {
+    getHostSurfaceSpec: () => spec,
     toBridgeDeclarations: () => createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, spec),
-    toLuaDefManifest: (opts) => buildLuaDefManifestFromHostSurfaceSpec(spec, opts, componentHooks),
+    toLuaDefManifest: (opts) =>
+      buildLuaDefManifestFromHostSurfaceSpec(spec, opts, componentHooks, componentTypes),
     capabilities,
+    componentTypes,
+    getComponentType: (name: string) => {
+      const profile = componentTypes[name];
+      if (profile === undefined) {
+        throw new Error(`unknown component type: ${name}`);
+      }
+      return profile;
+    },
     pickCapabilities: (...picked) =>
       pickSurfaceCapabilities(capabilities, ...picked) as ReadonlyArray<
         Extract<(typeof picked)[number], InferSurfaceCapabilities<TSpec>>
@@ -36,6 +55,7 @@ function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
 export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
+  componentTypeRegistry: ComponentTypeDefRegistry,
 ): HostSurface<undefined, InferSurfaceCapabilities<TSpec>>;
 export function compileHostSurface<
   const TSpec extends HostSurfaceSpec,
@@ -43,15 +63,17 @@ export function compileHostSurface<
 >(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
+  componentTypeRegistry: ComponentTypeDefRegistry,
   componentHooks: THooks,
 ): HostSurface<THooks, InferSurfaceCapabilities<TSpec>>;
 export function compileHostSurface<const TSpec extends HostSurfaceSpec>(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
+  componentTypeRegistry: ComponentTypeDefRegistry,
   componentHooks?: HostComponentHooksSpec,
 ): HostSurface<undefined, InferSurfaceCapabilities<TSpec>> | HostSurface<HostComponentHooksSpec, InferSurfaceCapabilities<TSpec>> {
   const [schemaValidation] = ports;
-  const core = buildHostSurfaceCore(schemaValidation, spec, componentHooks);
+  const core = buildHostSurfaceCore(schemaValidation, spec, componentTypeRegistry, componentHooks);
   if (componentHooks === undefined) {
     return core;
   }
@@ -67,14 +89,15 @@ export function compileHostSurfaceFor<
 >(
   ports: readonly [SchemaValidationPort],
   spec: TSpec,
+  componentTypeRegistry: ComponentTypeDefRegistry,
   componentHooks?: THooks,
 ): THooks extends HostComponentHooksSpec
   ? HostSurface<THooks, InferSurfaceCapabilities<TSpec>>
   : HostSurface<undefined, InferSurfaceCapabilities<TSpec>> {
   return (
     componentHooks === undefined
-      ? compileHostSurface(ports, spec)
-      : compileHostSurface(ports, spec, componentHooks)
+      ? compileHostSurface(ports, spec, componentTypeRegistry)
+      : compileHostSurface(ports, spec, componentTypeRegistry, componentHooks)
   ) as THooks extends HostComponentHooksSpec
     ? HostSurface<THooks, InferSurfaceCapabilities<TSpec>>
     : HostSurface<undefined, InferSurfaceCapabilities<TSpec>>;

@@ -12,7 +12,7 @@ One logical scripting universe in your process:
 - **Many** isolated **environment slots** — one per mounted script instance.
 - **One** host **surface** (declarative bridges + optional component hooks).
 - **One** host **object** (your TypeScript services).
-- **Per-instance capability allowlists** at mount.
+- **Typed component profiles** — bridges on `self.bridges` are narrowed by `YourType:extend()` in each script.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -21,10 +21,10 @@ One logical scripting universe in your process:
 │  │  Shared Wasm Lua VM                                   │  │
 │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │  │
 │  │  │ slot: a     │ │ slot: b     │ │ slot: c     │     │  │
-│  │  │ caps: […]   │ │ caps: […]   │ │ caps: […]   │     │  │
+│  │  │ OrderEcho   │ │ AuditOnly   │ │ Promotions  │     │  │
 │  │  └─────────────┘ └─────────────┘ └─────────────┘     │  │
 │  └───────────────────────────────────────────────────────┘  │
-│         ▲ bridges via self.bridges (scoped per instance)    │
+│         ▲ self.bridges after Type:extend() (per profile)    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -42,12 +42,13 @@ Workspace: `"@microverse.ts/microverse-lua": "workspace:*"`.
 |------|---------|
 | **Microverse** | One shared Wasm Lua VM + catalog of script definitions + N mounted instances ([`LuaMicroverse`](src/infrastructure/facade/luaMicroverse.ts)). |
 | **Host** | Your typed services object passed to `MicroverseLua.create({ host })`. Handlers on the surface receive it; Lua never sees the raw host table. |
-| **Surface** | Result of `defineHostSurfaceFor<THost>().bridge(…).method(…).componentHooks(…).build()` — bridges, capability ids, and a manifest for `.d.lua`. |
-| **Bridge** | A named group of host methods exposed in Lua as `self.bridges.<name>:<method>(payload)`. **Not** a global in the script slot. |
-| **Capability** | A `domain:action` string declared on each bridge method (`requires`). Each instance mounts with an allowlist (`surface.pickCapabilities(…)`). |
-| **Script definition** | Catalog entry: `scriptId`, Lua source, optional `injectLuaChunks`, optional props schema / defaults. |
-| **Script instance** | A mounted slot: `instanceId`, `scriptId`, capabilities, props, and the active component table from `component:extend()`. |
-| **Component** | Lua table from `component:extend()` with `properties`, `state`, `bridges`, lifecycle (`init`, `onDestroy`, `onPropsChanged`), and domain `on*` hooks. |
+| **Surface** | Result of `defineHostSurfaceFor<THost>().componentType(…).bridge(…).method(…).componentHooks(…).build()` — component types, bridges, capability ids, and a manifest for `.d.lua`. |
+| **Component type** | Declared profile: props/state Zod schemas, capability set, hook subset. Lua fixes the type with `OrderEcho:extend()` → `OrderEchoComponent`. |
+| **Bridge** | A named group of host methods exposed in Lua as `self.bridges.<name>:<method>(payload)` when the active type’s capabilities include that method. **Not** a global in the script slot. |
+| **Capability** | A `domain:action` string on each bridge method (`requires`) and on each `.componentType(…)` profile. Runtime includes only matching bridges on `self.bridges`. |
+| **Script definition** | Catalog entry: `scriptId`, Lua source, optional `injectLuaChunks`, optional `componentType` hint, optional props schema / defaults. |
+| **Script instance** | A mounted slot: `instanceId`, `scriptId`, props, and the component table from `YourType:extend()` in the script chunk. |
+| **Component** | Lua table from `YourType:extend()` with typed `properties`, `state`, narrowed `bridges`, lifecycle (`init`, `onDestroy`, `onPropsChanged`), and domain `on*` hooks. |
 
 ## Engine lifecycle
 
@@ -64,7 +65,7 @@ sequenceDiagram
   App->>MV: mountScriptInstance
   MV->>Session: openSession
   Session->>VM: run shared + inject prelude chunks
-  Session->>VM: run main chunk
+  Session->>VM: run main chunk (Type:extend())
   Session->>VM: setProps
   Session->>VM: invoke init
   App->>MV: emitToAllInstances
@@ -85,15 +86,15 @@ sequenceDiagram
 |-----------------|--------|
 | `MicroverseLua.create` | Create a Lua microverse (Wasm VM included). |
 | `registerScriptDefinition` | Catalog entry (source, optional preludes, props schema). |
-| `mountScriptInstance` | New Wasm slot for one instance (capabilities, props, audit). |
+| `mountScriptInstance` | New Wasm slot for one instance (props, audit). Script must call `Type:extend()`. |
 | `unmountScriptInstance` | Tear down one instance. |
 | `emitToAllInstances` | Call `on{Kind}` on every mounted instance (component hooks). |
 | `setInstanceProps` / `patchInstanceProps` | Update host-synced props; may invoke `onPropsChanged`. |
 | `getInstanceProps` / `flushInstanceProps` | Read or flush props proxy state. |
 | `getSurfaceCapabilities` | All capability ids declared on the surface. |
-| `surface.pickCapabilities(…)` | Build an allowlist for `mountScriptInstance`. |
+| `surface.getComponentType(name)` | Resolved profile (props, state, capabilities, hooks) for codegen/runtime. |
 | `dispose` | Unmount all instances. |
-| `defineHostSurfaceFor`, `defineHostSurface` | Fluent surface builder (`bridge` → `method` → `build`). |
+| `defineHostSurfaceFor`, `defineHostSurface` | Fluent surface builder (`componentType` → `bridge` → `method` → `build`). |
 
 Re-exported from this package for convenience; lower-level session API lives in `@microverse.ts/host-surface`.
 
@@ -128,27 +129,28 @@ microverse.registerScriptDefinition({
 await microverse.mountScriptInstance({
   instanceId: 'welcome',
   scriptId: 'welcome',
-  capabilities: surface.pickCapabilities('demo:greet'),
 });
 
 await microverse.dispose();
 ```
 
-> The minimal sample uses a global `greet` table for brevity. In production, use **`component:extend()`** and **`self.bridges`** (see [Lua authoring](#lua-authoring) and [Integrating in your app](#integrating-in-your-app)).
+> The minimal sample uses a global `greet` table for brevity. In production, declare **`.componentType(…)`** on the surface, call **`YourType:extend()`** in Lua, and use **`self.bridges`** (see [Lua authoring](#lua-authoring) and [Integrating in your app](#integrating-in-your-app)).
 
 ## Integrating in your app
 
-The reference layout is [`examples/business-scripting-engine`](../../examples/business-scripting-engine). File tour: [example README](../../examples/business-scripting-engine/README.md).
+The reference layout is [`examples/sorting-lab`](../../examples/sorting-lab). File tour: [example README](../../examples/sorting-lab/README.md).
 
 ### 1. Define the host
 
 Aggregate your real services into one object the surface handlers receive:
 
 ```ts
-// examples/business-scripting-engine/src/services/businessEngineHost.ts
-export type BusinessEngineHost = {
-  readonly orders: OrdersService;
-  readonly billing: BillingService;
+// examples/sorting-lab/src/engine/sortingLabHost.ts
+export type SortingLabHost = {
+  arrayA: number[];
+  arrayB: number[];
+  vizA: SortingVizSnapshot;
+  vizB: SortingVizSnapshot;
   // …
 };
 ```
@@ -160,24 +162,21 @@ Construct it in your app and pass it to `MicroverseLua.create({ host, surface })
 Declare bridges (Lua → host), Zod payloads, capabilities, and optional component hooks (host → Lua):
 
 ```ts
-// examples/business-scripting-engine/src/businessSurface.ts
+// examples/sorting-lab/src/engine/sortingSurface.ts
 import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
-import { businessComponentHooks } from './schemas/components/businessComponentHooks';
+import { sortingComponentHooks } from './sortingHooks';
 
-export default defineHostSurfaceFor<BusinessEngineHost>()
-  .bridge('orders')
-  .method('get', {
-    requires: 'orders:read',
-    input: z.object({ orderId }),
-    output: orderDto.optional(),
-    handler: ({ host }, { orderId }) => host.orders.get(orderId),
-  })
-  // … more bridges …
-  .componentHooks(businessComponentHooks)
+export default defineHostSurfaceFor<SortingLabHost>()
+  .componentType('SortingAlgorithm', SORTING_ALGORITHM_PROFILE)
+  .bridge('array')
+  .method('length', { requires: 'array:read', /* … */ })
+  // … viz, sort bridges …
+  .componentHooks(sortingComponentHooks)
   .build();
 ```
 
-- **`requires`** — Capability id enforced at runtime for this method.
+- **`componentType`** — Props/state schemas, capability set, and hook subset for `Name:extend()`.
+- **`requires`** — Capability id; only methods whose capability is in the active type appear on `self.bridges`.
 - **`handler`** — Runs in TypeScript with `{ host, script }` context.
 - **`componentHooks`** — Map of event kind → Zod object; generates `onOrderPlaced`, `MicroverseEvt_OrderPlaced`, etc. in `.d.lua`.
 
@@ -188,17 +187,17 @@ Default-export the built surface for `microverse generate-lua-defs --surface …
 A thin façade keeps app code free of microverse details:
 
 ```ts
-// examples/business-scripting-engine/src/BusinessScriptingEngine.ts
+// examples/sorting-lab/src/engine/sortingLabEngine.ts
 this.microverse = MicroverseLua.create({ host, surface, defaultTimeoutMs: 30_000 });
 
 await this.microverse.mountScriptInstance({
-  instanceId: 'promo-1',
-  scriptId: 'promotions',
-  capabilities: surface.pickCapabilities('orders:read', 'audit:record'),
-  props: { label: 'summer-sale' },
+  instanceId: 'A',
+  scriptId: 'bubble_sort',
+  profileId: 'SortingAlgorithm',
+  props: { label: 'Bubble sort', slotSide: 'A' },
 });
 
-await this.microverse.emitToAllInstances('OrderPlaced', { orderId, amountCents, customerId });
+await session.invokeComponentHook(luaGlobalHookName('Tick'), { step: 1 });
 ```
 
 Map your domain events to `emitToAllInstances` (see `dispatch` in the example).
@@ -217,14 +216,18 @@ Or inline strings for tests. Use **`sharedLuaChunks`** on `create` for libraries
 
 ### 5. Mount instances
 
-Each instance needs a **capability allowlist** — only declared methods on allowed bridges are callable from Lua:
+Each Lua script chooses its profile with **`YourType:extend()`** at load time. `self.bridges` only contains bridges/methods allowed by that type’s capabilities:
 
 ```ts
 await engine.mountScriptInstance({
   scriptId: 'billing_denied',
-  capabilities: surface.pickCapabilities('billing:charge', 'audit:record'),
   props: { maxCents: 1000 },
 });
+```
+
+```lua
+-- billing_denied.lua — AuditOnly type has no billing bridge
+local C = AuditOnly:extend()
 ```
 
 Optional **`audit`** metadata is passed to script audit callbacks for observability.
@@ -242,22 +245,20 @@ await engine.dispose();
 
 ### Component pattern
 
-Scripts use the injected **`component`** helper and implement hooks on the returned table:
+Scripts call the **type singleton** declared on the surface (e.g. `OrderEcho:extend()`) and implement hooks on the returned table:
 
 ```lua
--- examples/business-scripting-engine/lua/components/order_echo.lua
-local C = component:extend()
+-- examples/sorting-lab/lua/bubble_sort.lua
+local C = SortingAlgorithm:extend()
 
-function C:onOrderPlaced(evt)
-  self.bridges.notifications:send({
-    channel = "echo",
-    message = "order:" .. evt.orderId,
-  })
+function C:onTick(_evt)
+  self.bridges.viz:markComparing({ a = j, b = j + 1 })
+  -- one compare/swap per tick …
 end
 ```
 
-- **`component:extend()`** — Builds the instance with `properties`, `state`, and `bridges` for this slot.
-- **Domain events** — Implement `onOrderPlaced`, `onInventoryLow`, … matching `.componentHooks()` on the surface.
+- **`OrderEcho:extend()`** — Builds the instance with typed `properties`, `state`, and narrowed `bridges` for that profile.
+- **Domain events** — Implement `onOrderPlaced`, … listed in the type’s `hooks` (and in `OrderEchoComponent` in `.d.lua`).
 - **Lifecycle** — `init`, `onDestroy`, `onPropsChanged` (see `props_demo.lua`).
 
 ### Bridges (scoped, not global)
@@ -269,7 +270,7 @@ local order = self.bridges.orders:get({ orderId = evt.orderId })
 self.bridges.audit:record({ line = "seen:" .. evt.orderId })
 ```
 
-Bridge names match `.bridge('orders')` in TypeScript (camelCase field on `MicroverseBridges` in `.d.lua`).
+Bridge names match `.bridge('orders')` in TypeScript (camelCase field on `OrderEchoBridges` / your type’s bridges class in `.d.lua`).
 
 ### Props and state
 
@@ -320,36 +321,53 @@ Generate stubs from the same surface module that drives runtime:
 
 ```bash
 pnpm add -D @microverse.ts/cli
-pnpm exec microverse generate-lua-defs --surface src/businessSurface.ts
+pnpm exec microverse generate-lua-defs --surface src/engine/sortingSurface.ts
 ```
 
 The manifest emits **type-only** bridge classes (`---@class Orders` + `---@field get fun(…)`) so LuaLS does not treat `Orders` as a runtime global. Use:
 
-- `self.bridges.orders` — field name (camelCase) on `MicroverseBridges`
+- `self.bridges.orders` — field name (camelCase) on `OrderEchoBridges` (per component type)
 - Types like `Orders`, `OrderDto` — PascalCase classes in the stub file
+- `OrderEcho:extend()` — singleton stub per `.componentType('OrderEcho', …)`
 
-Point LuaLS at the generated folder:
+Point LuaLS at the generated folder and list your type singletons as globals:
 
 ```json
 {
   "workspace.library": ["./generated"],
-  "diagnostics.globals": ["component"]
+  "diagnostics.globals": ["OrderEcho", "AuditOnly", "Promotions"]
 }
 ```
 
-See [`examples/business-scripting-engine/.luarc.json`](../../examples/business-scripting-engine/.luarc.json) and [`generated/businessSurface.d.lua`](../../examples/business-scripting-engine/generated/businessSurface.d.lua).
+Include both `sortingSurface.d.lua` (bridges + `*Component`) and `sortingScriptCatalog.d.lua` (per-`scriptId` aliases) when using a script catalog.
+
+See [`examples/sorting-lab/.luarc.json`](../../examples/sorting-lab/.luarc.json) and [`generated/sortingSurface.d.lua`](../../examples/sorting-lab/generated/sortingSurface.d.lua).
 
 Details: [`@microverse.ts/cli`](../cli/README.md), [`@microverse.ts/lua-defs`](../lua-defs/README.md).
+
+## Integrating a game engine (script profiles)
+
+For ECS-style hosts (many entities, many scripts, YAML-driven props), use **script profiles** instead of declaring every script on the surface:
+
+| Primitive | Role |
+|-----------|------|
+| `LuaScriptDefinition.profileId` | Names a profile (usually matches a `.componentType()` on the surface for bridges/codegen). |
+| `mountScriptInstance({ profileId })` | Host applies the profile at `openSession` — Lua chunks can omit `Type:extend()` for runtime (keep `---@type XxxComponent` for LuaLS). |
+| `HostScriptSession` + `createLuaEnvSlotKey('entity::script')` | One slot per entity+script; your subsystem owns reconcile/lifecycle. |
+| `ScriptReferenceResolver` | Implement `self.references.*` wrappers (entity handles) without ECS types in microverse. |
+| `buildScriptCatalogLuaDefManifest` | Emit per-`scriptId` aliases for `lua/` (see business example). |
+
+Reference layout: [`examples/sorting-lab/src/engine/sortingScriptCatalog.ts`](../../examples/sorting-lab/src/engine/sortingScriptCatalog.ts).
 
 ## Security model
 
 | Layer | Behavior |
 |-------|----------|
-| **Capabilities** | Each bridge method declares `requires`. Calls from Lua are denied unless the instance’s allowlist includes that capability. |
-| **Per-instance allowlist** | `mountScriptInstance({ capabilities: surface.pickCapabilities(…) })` — principle of least privilege per script. |
+| **Component types** | Each `.componentType(…)` declares a capability set. `Type:extend()` mounts only matching bridges on `self.bridges`; other bridges are absent (`nil`). |
+| **Bridge methods** | Each method declares `requires`; filtering happens at extend time, not per call (no `capability denied` throws). |
 | **Host isolation** | The TypeScript `host` object is not injected into Lua; only bridge tables built from the surface are visible (via `self.bridges`). |
 | **Timeouts** | `defaultTimeoutMs` or `defaultTimeout` on `create`; Wasm instruction budget in `@microverse.ts/runtime-wasm`. |
-| **Validation** | Zod validates bridge inputs and outputs at the TS boundary (`@microverse.ts/runtime-zod`). |
+| **Validation** | Zod validates bridge inputs/outputs and instance props (per active type) at the TS boundary (`@microverse.ts/runtime-zod`). |
 
 ## Related packages
 
@@ -362,8 +380,9 @@ Details: [`@microverse.ts/cli`](../cli/README.md), [`@microverse.ts/lua-defs`](.
 
 ## Reference example
 
-[`examples/business-scripting-engine`](../../examples/business-scripting-engine) — orders, billing, notifications, audit, inventory, jobs, component Lua, and `BusinessScriptingEngine` wrapping this package.
+[`examples/sorting-lab`](../../examples/sorting-lab) — browser sorting comparator: Wasm Lua, tick-by-tick `onTick`, dual panels, and `SortingLabEngine` wrapping this package.
 
 ```bash
-pnpm --filter @microverse.ts/business-scripting-engine test
+pnpm --filter @microverse.ts/sorting-lab test
+pnpm --filter @microverse.ts/sorting-lab dev
 ```

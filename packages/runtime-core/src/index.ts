@@ -1,6 +1,9 @@
 export { neverCancelledToken, type CancellationToken } from './domain/runtime/CancellationToken';
 export type { ExecutionContext } from './domain/runtime/ExecutionContext';
-export type { ExecutionFailure } from './domain/runtime/ExecutionFailure';
+export {
+  formatExecutionFailure,
+  type ExecutionFailure,
+} from './domain/runtime/ExecutionFailure';
 export type { RuntimeAdapter } from './domain/runtime/RuntimeAdapter';
 export type { RunScriptInput } from './domain/runtime/RunScriptInput';
 export type { RunScriptResult, MicroverseScalar } from './domain/runtime/RunScriptResult';
@@ -44,8 +47,10 @@ export {
   mergeScriptPropertyBags,
   shallowEqualScriptPropertyValue,
 } from './domain/scriptProps/scriptProperties';
+export type { ScriptReferenceFieldDef, ScriptReferenceFieldSchema, ScriptReferenceKind } from './domain/script/scriptReferenceSchema';
+export type { ScriptProfileDefInput } from './domain/script/scriptProfileDef';
 export type { LuaScriptDefinition, LuaScriptSource } from './domain/script/LuaScriptDefinition';
-export { resolveLuaScriptSource } from './domain/script/LuaScriptDefinition';
+export { resolveLuaScriptProfileId, resolveLuaScriptSource } from './domain/script/LuaScriptDefinition';
 export type {
   ScriptInstanceContext,
   ScriptInstanceId,

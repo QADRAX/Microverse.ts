@@ -5,7 +5,8 @@ import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
 import type { SurfaceCapabilityString } from './surfaceCapabilityString';
-import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol';
+import type { ResolvedComponentTypeProfile, ResolvedComponentTypeRegistry } from './componentTypeSpec';
+import type { WithMicroverseScriptContext } from './scriptContextSymbol';
 
 /**
  * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
@@ -117,13 +118,18 @@ export type HostComponentHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
  * @typeParam TCapabilities - Union of capability ids declared on the surface spec (see {@link InferSurfaceCapabilities}).
  */
 export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> = {
+  /** Internal bridge/method tree (for profile filtering and manifest). */
+  readonly getHostSurfaceSpec: () => HostSurfaceSpec;
   /**
    * Declarative bridge declarations compatible with {@link buildDeclarativeBridgeTable}.
-   * The host must satisfy {@link WithMicroverseCapabilityRegistry} (see {@link HostScriptSession}).
    */
   readonly toBridgeDeclarations: () => ReadonlyArray<
-    DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>
+    DeclarativeBridgeDeclaration<WithMicroverseScriptContext, string>
   >;
+  /** Resolved component type profiles declared via `.componentType()`. */
+  readonly componentTypes: ResolvedComponentTypeRegistry;
+  /** Lookup a component type profile by name (throws if unknown). */
+  readonly getComponentType: (name: string) => ResolvedComponentTypeProfile;
   /**
    * Builds a `LuaDefManifest` for `@microverse.ts/lua-defs` (`buildLuaCatsDocument`, `generateDefs`, CLI).
    *

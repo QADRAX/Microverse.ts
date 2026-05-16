@@ -3,9 +3,11 @@ import type { z } from 'zod';
 import {
   HostScriptSession,
   luaGlobalHookName,
+  resolveScriptProfile,
   type HostSurface,
   type HostSurfaceCore,
   type HostComponentHooksSpec,
+  type ResolvedScriptProfile,
 } from '@microverse.ts/host-surface';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
@@ -13,7 +15,10 @@ import {
   createScriptInstanceContext,
   fixedTimeout,
   mergeScriptPropertyBags,
+  formatExecutionFailure,
+  resolveLuaScriptProfileId,
   resolveLuaScriptSource,
+  type ExecutionFailure,
   type LuaScriptDefinition,
   type MicroverseRuntime,
   type ScriptAuditEvent,
@@ -148,11 +153,14 @@ export class LuaMicroverse<
     readonly scriptId: string;
     readonly script?: string | undefined;
     readonly props?: ScriptPropertyBag | undefined;
-    readonly capabilities: readonly TCapabilities[];
     readonly audit?: Readonly<Record<string, string | number | boolean>> | undefined;
     readonly injectLuaChunks?: readonly string[] | undefined;
+    /** Overrides {@link LuaScriptDefinition.profileId} for this mount. */
+    readonly profileId?: string | undefined;
+    /** Lua global for `Type:extend()` when using an inline {@link LuaScriptDefinition.profile}. */
+    readonly profileSingleton?: string | undefined;
   }): Promise<void> => {
-    const { instanceId, scriptId, capabilities, audit, injectLuaChunks } = args;
+    const { instanceId, scriptId, audit, injectLuaChunks } = args;
     if (this.instances.has(instanceId)) {
       throw new Error(`script instance already mounted: ${instanceId}`);
     }
@@ -171,6 +179,23 @@ export class LuaMicroverse<
       def = { ...def, source: args.script };
     }
 
+    const profileId = args.profileId ?? resolveLuaScriptProfileId(def);
+    let resolvedProfile: ResolvedScriptProfile | undefined;
+    if (def.profile !== undefined) {
+      const profileName = profileId ?? args.profileSingleton ?? scriptId;
+      resolvedProfile = resolveScriptProfile(
+        { [profileName]: def.profile },
+        profileName,
+        this.surface.getHostSurfaceSpec(),
+      );
+    } else if (profileId !== undefined) {
+      this.surface.getComponentType(profileId);
+    }
+
+    const profileSingleton =
+      args.profileSingleton ??
+      (def.profile !== undefined && profileId !== undefined ? profileId : undefined);
+
     const slotKey = createLuaEnvSlotKey(`${this.envSlotScope}:${instanceId}`);
     const scriptContext = createScriptInstanceContext({
       instanceId,
@@ -184,10 +209,11 @@ export class LuaMicroverse<
       surface: this.surface,
       host: this.host,
       slotKey,
-      allowedCapabilities: capabilities,
       defaultTimeout: this.defaultTimeout,
       script: scriptContext,
-      propsSchema: def.propsSchema,
+      profileId: resolvedProfile?.name ?? profileId,
+      resolvedProfile,
+      profileSingleton,
       onScriptAudit: this.onScriptAudit,
     });
 
@@ -303,13 +329,9 @@ export class LuaMicroverse<
 function formatRunError(
   instanceId: string,
   phase: string,
-  result: { _tag: string; error?: { _tag?: string; message?: string } },
+  result: { readonly _tag: 'err'; readonly error: ExecutionFailure },
 ): string {
-  const detail =
-    result._tag === 'err' && result.error?._tag === 'AdapterError'
-      ? result.error.message
-      : JSON.stringify(result.error);
-  return `instance "${instanceId}" failed ${phase}: ${detail}`;
+  return `instance "${instanceId}" failed ${phase}: ${formatExecutionFailure(result.error)}`;
 }
 
 export function createLuaMicroverse<

@@ -1,6 +1,6 @@
 # `@microverse.ts/host-surface`
 
-Declare a **host surface** in TypeScript: Zod schemas, capabilities, and handlers that compile into:
+Declare a **host surface** in TypeScript: Zod schemas, capabilities, component types, and handlers that compile into:
 
 1. **Runtime bridge tables** for `mergeEnv` (what Lua calls at execution time).
 2. A **`LuaDefManifest`** for `@microverse.ts/lua-defs` (`.d.lua` stubs for LuaLS).
@@ -16,6 +16,19 @@ import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
 export default defineHostSurfaceFor<MyHost>()
+  .componentType('OrderEcho', {
+    extends: 'AuditOnly',
+    capabilities: ['orders:read', 'notifications:send'],
+    props: z.object({ label: z.string().optional() }),
+    state: z.object({}),
+    hooks: ['OrderPlaced'],
+  })
+  .componentType('AuditOnly', {
+    capabilities: ['audit:record'],
+    props: z.object({}),
+    state: z.object({}),
+    hooks: ['OrderPlaced'],
+  })
   .bridge('orders')
   .method('get', {
     requires: 'orders:read',
@@ -31,14 +44,15 @@ export default defineHostSurfaceFor<MyHost>()
 | Step | Role |
 |------|------|
 | `defineHostSurfaceFor<THost>()` | Start builder; `handler` receives typed `host`. |
-| `.bridge('orders')` | Bridge table on `self.bridges` after `component:extend()`. |
+| `.componentType(name, …)` | Declares props, state, capability set, and hook subset for Lua `Name:extend()`. |
+| `.bridge('orders')` | Bridge table on `self.bridges` after `OrderEcho:extend()` (only bridges allowed by the active type). |
 | `.method('get', { … })` | One bridge method: `requires`, `input`, `output`, `handler`. |
-| `.componentHooks(…)` | Optional Zod map → `on*` domain events on `Component`. |
-| `.build()` | Compiled {@link HostSurface}. |
+| `.componentHooks(…)` | Optional Zod map → `on*` domain events; each type lists which hooks it implements. |
+| `.build()` | Compiled {@link HostSurface} with `componentTypes` registry. |
 
-`requires` is a `domain:action` capability string. `async` is inferred from `async function` handlers.
+`requires` is a `domain:action` capability string on each bridge method. Each **component type** lists which capabilities its instances may use; runtime mounts only those bridges/methods on `self.bridges`. Disallowed bridges are **absent** (`nil` in Lua), not denied at call time.
 
-Bridges are **not** global in the slot: use `self.bridges.orders:get(…)` from component methods.
+Bridges are **not** global in the slot: use `self.bridges.orders:get(…)` from component methods after `YourType:extend()`.
 
 ### Host object
 
@@ -49,12 +63,22 @@ The **host** is your engine context (services, repos, config). It is not generat
 Call `.componentHooks({ OrderPlaced: z.object({ … }), … })` before `.build()`.
 
 - TypeScript emits via `emitToAllInstances('OrderPlaced', payload)`.
-- Lua implements `onOrderPlaced` on the table from `component:extend()`.
-- Manifest includes `MicroverseEvt_*` payload classes and `on*` fields on `Component` in `.d.lua`.
+- Lua implements `onOrderPlaced` on the table from `OrderEcho:extend()` (when that type’s `hooks` includes `OrderPlaced`).
+- Manifest emits `MicroverseEvt_*` payload classes and per-type `on*` fields on `OrderEchoComponent` in `.d.lua`.
+
+### Component types and inheritance
+
+| Field | Rule |
+|-------|------|
+| `capabilities` | Union of parent + child (deduplicated). |
+| `props` / `state` | Zod `parent.extend(childShape)`. |
+| `hooks` | Union of parent + child hook names. |
+
+`extends` must reference another type on the same surface. Names must be unique; cycles are rejected at `build()`.
 
 ## `HostScriptSession`
 
-Lower-level API when you manage slots yourself (one session = one env slot + capability allowlist):
+Lower-level API when you manage slots yourself (one session = one env slot):
 
 ```ts
 const session = new HostScriptSession({
@@ -62,10 +86,10 @@ const session = new HostScriptSession({
   surface,
   host,
   slotKey: createLuaEnvSlotKey('script:my-id'),
-  allowedCapabilities: surface.pickCapabilities('orders:read'),
 });
 await session.openSession();
-await session.runChunk(luaSource);
+await session.runChunk(luaSource); // script must call YourType:extend() first
+await session.setProps({ … }); // validated against active type’s props schema
 ```
 
 `MicroverseLua` in `@microverse.ts/microverse-lua` wraps this for the common case (shared VM, script catalog + instances, broadcast hooks).
@@ -76,9 +100,15 @@ await session.runChunk(luaSource);
 microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
-Requires `export default` of the compiled surface (`.build()` result). See [`@microverse.ts/cli`](../cli/README.md) and [`@microverse.ts/lua-defs`](../lua-defs/README.md).
+Requires `export default` of the compiled surface (`.build()` result). The manifest emits, per component type:
 
-Optional **Lua type names** on Zod schemas (`luaType('OrderDto', z.object({ … }))`) improve stub names—see `examples/business-scripting-engine/src/schemas/surface/bridgePayloads.ts`.
+- `AuditOnlyProps`, `AuditOnlyState`, `AuditOnlyBridges`
+- `AuditOnlyComponent` (with `on*` only for that type’s hooks)
+- `AuditOnly:extend() → AuditOnlyComponent` singleton stub
+
+See [`@microverse.ts/cli`](../cli/README.md) and [`@microverse.ts/lua-defs`](../lua-defs/README.md).
+
+Optional **Lua type names** on Zod schemas (`luaType('OrderDto', z.object({ … }))`) improve stub names—see bridge payload patterns in consumer surfaces (e.g. `examples/sorting-lab`).
 
 ## Async bridges and Lua patterns
 
@@ -86,9 +116,9 @@ Bridge handlers are **synchronous at the Lua boundary**; Wasmoon does not auto-r
 
 - [Async bridges — `@microverse.ts/microverse-lua`](../microverse-lua/README.md#async-bridges)
 - [Lua authoring (components)](../microverse-lua/README.md#lua-authoring)
-- Example: [`order_asyncio_tick.lua`](../../examples/business-scripting-engine/lua/components/order_asyncio_tick.lua)
+- Example: [`bubble_sort.lua`](../../examples/sorting-lab/lua/bubble_sort.lua)
 
 ## Reference
 
-- Example surface: [`examples/business-scripting-engine/src/businessSurface.ts`](../../examples/business-scripting-engine/src/businessSurface.ts)
+- Example surface: [`examples/sorting-lab/src/engine/sortingSurface.ts`](../../examples/sorting-lab/src/engine/sortingSurface.ts)
 - Tests: `src/domain/`, `src/application/`, `src/infrastructure/`

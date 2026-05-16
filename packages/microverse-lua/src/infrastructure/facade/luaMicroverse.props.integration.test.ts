@@ -8,10 +8,21 @@ type Host = {
   readonly auditLines: string[];
 };
 
-describe('LuaMicroverse props + instances', () => {
-  const caps = ['demo:ping'] as const;
+const propsSchema = z.object({
+  n: z.number().optional(),
+  score: z.number().optional(),
+  path: z.object({ x: z.number(), y: z.number() }).optional(),
+  tags: z.array(z.string()).optional(),
+});
 
+describe('LuaMicroverse props + instances', () => {
   const surface = defineHostSurfaceFor<Host>()
+    .componentType('Demo', {
+      capabilities: ['demo:ping'],
+      props: propsSchema,
+      state: z.object({ tag: z.string().optional(), hits: z.number().optional() }),
+      hooks: ['OrderPlaced'],
+    })
     .bridge('audit')
     .method('record', {
       requires: 'demo:ping',
@@ -29,7 +40,7 @@ describe('LuaMicroverse props + instances', () => {
 
   it('mounts two instances of the same scriptId with independent props', async () => {
     const source = `
-local C = component:extend()
+local C = Demo:extend()
 function C:init()
   self.state = { tag = "init" }
 end
@@ -44,14 +55,12 @@ end
       instanceId: 'e1::counter',
       scriptId: 'counter',
       props: { n: 1 },
-      capabilities: [...caps],
       audit: { entityId: 'e1' },
     });
     await microverse.mountScriptInstance({
       instanceId: 'e2::counter',
       scriptId: 'counter',
       props: { n: 2 },
-      capabilities: [...caps],
       audit: { entityId: 'e2' },
     });
 
@@ -68,7 +77,7 @@ end
   });
 
   it('flushInstanceProps returns Lua-written property values', async () => {
-    const source = `local C = component:extend()\nfunction C:init() end\n`;
+    const source = `local C = Demo:extend()\nfunction C:init() end\n`;
     const microverse = createLuaMicroverse({
       host: { auditLines: [] },
       surface,
@@ -77,7 +86,6 @@ end
     await microverse.mountScriptInstance({
       instanceId: 'w1',
       scriptId: 'writer',
-      capabilities: [...caps],
     });
     const inst = microverse.getInstance('w1');
     await inst!.runChunk(`
@@ -94,14 +102,13 @@ impl.properties.score = 7
   });
 
   it('nested props round-trip through patch', async () => {
-    const source = `local C = component:extend()\nfunction C:init() end\n`;
+    const source = `local C = Demo:extend()\nfunction C:init() end\n`;
     const microverse = createLuaMicroverse({ host: { auditLines: [] }, surface });
     microverse.registerScriptDefinition({ scriptId: 'nested', source });
     await microverse.mountScriptInstance({
       instanceId: 'n1',
       scriptId: 'nested',
       props: { path: { x: 1, y: 2 }, tags: ['a'] },
-      capabilities: [...caps],
     });
     await microverse.patchInstanceProps('n1', { path: { x: 9, y: 2 } });
     expect(microverse.getInstanceProps('n1').path).toEqual({ x: 9, y: 2 });
@@ -111,7 +118,7 @@ impl.properties.score = 7
 
   it('bridge handler receives script audit context', async () => {
     const source = `
-local C = component:extend()
+local C = Demo:extend()
 function C:init()
   self.bridges.audit:record({ line = "from-init" })
 end
@@ -122,7 +129,6 @@ end
     await microverse.mountScriptInstance({
       instanceId: 'ent::audit-script',
       scriptId: 'audit-script',
-      capabilities: [...caps],
       audit: { entityId: 'ent' },
     });
     expect(host.auditLines[0]).toBe('ent::audit-script:audit-script:from-init');
@@ -132,7 +138,7 @@ end
 
   it('component receives domain events via onOrderPlaced', async () => {
     const source = `
-local C = component:extend()
+local C = Demo:extend()
 function C:init()
   self.state = { hits = 0 }
 end
@@ -147,7 +153,6 @@ end
     await microverse.mountScriptInstance({
       instanceId: 'c1',
       scriptId: 'combo',
-      capabilities: [...caps],
     });
     await microverse.emitToAllInstances('OrderPlaced', { orderId: 'o-99', amountCents: 1 });
     expect(host.auditLines[0]).toBe('c1:combo:hits=1:o-99');

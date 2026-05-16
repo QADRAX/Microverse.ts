@@ -1,0 +1,62 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorting Lab — Microverse.ts</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>Sorting Lab</h1>
+      <p class="subtitle">Compare two Lua sorting algorithms tick-by-tick (Wasm Microverse)</p>
+    </header>
+
+    <section class="controls" aria-label="Simulation controls">
+      <div class="control-row">
+        <label>
+          Algorithm A
+          <select id="algoA"></select>
+        </label>
+        <label>
+          Algorithm B
+          <select id="algoB"></select>
+        </label>
+      </div>
+      <div class="control-row">
+        <label>
+          Size N
+          <input id="sizeN" type="number" min="3" max="64" value="16" />
+        </label>
+        <label>
+          Seed
+          <input id="seed" type="number" value="42" />
+        </label>
+        <button type="button" id="shuffle">Randomize</button>
+      </div>
+      <div class="control-row transport">
+        <button type="button" id="play">Play</button>
+        <button type="button" id="pause">Pause</button>
+        <button type="button" id="step">Step</button>
+        <button type="button" id="reset">Reset</button>
+        <span id="stepLabel" class="step-label">Step 0</span>
+      </div>
+    </section>
+
+    <main class="panels">
+      <article class="panel" aria-labelledby="titleA">
+        <h2 id="titleA">Panel A</h2>
+        <p id="messageA" class="panel-message"></p>
+        <div id="panelA" class="bar-chart" role="img" aria-label="Array visualization A"></div>
+      </article>
+      <article class="panel" aria-labelledby="titleB">
+        <h2 id="titleB">Panel B</h2>
+        <p id="messageB" class="panel-message"></p>
+        <div id="panelB" class="bar-chart" role="img" aria-label="Array visualization B"></div>
+      </article>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

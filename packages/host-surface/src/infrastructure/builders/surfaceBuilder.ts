@@ -1,5 +1,6 @@
 import { compileHostSurfaceFor } from '../../application/useCases/compileHostSurface';
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
+import type { ComponentTypeDefInput, ComponentTypeDefRegistry } from '../../domain/componentTypeSpec';
 import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities';
 import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef';
 import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey';
@@ -11,6 +12,7 @@ import type {
 } from '../../domain/hostSurfaceTypes';
 
 type MutableHostSurfaceSpec = Record<string, Record<string, AnyHostSurfaceMethod>>;
+type MutableComponentTypeRegistry = Record<string, ComponentTypeDefInput>;
 
 /**
  * Fluent builder for a host surface. Created via {@link defineHostSurfaceFor} / {@link defineHostSurface} factory overloads.
@@ -21,6 +23,8 @@ export class SurfaceBuilder<
 > {
   private readonly spec: MutableHostSurfaceSpec = createNullPrototypeRecord();
 
+  private readonly componentTypeRegistry: MutableComponentTypeRegistry = createNullPrototypeRecord();
+
   private componentHooksSpec: THooks;
 
   private readonly ports: readonly [SchemaValidationPort];
@@ -29,6 +33,7 @@ export class SurfaceBuilder<
     ports: readonly [SchemaValidationPort],
     componentHooks?: THooks,
     initialSpec?: MutableHostSurfaceSpec,
+    initialComponentTypes?: MutableComponentTypeRegistry,
   ) {
     this.ports = ports;
     this.componentHooksSpec = componentHooks as THooks;
@@ -44,6 +49,21 @@ export class SurfaceBuilder<
         this.spec[bridgeName] = bridge;
       }
     }
+    if (initialComponentTypes !== undefined) {
+      for (const name of Object.keys(initialComponentTypes)) {
+        this.componentTypeRegistry[name] = initialComponentTypes[name]!;
+      }
+    }
+  }
+
+  /** Declares a typed Lua component profile (props, state, capabilities, hooks). */
+  componentType<const N extends string>(
+    name: N,
+    def: ComponentTypeDefInput<`${string}:${string}`, THooks>,
+  ): SurfaceBuilder<THost, THooks> {
+    assertSafeObjectKey('componentType', name);
+    this.componentTypeRegistry[name] = def;
+    return this;
   }
 
   /** Opens a Lua bridge table (e.g. `orders`, `greet`). */
@@ -51,9 +71,14 @@ export class SurfaceBuilder<
     return new BridgeBuilder(this, name);
   }
 
-  /** Attaches component domain-event Zod schemas (emitted into `.d.lua` as `on*` methods on `Component`). */
+  /** Attaches component domain-event Zod schemas (emitted into `.d.lua` as `on*` methods on component types). */
   componentHooks<const H extends HostComponentHooksSpec>(hooks: H): SurfaceBuilder<THost, H> {
-    return new SurfaceBuilder<THost, H>(this.ports, hooks, this.spec);
+    return new SurfaceBuilder<THost, H>(
+      this.ports,
+      hooks,
+      this.spec,
+      this.componentTypeRegistry,
+    );
   }
 
   /** Compiles the accumulated spec into a {@link HostSurface}. */
@@ -61,7 +86,8 @@ export class SurfaceBuilder<
     ? HostSurface<THooks, InferSurfaceCapabilities<HostSurfaceSpec>>
     : HostSurface<undefined, InferSurfaceCapabilities<HostSurfaceSpec>> {
     const spec = this.spec as HostSurfaceSpec;
-    return compileHostSurfaceFor(this.ports, spec, this.componentHooksSpec);
+    const registry = this.componentTypeRegistry as ComponentTypeDefRegistry;
+    return compileHostSurfaceFor(this.ports, spec, registry, this.componentHooksSpec);
   }
 
   /** @internal */

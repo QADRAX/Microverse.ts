@@ -14,6 +14,11 @@ const entityId = luaType('EntityId', z.string());
 describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
   it('builds LuaDefManifest for lua-defs snapshot', () => {
     const surface = defineHostSurfaceFor<ToyHost>()
+      .componentType('Toy', {
+        capabilities: ['engine:time', 'ecs:read'],
+        props: z.object({}),
+        state: z.object({}),
+      })
       .bridge('time')
       .method('delta', {
         requires: 'engine:time',
@@ -42,6 +47,11 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
 
   it('pickCapabilities accepts declared capability literals', () => {
     const surface = defineHostSurfaceFor<ToyHost>()
+      .componentType('Toy', {
+        capabilities: ['engine:time'],
+        props: z.object({}),
+        state: z.object({}),
+      })
       .bridge('time')
       .method('delta', {
         requires: 'engine:time',
@@ -57,6 +67,12 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
   it('componentHooks attach to compiled surface', () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     const surface = defineHostSurfaceFor<ToyHost>()
+      .componentType('Toy', {
+        capabilities: ['demo:tick'],
+        props: z.object({}),
+        state: z.object({}),
+        hooks: ['Ping'],
+      })
       .bridge('demo')
       .method('tick', {
         requires: 'demo:tick',
@@ -96,6 +112,11 @@ describe('SurfaceBuilder (fluent defineHostSurfaceFor)', () => {
 
   it('marks async handlers in manifest', () => {
     const surface = defineHostSurfaceFor<ToyHost>()
+      .componentType('Toy', {
+        capabilities: ['asyncio:run'],
+        props: z.object({}),
+        state: z.object({}),
+      })
       .bridge('asyncio')
       .method('run', {
         requires: 'asyncio:run',

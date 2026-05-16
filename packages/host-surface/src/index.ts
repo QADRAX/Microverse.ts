@@ -5,8 +5,37 @@
  * @packageDocumentation
  */
 export {
-  buildBridgeMergeEnvForHost,
+  buildBridgeMergeEnvForProfile,
 } from './infrastructure/builders/bridgeMergeEnv';
+export type {
+  ComponentTypeDefInput,
+  ComponentTypeDefRegistry,
+  ResolvedComponentTypeProfile,
+  ResolvedComponentTypeRegistry,
+} from './domain/componentTypeSpec';
+export type {
+  ScriptProfileDefRegistry,
+  ResolvedScriptProfile,
+  ResolvedScriptProfileRegistry,
+} from './domain/scriptProfileSpec';
+export {
+  resolveScriptProfile,
+  buildResolvedScriptProfileRegistry,
+  scriptProfileComponentClassName,
+} from './domain/scriptProfileSpec';
+export type { ScriptCatalogEntry } from './domain/scriptCatalogManifest';
+export { buildScriptCatalogLuaDefManifest, scriptCatalogComponentAlias } from './domain/scriptCatalogManifest';
+export type {
+  ScriptReferenceResolverPort,
+  ScriptReferenceWrapContext,
+} from './application/ports/ScriptReferenceResolverPort';
+export {
+  componentTypeClassName,
+  componentTypePropsAlias,
+  componentTypeStateAlias,
+  componentTypeBridgesClassName,
+} from './domain/componentTypeSpec';
+export { buildComponentTypeSingletonsPreludeLua } from './domain/componentSlotPrelude';
 export {
   BridgeBuilder,
   defineHostSurface,
