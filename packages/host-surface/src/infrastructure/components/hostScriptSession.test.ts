@@ -2,14 +2,15 @@ import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
+  createScriptInstanceContext,
   createStubMicroverseRuntime,
   StubRuntimeAdapter,
 } from '@microverse.ts/runtime-core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineHostSurfaceFor } from '../builders/defineHostSurfaceFacade.js';
-import { HostScriptSession } from './hostScriptSession.js';
+import { defineHostSurfaceFor } from '../builders/defineHostSurfaceFacade';
+import { HostScriptSession } from './hostScriptSession';
 
 type H = { readonly tag: string };
 
@@ -34,18 +35,21 @@ describe('HostScriptSession', () => {
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-1'),
       allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
+      script: createScriptInstanceContext({
+        instanceId: 'sess-1',
+        scriptId: 'test',
+        slotKey: 'sess-1',
+      }),
     });
 
     await session.openSession();
     const r = await session.runChunk('-- stub');
     expect(r._tag).toBe('ok');
-    const hook = await session.invokeGlobalHookIfPresent('onSmoke', { n: 1, ok: true, msg: 'x' });
-    expect(hook._tag).toBe('ok');
     await session.dispose();
   });
 
-  it('narrows invokeGlobalHookIfPresent when THooks is provided', async () => {
-    const workflowHooks = {
+  it('narrows invokeComponentEventHook when THooks is provided', async () => {
+    const componentHooks = {
       OrderPlaced: z.object({ orderId: z.string(), amountCents: z.number() }),
     } as const;
 
@@ -57,10 +61,10 @@ describe('HostScriptSession', () => {
         output: z.string(),
         handler: ({ host }) => host.tag,
       })
-      .workflowHooks(workflowHooks)
+      .componentHooks(componentHooks)
       .build();
 
-    const session = new HostScriptSession<H, typeof workflowHooks>({
+    const session = new HostScriptSession<H, typeof componentHooks>({
       runtime: createStubMicroverseRuntime({
         adapter: new StubRuntimeAdapter(),
         logger: new ConsoleLogger(),
@@ -69,10 +73,16 @@ describe('HostScriptSession', () => {
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-hooks'),
       allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
+      script: createScriptInstanceContext({
+        instanceId: 'sess-hooks',
+        scriptId: 'test',
+        slotKey: 'sess-hooks',
+      }),
     });
 
     await session.openSession();
-    const ok = await session.invokeGlobalHookIfPresent('onOrderPlaced', {
+    await session.runChunk('local C = component:extend()\nfunction C:onOrderPlaced() end\n');
+    const ok = await session.invokeComponentEventHook('onOrderPlaced', {
       orderId: 'o-1',
       amountCents: 10,
     });

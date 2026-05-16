@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Illustrative business rules engine: mock domain APIs, domain events, and per-workflow Lua via host-surface.",
+  "description": "Illustrative business rules engine: mock domain APIs, domain events, and component Lua scripts via host-surface.",
   "scripts": {
-    "generate:lua-defs": "microverse generate-lua-defs --surface src/businessSurface.ts --header-note \"LuaLS stub for lua/workflows (Zod surface — businessSurface.ts)\"",
+    "generate:lua-defs": "microverse generate-lua-defs --surface src/businessSurface.ts --header-note \"LuaLS stub for lua/components. Bridge types (Orders, Audit, …) are not globals — use self.bridges.* after component:extend().\"",
     "build": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run generate:lua-defs",
     "lint": "eslint .",
     "pretest": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run generate:lua-defs",

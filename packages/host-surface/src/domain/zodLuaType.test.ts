@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 
-import { luaType, resolveZodLuaTypeAlias } from './zodLuaType.js';
-import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
+import { luaType, resolveZodLuaTypeAlias } from './zodLuaType';
+import { zodToLuaTypeRef } from './zodToLuaTypeRef';
 
 describe('luaType', () => {
   it('registers a nominal name used by zodToLuaTypeRef', () => {

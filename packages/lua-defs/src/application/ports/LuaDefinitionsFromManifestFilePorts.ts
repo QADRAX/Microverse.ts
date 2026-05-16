@@ -1,6 +1,6 @@
-import type { FileSystemPort } from './FileSystemPort.js';
-import type { LuaCatsDocumentBuilderPort } from './LuaCatsDocumentBuilderPort.js';
-import type { ManifestParserPort } from './ManifestParserPort.js';
+import type { FileSystemPort } from './FileSystemPort';
+import type { LuaCatsDocumentBuilderPort } from './LuaCatsDocumentBuilderPort';
+import type { ManifestParserPort } from './ManifestParserPort';
 
 /**
  * Puertos compartidos por los casos de uso que leen un manifiesto desde disco.

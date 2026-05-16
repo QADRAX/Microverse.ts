@@ -10,16 +10,35 @@ exports[`SurfaceBuilder (fluent defineHostSurfaceFor) > builds LuaDefManifest fo
 ---@alias EntityId string
 
 
----@class time
-time = {}
----Frame delta seconds
----@return number
-function time:delta() end
+---@class Ecs
+---@field getName fun(self: Ecs, payload: { id: EntityId }): string|nil
 
----@class ecs
-ecs = {}
----@param payload { id: EntityId }
----@return string|nil
-function ecs:getName(payload) end
+---@class Time
+---Frame delta seconds
+---@field delta fun(self: Time): number
+
+---Capability-scoped host bridges for this component (\`self.bridges\` after \`component:extend()\`).
+---@class MicroverseBridges
+---@field ecs Ecs
+---@field time Time
+
+---Component instance from \`local C = component:extend()\`. Use \`self.bridges\` for host APIs; define \`on*\` methods for domain events.
+---@class Component
+---@field properties table Host-synced props (proxy).
+---@field state table Lua-local state.
+---@field bridges MicroverseBridges Host bridges allowed for this instance (not global in the slot).
+---@field init fun(self: Component) Called once after mount and initial props are applied.
+---@field onPropsChanged fun(self: Component, key: string, newValue: any) Called when the host patches a property key.
+---@field onDestroy fun(self: Component) Called before the script instance slot is disposed.
+
+---Per-slot helper injected by the host. Use \`component:extend()\` to create the active component.
+---@class component
+component = {}
+---Returns the component table with \`properties\`, \`state\`, and \`bridges\` wired for this slot.
+---@return Component
+function component:extend()
+return {}
+---@type Component
+end
 "
 `;

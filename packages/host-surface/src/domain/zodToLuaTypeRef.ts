@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { resolveZodLuaTypeAlias } from './zodLuaType.js';
+import { resolveZodLuaTypeAlias } from './zodLuaType';
 
 /* Zod's internal `_def` / `options` are intentionally untyped for this best-effort emitter. */
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */

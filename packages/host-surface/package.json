@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
-  "description": "Declarative host surface (Zod + capabilities) → bridge tables and LuaDefManifest for .d.lua.",
+  "description": "Fluent host surface DSL: Zod bridges, capability checks, component hooks, and LuaDefManifest for runtime + LuaLS stubs.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",
@@ -41,6 +41,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@microverse.ts/runtime-wasm": "workspace:*",
     "typescript": "^5.8.3",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",

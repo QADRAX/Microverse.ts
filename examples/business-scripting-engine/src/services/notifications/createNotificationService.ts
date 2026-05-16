@@ -1,4 +1,4 @@
-import type { NotificationEntry } from '../../domain/models/notificationEntry.js';
+import type { NotificationEntry } from '../../domain/models/notificationEntry';
 
 export function createNotificationService() {
   const sent: NotificationEntry[] = [];

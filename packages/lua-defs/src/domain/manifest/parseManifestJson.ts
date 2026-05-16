@@ -1,4 +1,4 @@
-import type { LuaDefManifest } from './LuaDefManifest.js';
+import type { LuaDefManifest } from './LuaDefManifest';
 
 export function parseManifestJson(raw: string): LuaDefManifest {
   const data: unknown = JSON.parse(raw);

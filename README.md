@@ -1,16 +1,25 @@
 # Microverse
 
-**Typed, sandboxed Lua scripting for TypeScript applications.**
+**A protocol-in-progress for sandboxed, domain-specific scripting in applications.**
 
-Microverse is a pnpm monorepo for embedding **user-defined behavior** in your product—rules, workflows, promotions, plugins—without redeploying TypeScript for every change. Your app stays the source of truth (databases, billing, auth); Lua scripts run in isolated slots inside a Wasm VM and call back into TypeScript through **declarative bridges** guarded by **capabilities**.
+Microverse is a project under active development. The goal is a **protocol** that lets applications host **microverses**—isolated sandboxes where user or domain logic runs against a **host-defined API** (your DSL), not arbitrary OS or network access. Product teams can model rules, promotions, plugins, and workflows in a scripting language while TypeScript (or another host) keeps databases, billing, auth, and IO.
+
+**Microverse Lua** is the first concrete profile: Lua scripts, declarative **bridges** into your services, **capability** allowlists per script instance, and optional **component hooks** (`onOrderPlaced`, …) for host → script events.
+
+## Today vs aspiration
+
+| | |
+|---|---|
+| **Implemented now** | **microverse.ts** — this pnpm monorepo. Consumer entry: [`@microverse.ts/microverse-lua`](packages/microverse-lua/README.md). Node ≥ 20 and browser, Wasmoon Lua VM, Zod at bridge boundaries, LuaCATS generation for LuaLS. |
+| **Aspiration** | A protocol abstract enough to support **other microverse kinds** (different runtimes or languages) while keeping the same ideas: host services, surface spec, isolated slots, capabilities, and typed host ↔ script events. |
 
 ## Why Microverse?
 
 | Need | How Microverse helps |
 |------|----------------------|
 | Scriptable business logic | Load Lua chunks per tenant, campaign, or entity. |
-| Safe host APIs | Each bridge method has Zod input/output and a `domain:action` capability; scripts declare an allowlist at registration. |
-| Host → script events | Workflow hooks (`onOrderPlaced`, …) with typed payloads from TypeScript. |
+| Safe host APIs | Each bridge method has Zod input/output and a `domain:action` capability; scripts declare an allowlist at mount. |
+| Host → script events | Component hooks (`onOrderPlaced`, …) with typed payloads from TypeScript. |
 | Good DX in Lua | Generate [LuaCATS](https://luals.github.io/wiki/annotations/) `.d.lua` stubs from the same surface spec that drives runtime. |
 | No native Lua install | Lua runs via **Wasmoon** in Node or the browser. |
 
@@ -18,121 +27,40 @@ Microverse is a pnpm monorepo for embedding **user-defined behavior** in your pr
 
 ```mermaid
 flowchart TB
+  subgraph protocol [Microverse protocol - target]
+    HostContract[Host services]
+    SurfaceSpec[Surface spec: bridges + hooks + capabilities]
+    SlotModel[Isolated script slots]
+  end
+
+  subgraph impl [microverse.ts - implemented]
+    ML[MicroverseLua facade]
+    HS[host-surface builder]
+    RT[runtime-wasm + runtime-bridge + runtime-capabilities]
+    Defs[lua-defs + CLI]
+  end
+
   subgraph app [Your application]
-    Host[Host services object]
-    Surface[Host surface fluent builder]
+    AppHost[Business host object]
+    AppEngine[Engine wrapper optional]
+    LuaScripts[Lua components per instance]
   end
 
-  subgraph facade ["@microverse.ts/microverse-lua"]
-    ML[MicroverseLua.create]
-  end
-
-  subgraph runtime [Runtime packages]
-    WASM[runtime-wasm Wasmoon VM]
-    Bridge[runtime-bridge mergeEnv tables]
-    Cap[runtime-capabilities allowlist]
-  end
-
-  subgraph build [Build-time]
-    CLI[microverse generate-lua-defs]
-    Defs[lua-defs → .d.lua]
-  end
-
-  Host --> ML
-  Surface --> ML
-  ML --> WASM
-  Surface --> Bridge
-  Bridge --> WASM
-  Cap --> Bridge
-  Surface --> CLI
-  CLI --> Defs
+  AppHost --> ML
+  SurfaceSpec --> HS
+  HS --> ML
+  ML --> RT
+  HS --> Defs
+  ML --> LuaScripts
+  RT --> LuaScripts
 ```
 
-1. You define a **host** (your services) and a **surface** (what Lua may call).
-2. **`MicroverseLua.create`** opens one shared Wasm Lua VM and manages **script sessions** (one env slot per `scriptId`).
-3. At build time, the same surface produces **`.d.lua`** stubs for LuaLS.
+1. You model your **DSL** as a **host surface** (bridge methods + optional `componentHooks`).
+2. You pass a **host** object (your real services) and the surface into `MicroverseLua.create`.
+3. Each **script instance** gets a Wasm **env slot**, a capability allowlist, and scoped `self.bridges` (bridges are not globals in the slot).
+4. The host emits domain events → Lua `on*` methods on every mounted component that implements them.
+5. At build time, the same surface produces **`.d.lua`** stubs for LuaLS.
 
-Start with the Lua facade: **[`packages/microverse-lua`](packages/microverse-lua/README.md)**.
+## Documentation
 
-## Quick start
-
-**Requirements:** Node ≥ 20.10, pnpm 10.
-
-```bash
-pnpm install
-pnpm build
-pnpm test
-```
-
-**Consumer entry point** (applications depend on this package only):
-
-```ts
-import { MicroverseLua, defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
-```
-
-**Generate IDE stubs** (dev dependency):
-
-```bash
-pnpm add -D @microverse.ts/cli
-pnpm exec microverse generate-lua-defs --surface src/mySurface.ts
-```
-
-See the full walkthrough in [`packages/microverse-lua/README.md`](packages/microverse-lua/README.md) and the reference app below.
-
-## Reference example
-
-[`examples/business-scripting-engine`](examples/business-scripting-engine) models an e-commerce **rules engine**:
-
-- **Host** — in-memory orders, billing, notifications, audit, inventory, jobs.
-- **Surface** — `businessSurface.ts` (bridges + workflow hooks).
-- **Lua** — `lua/workflows/*.lua` react to `OrderPlaced`, charge orders, etc.
-- **Engine** — `BusinessScriptingEngine` wraps `MicroverseLua.create`.
-
-```bash
-pnpm --filter @microverse.ts/business-scripting-engine test
-```
-
-## Monorepo layout
-
-| Path | Role |
-|------|------|
-| [`packages/microverse-lua`](packages/microverse-lua/README.md) | **Lua facade** — `MicroverseLua`, re-exports, plug-and-play Lua microverse. |
-| [`packages/host-surface`](packages/host-surface/README.md) | Fluent `defineHostSurfaceFor`, manifest → bridges + `.d.lua`. |
-| [`packages/lua-defs`](packages/lua-defs/README.md) | Manifest → LuaCATS file (library / plugins). |
-| [`packages/cli`](packages/cli/README.md) | `microverse` CLI (`generate-lua-defs`, …). |
-| `packages/runtime-core` | Runtime ports, slots, timeouts, script execution. |
-| `packages/runtime-wasm` | Wasmoon adapter, `mergeEnv`, async bridge policy. |
-| `packages/runtime-bridge` | Declarative bridge tables and coordinator. |
-| `packages/runtime-capabilities` | Capability registry and allowlists. |
-| `packages/runtime-lua` | Lua chunk / mapping types. |
-| `packages/runtime-zod` | Zod validation at bridge boundaries. |
-| `packages/shared` | Shared types and use-case conventions. |
-| `examples/*` | End-to-end samples. |
-| `tooling/*` | ESLint, Prettier, TypeScript, Vite presets. |
-
-Packages follow a **layered** layout (`domain` / `application` / `infrastructure`) and `eslint-plugin-boundaries` rules to keep dependencies acyclic.
-
-## Documentation map
-
-| Topic | Where to read |
-|-------|----------------|
-| What is a Lua microverse? | [`packages/microverse-lua/README.md`](packages/microverse-lua/README.md) |
-| Defining surfaces & host | [`packages/host-surface/README.md`](packages/host-surface/README.md) |
-| Generating `.d.lua` | [`packages/lua-defs/README.md`](packages/lua-defs/README.md), [`packages/cli/README.md`](packages/cli/README.md) |
-| Async bridges & Lua patterns | [`packages/host-surface/docs/async-subroutines-components.md`](packages/host-surface/docs/async-subroutines-components.md) |
-| Component-style Lua (props/state) | [`examples/business-scripting-engine/docs/COMPONENT_PATTERN.md`](examples/business-scripting-engine/docs/COMPONENT_PATTERN.md) |
-
-## Scripts (root)
-
-| Command | Description |
-|---------|-------------|
-| `pnpm build` | Build all packages (Turbo). |
-| `pnpm test` | Run tests across the workspace. |
-| `pnpm lint` | ESLint. |
-| `pnpm typecheck` | TypeScript `--noEmit`. |
-| `pnpm format` | Prettier write. |
-| `pnpm check:circular` | Madge circular dependency check. |
-
-## License
-
-MIT — see [LICENSE](LICENSE). Published packages live under the [`@microverse.ts`](https://www.npmjs.com/org/microverse.ts) scope on npm; the consumer entry point is [`@microverse.ts/microverse-lua`](https://www.npmjs.com/package/@microverse.ts/microverse-lua).
+Install, API, Lua authoring, integration, and the reference example: **[`packages/microverse-lua/README.md`](packages/microverse-lua/README.md)**.

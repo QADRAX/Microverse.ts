@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { luaGlobalHookName } from './luaGlobalHook.js';
+import { luaGlobalHookName } from './luaGlobalHook';
 
 describe('luaGlobalHookName', () => {
   it('prefixes PascalCase kind with on', () => {

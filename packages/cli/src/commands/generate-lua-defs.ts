@@ -55,7 +55,7 @@ export async function runGenerateLuaDefs(
   if (hasManifest) {
     const { written } = await generateDefs({
       cwd,
-      manifestPath: manifestPath as string,
+      manifestPath,
       outPath,
     });
     return resolve(written);

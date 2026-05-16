@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-/** Zod payloads for workflow Lua hooks (`onOrderPlaced` on the table from `workflow:extend()`, …); drives `.d.lua` + LuaLS in `lua/workflows`. */
-export const businessWorkflowHooks = {
+/** Zod payloads for component domain events (`onOrderPlaced` on the table from `component:extend()`, …); drives `.d.lua` + LuaLS. */
+export const businessComponentHooks = {
   OrderPlaced: z.object({
     orderId: z.string(),
     amountCents: z.number(),
@@ -18,4 +18,4 @@ export const businessWorkflowHooks = {
   }),
 } as const;
 
-export type BusinessWorkflowHooksSpec = typeof businessWorkflowHooks;
+export type BusinessComponentHooksSpec = typeof businessComponentHooks;

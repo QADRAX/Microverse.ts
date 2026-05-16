@@ -1,10 +1,11 @@
 import type { LuaDefManifest } from '@microverse.ts/lua-defs';
+import type { ScriptInstanceContext } from '@microverse.ts/runtime-core';
 import type { DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import type { z } from 'zod';
 
-import type { SurfaceCapabilityString } from './surfaceCapabilityString.js';
-import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol.js';
+import type { SurfaceCapabilityString } from './surfaceCapabilityString';
+import type { WithMicroverseCapabilityRegistry } from './capabilityRegistrySymbol';
 
 /**
  * Context passed to every surface `handler`: your typed host plus the active Lua **slot key** (string form).
@@ -15,6 +16,8 @@ export type HostFnContext<THost> = {
   readonly host: THost;
   /** Stable slot identifier for this sandbox (same convention as `DeclarativeBridgeDeclaration`). */
   readonly slotKey: string;
+  /** Mounted script instance identity (audit, logging). */
+  readonly script: ScriptInstanceContext;
 };
 
 /**
@@ -101,11 +104,11 @@ export type HostSurfaceSpecForHost<THost> = Readonly<{
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
- * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua method `onOrderPlaced` on the handler from `workflow:extend()`).
- * Passed as the second argument to {@link defineHostSurface} to emit workflow hook typings into `.d.lua`.
+ * Zod object schemas keyed by PascalCase event kind (`OrderPlaced` → Lua method `onOrderPlaced` on the component from `component:extend()`).
+ * Passed to {@link SurfaceBuilder.componentHooks} to emit domain event typings into `.d.lua`.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any -- workflow hook payloads use open Zod object shapes */
-export type HostWorkflowHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
+/* eslint-disable @typescript-eslint/no-explicit-any -- component hook payloads use open Zod object shapes */
+export type HostComponentHooksSpec = Readonly<Record<string, z.ZodObject<any>>>;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
@@ -149,16 +152,16 @@ export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> =
 /**
  * Compiled host surface: bridge factories for `mergeEnv` plus manifest builder for `.d.lua` generation.
  *
- * @typeParam THooks - When you pass `workflowHooks` to {@link defineHostSurface}, the returned surface includes
- * `workflowHooks` so callers can type workflow events from the surface object alone.
+ * @typeParam THooks - When you pass `componentHooks` to {@link defineHostSurface}, the returned surface includes
+ * `componentHooks` so callers can type domain events from the surface object alone.
  * @typeParam TCapabilities - Capability ids declared on the surface (for script allowlists).
  */
 export type HostSurface<
-  THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  THooks extends HostComponentHooksSpec | undefined = undefined,
   TCapabilities extends CapabilityId = CapabilityId,
 > = [undefined] extends [THooks]
   ? HostSurfaceCore<TCapabilities>
-  : HostSurfaceCore<TCapabilities> & { readonly workflowHooks: THooks };
+  : HostSurfaceCore<TCapabilities> & { readonly componentHooks: THooks };
 
 /** Options passed to {@link HostSurfaceCore.toLuaDefManifest}. */
 export type LuaDefManifestGeneratorOpts = Parameters<HostSurfaceCore['toLuaDefManifest']>[0];

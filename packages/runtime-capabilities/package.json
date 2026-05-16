@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
+  "description": "Capability registry and per-instance allowlists (`domain:action`) that gate which bridge methods a script may call.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

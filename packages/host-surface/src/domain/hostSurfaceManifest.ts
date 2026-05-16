@@ -8,55 +8,73 @@ import type {
 } from '@microverse.ts/lua-defs';
 import { z } from 'zod';
 
-import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.js';
-import { luaGlobalHookName } from './luaGlobalHook.js';
-import { isLuaTypeAtom } from './luaTypeAtoms.js';
-import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType.js';
-import { zodToLuaTypeRef } from './zodToLuaTypeRef.js';
+import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes';
+import { luaGlobalHookName } from './luaGlobalHook';
+import { isLuaTypeAtom } from './luaTypeAtoms';
+import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType';
+import { zodToLuaTypeRef } from './zodToLuaTypeRef';
 
 function asyncHandleClassName(bridgeName: string, methodName: string): string {
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return `${cap(bridgeName)}${cap(methodName)}Handle`;
 }
 
-function buildWorkflowHookManifestFields(
+/** LuaCATS class for runtime bridge key `audit` → `Audit` (distinct from field name for LuaLS). */
+function bridgeLuaClassName(bridgeTableName: string): string {
+  return bridgeTableName.charAt(0).toUpperCase() + bridgeTableName.slice(1);
+}
+
+function pushMicroverseBridgesClass(bridgeNames: readonly string[], classes: ManifestClass[]): void {
+  if (bridgeNames.length === 0) {
+    return;
+  }
+  classes.push({
+    name: 'MicroverseBridges',
+    description: 'Capability-scoped host bridges for this component (`self.bridges` after `component:extend()`).',
+    fields: bridgeNames.map((name) => ({
+      name,
+      luaType: bridgeLuaClassName(name),
+    })),
+    emitSingleton: false,
+  });
+}
+
+function buildComponentEventManifestFields(
   kinds: readonly string[],
-  workflowHooks: HostWorkflowHooksSpec,
-  selfType: string,
-  fieldDescriptionSuffix: string,
+  componentHooks: HostComponentHooksSpec,
 ): ManifestClassField[] {
   const out: ManifestClassField[] = [];
   for (const kind of kinds) {
-    const schema = workflowHooks[kind];
+    const schema = componentHooks[kind];
     if (!(schema instanceof z.ZodObject)) {
-      throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+      throw new Error(`defineHostSurface componentHooks: "${kind}" must be a z.object(...)`);
     }
-    const payloadName = `MicroverseWorkflowEvt_${kind}`;
+    const payloadName = `MicroverseEvt_${kind}`;
     const hookName = luaGlobalHookName(kind);
     out.push({
       name: hookName,
-      description: `${fieldDescriptionSuffix} Payload: \`${payloadName}\`.`,
-      luaType: `fun(self: ${selfType}, evt: ${payloadName})`,
+      description: `Host invokes when \`${kind}\` is emitted. Payload: \`${payloadName}\`.`,
+      luaType: `fun(self: Component, evt: ${payloadName})`,
     });
   }
   return out;
 }
 
-function pushWorkflowPayloadManifestClasses(
+function pushComponentEventPayloadClasses(
   kinds: readonly string[],
-  workflowHooks: HostWorkflowHooksSpec,
+  componentHooks: HostComponentHooksSpec,
   classes: ManifestClass[],
 ): void {
   for (const kind of kinds) {
-    const schema = workflowHooks[kind];
+    const schema = componentHooks[kind];
     if (!(schema instanceof z.ZodObject)) {
-      throw new Error(`defineHostSurface workflowHooks: "${kind}" must be a z.object(...)`);
+      throw new Error(`defineHostSurface componentHooks: "${kind}" must be a z.object(...)`);
     }
-    const name = `MicroverseWorkflowEvt_${kind}`;
+    const name = `MicroverseEvt_${kind}`;
     const shape = schema.shape as Record<string, z.ZodTypeAny>;
     classes.push({
       name,
-      description: `Workflow hook payload for \`${luaGlobalHookName(kind)}\` (Zod → LuaCATS fields).`,
+      description: `Domain event payload for \`${luaGlobalHookName(kind)}\` (Zod → LuaCATS fields).`,
       fields: Object.keys(shape).map((k) => ({
         name: k,
         luaType: zodToLuaTypeRef(shape[k]!),
@@ -66,6 +84,66 @@ function pushWorkflowPayloadManifestClasses(
   }
 }
 
+function pushComponentManifestClasses(
+  classes: ManifestClass[],
+  bridgeNames: readonly string[],
+  componentHooks?: HostComponentHooksSpec,
+): void {
+  const eventKinds =
+    componentHooks !== undefined
+      ? Object.keys(componentHooks).sort((a, b) => a.localeCompare(b))
+      : [];
+  if (componentHooks !== undefined) {
+    pushComponentEventPayloadClasses(eventKinds, componentHooks, classes);
+  }
+  const lifecycleFields: ManifestClassField[] = [
+    { name: 'properties', luaType: 'table', description: 'Host-synced props (proxy).' },
+    { name: 'state', luaType: 'table', description: 'Lua-local state.' },
+    {
+      name: 'bridges',
+      luaType: bridgeNames.length > 0 ? 'MicroverseBridges' : 'table',
+      description: 'Host bridges allowed for this instance (not global in the slot).',
+    },
+    {
+      name: 'init',
+      luaType: 'fun(self: Component)',
+      description: 'Called once after mount and initial props are applied.',
+    },
+    {
+      name: 'onPropsChanged',
+      luaType: 'fun(self: Component, key: string, newValue: any)',
+      description: 'Called when the host patches a property key.',
+    },
+    {
+      name: 'onDestroy',
+      luaType: 'fun(self: Component)',
+      description: 'Called before the script instance slot is disposed.',
+    },
+  ];
+  if (componentHooks !== undefined) {
+    lifecycleFields.push(...buildComponentEventManifestFields(eventKinds, componentHooks));
+  }
+  classes.push({
+    name: 'Component',
+    description:
+      'Component instance from `local C = component:extend()`. Use `self.bridges` for host APIs; define `on*` methods for domain events.',
+    fields: lifecycleFields,
+    emitSingleton: false,
+  });
+  classes.push({
+    name: 'component',
+    description: 'Per-slot helper injected by the host. Use `component:extend()` to create the active component.',
+    methods: [
+      {
+        name: 'extend',
+        description: 'Returns the component table with `properties`, `state`, and `bridges` wired for this slot.',
+        params: [],
+        returns: 'Component',
+      },
+    ],
+  });
+}
+
 export function buildLuaDefManifestFromHostSurfaceSpec(
   spec: HostSurfaceSpec,
   opts: {
@@ -73,10 +151,11 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
     readonly headerNote?: string | undefined;
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   },
-  workflowHooks?: HostWorkflowHooksSpec,
+  componentHooks?: HostComponentHooksSpec,
 ): LuaDefManifest {
   const classes: ManifestClass[] = [];
-  for (const bridgeName of Object.keys(spec)) {
+  const bridgeNames = Object.keys(spec).sort((a, b) => a.localeCompare(b));
+  for (const bridgeName of bridgeNames) {
     const methods = spec[bridgeName]!;
     const manifestMethods: ManifestMethod[] = [];
     for (const methodName of Object.keys(methods)) {
@@ -111,10 +190,12 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
       }
     }
     classes.push({
-      name: bridgeName,
+      name: bridgeLuaClassName(bridgeName),
       methods: manifestMethods,
+      emitSingleton: false,
     });
   }
+  pushMicroverseBridgesClass(bridgeNames, classes);
   const fromLuaType = collectLuaTypeAliasesFromHostSpec(spec);
   const fromOverrides = inferLuaTypeAliasesFromHostSpec(spec);
   const merged = new Map<string, string>([
@@ -127,37 +208,7 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
     }
   }
 
-  if (workflowHooks !== undefined) {
-    const kinds = Object.keys(workflowHooks).sort((a, b) => a.localeCompare(b));
-    pushWorkflowPayloadManifestClasses(kinds, workflowHooks, classes);
-    const abstractFields = buildWorkflowHookManifestFields(
-      kinds,
-      workflowHooks,
-      'Workflow',
-      'Host invokes this method on your table (from `workflow:extend()`) when the matching domain event fires.',
-    );
-    classes.push({
-      name: 'Workflow',
-      description:
-        'Abstract workflow handler type. Call `local w = workflow:extend()` then define `function w:onOrderPlaced(evt) … end` (etc.). Each Lua slot has its own `workflow` helper and handler table.',
-      fields: abstractFields,
-      emitSingleton: false,
-    });
-    classes.push({
-      name: 'workflow',
-      description:
-        'Per-slot helper injected by the host (not a TS bridge). Creates the active handler table for this sandbox slot.',
-      methods: [
-        {
-          name: 'extend',
-          description:
-            'Returns a new handler table with default no-op hooks; registers it for host → Lua dispatch in this slot.',
-          params: [],
-          returns: 'Workflow',
-        },
-      ],
-    });
-  }
+  pushComponentManifestClasses(classes, bridgeNames, componentHooks);
 
   const aliases =
     merged.size === 0

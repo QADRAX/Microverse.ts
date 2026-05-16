@@ -1,8 +1,8 @@
 import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
-import type { BusinessEngineHost } from './services/businessEngineHost.js';
-import { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
+import type { BusinessEngineHost } from './services/businessEngineHost';
+import { businessComponentHooks } from './schemas/components/businessComponentHooks';
 import {
   asyncioTickResult,
   chargeResult,
@@ -10,17 +10,17 @@ import {
   jobCreateResult,
   orderDto,
   orderId,
-} from './schemas/surface/bridgePayloads.js';
+} from './schemas/surface/bridgePayloads';
 
-export { businessWorkflowHooks } from './schemas/workflows/businessWorkflowHooks.js';
+export { businessComponentHooks } from './schemas/components/businessComponentHooks';
 
 /**
  * Host surface exposed to Lua: domain integrations with Zod + capabilities.
- * Each script registers a subset via `surface.pickCapabilities(…)` (see {@link BusinessScriptingEngine.registerScript}).
+ * Each script instance registers a subset via `surface.pickCapabilities(…)` (see {@link BusinessScriptingEngine.mountScriptInstance}).
  *
  * Default-exported for `microverse generate-lua-defs --surface ...` (see package.json).
  * LuaCATS names (`OrderDto`, `OrderId`, …) come from {@link luaType} on schemas in `bridgePayloads.ts`.
- * Workflow hooks: abstract **`Workflow`** plus injected **`workflow:extend()`** helper (see generated `businessSurface.d.lua`).
+ * Component domain events: `on*` methods on **`Component`** from `component:extend()` (see generated `businessSurface.d.lua`).
  * For LuaLS, keep `.luarc.json` **`workspace.library`** as `./generated` (relative to that file) so stubs apply when the repo root is the IDE workspace. If your editor still flags bridge tables as undefined, list them under **`diagnostics.globals`** (see this package’s `.luarc.json`).
  */
 export default defineHostSurfaceFor<BusinessEngineHost>()
@@ -96,5 +96,5 @@ export default defineHostSurfaceFor<BusinessEngineHost>()
       return { value: seed + 7 };
     },
   })
-  .workflowHooks(businessWorkflowHooks)
+  .componentHooks(businessComponentHooks)
   .build();

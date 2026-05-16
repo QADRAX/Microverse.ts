@@ -1,14 +1,14 @@
-import { compileHostSurfaceFor } from '../../application/useCases/compileHostSurface.js';
-import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort.js';
-import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities.js';
-import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef.js';
-import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey.js';
+import { compileHostSurfaceFor } from '../../application/useCases/compileHostSurface';
+import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
+import type { InferSurfaceCapabilities } from '../../domain/surfaceCapabilities';
+import { normalizeMethodDef, type SurfaceMethodDef } from '../../domain/surfaceMethodDef';
+import { assertSafeObjectKey, createNullPrototypeRecord } from '../../domain/safeObjectKey';
 import type {
   AnyHostSurfaceMethod,
   HostSurface,
   HostSurfaceSpec,
-  HostWorkflowHooksSpec,
-} from '../../domain/hostSurfaceTypes.js';
+  HostComponentHooksSpec,
+} from '../../domain/hostSurfaceTypes';
 
 type MutableHostSurfaceSpec = Record<string, Record<string, AnyHostSurfaceMethod>>;
 
@@ -17,21 +17,21 @@ type MutableHostSurfaceSpec = Record<string, Record<string, AnyHostSurfaceMethod
  */
 export class SurfaceBuilder<
   THost,
-  const THooks extends HostWorkflowHooksSpec | undefined = undefined,
+  const THooks extends HostComponentHooksSpec | undefined = undefined,
 > {
   private readonly spec: MutableHostSurfaceSpec = createNullPrototypeRecord();
 
-  private workflowHooksSpec: THooks;
+  private componentHooksSpec: THooks;
 
   private readonly ports: readonly [SchemaValidationPort];
 
   constructor(
     ports: readonly [SchemaValidationPort],
-    workflowHooks?: THooks,
+    componentHooks?: THooks,
     initialSpec?: MutableHostSurfaceSpec,
   ) {
     this.ports = ports;
-    this.workflowHooksSpec = workflowHooks as THooks;
+    this.componentHooksSpec = componentHooks as THooks;
     if (initialSpec !== undefined) {
       for (const bridgeName of Object.keys(initialSpec)) {
         assertSafeObjectKey('bridge', bridgeName);
@@ -51,17 +51,17 @@ export class SurfaceBuilder<
     return new BridgeBuilder(this, name);
   }
 
-  /** Attaches workflow hook Zod schemas (emitted into `.d.lua` as `on*` methods). */
-  workflowHooks<const H extends HostWorkflowHooksSpec>(hooks: H): SurfaceBuilder<THost, H> {
+  /** Attaches component domain-event Zod schemas (emitted into `.d.lua` as `on*` methods on `Component`). */
+  componentHooks<const H extends HostComponentHooksSpec>(hooks: H): SurfaceBuilder<THost, H> {
     return new SurfaceBuilder<THost, H>(this.ports, hooks, this.spec);
   }
 
   /** Compiles the accumulated spec into a {@link HostSurface}. */
-  build(): THooks extends HostWorkflowHooksSpec
+  build(): THooks extends HostComponentHooksSpec
     ? HostSurface<THooks, InferSurfaceCapabilities<HostSurfaceSpec>>
     : HostSurface<undefined, InferSurfaceCapabilities<HostSurfaceSpec>> {
     const spec = this.spec as HostSurfaceSpec;
-    return compileHostSurfaceFor(this.ports, spec, this.workflowHooksSpec);
+    return compileHostSurfaceFor(this.ports, spec, this.componentHooksSpec);
   }
 
   /** @internal */
@@ -88,7 +88,7 @@ export class SurfaceBuilder<
 export class BridgeBuilder<
   THost,
   const B extends string,
-  THooks extends HostWorkflowHooksSpec | undefined,
+  THooks extends HostComponentHooksSpec | undefined,
 > {
   constructor(
     private readonly parent: SurfaceBuilder<THost, THooks>,

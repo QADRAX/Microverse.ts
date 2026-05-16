@@ -98,6 +98,12 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vite:
+        specifier: ^8.0.13
+        version: 8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@22.19.19)(rollup@4.60.3)(typescript@5.9.3)(vite@8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0))
 
   packages/host-surface:
     dependencies:
@@ -123,6 +129,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@microverse.ts/runtime-wasm':
+        specifier: workspace:*
+        version: link:../runtime-wasm
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -148,6 +157,12 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vite:
+        specifier: ^8.0.13
+        version: 8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@22.19.19)(rollup@4.60.3)(typescript@5.9.3)(vite@8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0))
       vitest:
         specifier: ^3.1.4
         version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
@@ -244,6 +259,9 @@ importers:
       '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
     devDependencies:
       typescript:
         specifier: ^5.8.3

@@ -2,12 +2,12 @@ import { defineHostSurfaceFor } from '@microverse.ts/host-surface';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 
-import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicroverse.js';
+import { createLuaMicroverse, type TaggedLuaMicroverseHost } from './luaMicroverse';
 
 type H = { readonly n: number };
 
 describe('createLuaMicroverse', () => {
-  it('registers a script and runs typed emitToAllScripts (built-in Wasm runtime)', async () => {
+  it('mounts a script instance and runs typed emitToAllInstances (built-in Wasm runtime)', async () => {
     const hooks = { Ping: z.object({ x: z.number() }) } as const;
     type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
@@ -19,7 +19,7 @@ describe('createLuaMicroverse', () => {
         output: z.number(),
         handler: ({ host }) => host.n,
       })
-      .workflowHooks(hooks)
+      .componentHooks(hooks)
       .build();
 
     const microverse = createLuaMicroverse({
@@ -27,13 +27,14 @@ describe('createLuaMicroverse', () => {
       surface,
     });
 
-    await microverse.registerScript({
+    microverse.registerScriptDefinition({ scriptId: 's1', source: '-- stub' });
+    await microverse.mountScriptInstance({
+      instanceId: 's1',
       scriptId: 's1',
-      script: '-- stub',
       capabilities: surface.pickCapabilities('demo:tick'),
     });
 
-    await microverse.emitToAllScripts('Ping', { x: 1 });
+    await microverse.emitToAllInstances('Ping', { x: 1 });
     await microverse.dispose();
   });
 });

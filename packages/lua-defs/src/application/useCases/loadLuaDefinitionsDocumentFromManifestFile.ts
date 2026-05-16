@@ -1,6 +1,6 @@
 import type { AsyncUseCase } from '@microverse.ts/shared';
 
-import type { LuaDefinitionsFromManifestFilePorts } from '../ports/LuaDefinitionsFromManifestFilePorts.js';
+import type { LuaDefinitionsFromManifestFilePorts } from '../ports/LuaDefinitionsFromManifestFilePorts';
 
 export type LoadLuaDefinitionsDocumentFromManifestFileInput = {
   readonly cwd: string;

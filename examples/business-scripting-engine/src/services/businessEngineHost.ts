@@ -1,14 +1,14 @@
 import type { TaggedLuaMicroverseHost } from '@microverse.ts/microverse-lua';
 
-import type { OrderRecord } from '../domain/models/orderRecord.js';
-import type { BusinessWorkflowHooksSpec } from '../schemas/workflows/businessWorkflowHooks.js';
+import type { OrderRecord } from '../domain/models/orderRecord';
+import type { BusinessComponentHooksSpec } from '../schemas/components/businessComponentHooks';
 
-import { createAuditService } from './audit/createAuditService.js';
-import { createBillingService } from './billing/createBillingService.js';
-import { createInventoryService } from './inventory/createInventoryService.js';
-import { createJobsService } from './jobs/createJobsService.js';
-import { createInMemoryOrders } from './orders/createInMemoryOrders.js';
-import { createNotificationService } from './notifications/createNotificationService.js';
+import { createAuditService } from './audit/createAuditService';
+import { createBillingService } from './billing/createBillingService';
+import { createInventoryService } from './inventory/createInventoryService';
+import { createJobsService } from './jobs/createJobsService';
+import { createInMemoryOrders } from './orders/createInMemoryOrders';
+import { createNotificationService } from './notifications/createNotificationService';
 
 type BusinessEngineServices = {
   readonly orders: ReturnType<typeof createInMemoryOrders>;
@@ -22,9 +22,9 @@ type BusinessEngineServices = {
 /**
  * Host services object passed into {@link BusinessScriptingEngine} and into every `fn<BusinessEngineHost, …>` handler
  * in {@link businessSurface.js}. Carries hook typing for {@link createLuaMicroverse} via {@link TaggedLuaMicroverseHost}
- * (hooks are methods on the handler table from `workflow:extend()`, typed as `Workflow` in `.d.lua`).
+ * (domain events are methods on the component from `component:extend()`, typed as `Component` in `.d.lua`).
  */
-export type BusinessEngineHost = TaggedLuaMicroverseHost<BusinessWorkflowHooksSpec, BusinessEngineServices>;
+export type BusinessEngineHost = TaggedLuaMicroverseHost<BusinessComponentHooksSpec, BusinessEngineServices>;
 
 export function createDefaultBusinessHost(
   seedOrders: readonly OrderRecord[],

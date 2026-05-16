@@ -1,6 +1,6 @@
 import type { CapabilityRegistryPort } from '@microverse.ts/runtime-capabilities';
 
-import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
+import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol';
 
 /**
  * Returns a shallow copy of `host` with {@link MICROVERSE_CAPABILITY_REGISTRY} set to `registry`.

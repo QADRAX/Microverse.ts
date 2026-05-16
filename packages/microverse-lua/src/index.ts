@@ -29,7 +29,7 @@ export {
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
   type HostSurfaceSpecForHost,
-  type HostWorkflowHooksSpec,
+  type HostComponentHooksSpec,
   type InferSurfaceCapabilities,
   type LuaDefManifestGeneratorOpts,
   type LuaGlobalHookName,
@@ -37,7 +37,7 @@ export {
   type SurfaceCapabilityString,
   type SurfaceMethodDef,
   type WithMicroverseCapabilityRegistry,
-  type WorkflowHookInvokeArgs,
+  type ComponentEventHookInvokeArgs,
   type ZodToLuaTypeRefOptions,
 } from '@microverse.ts/host-surface';
 export * from '@microverse.ts/shared';
@@ -48,7 +48,7 @@ export * from '@microverse.ts/runtime-bridge';
 export * from '@microverse.ts/runtime-capabilities';
 export * from '@microverse.ts/runtime-zod';
 
-export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace.js';
+export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace';
 export {
   createLuaMicroverse,
   LuaMicroverse,
@@ -57,4 +57,4 @@ export {
   type InferScriptHooksFromSurface,
   type InferSurfaceCapabilitiesFromSurface,
   type TaggedLuaMicroverseHost,
-} from './infrastructure/facade/luaMicroverse.js';
+} from './infrastructure/facade/luaMicroverse';

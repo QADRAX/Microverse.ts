@@ -150,6 +150,7 @@ export class WasmoonRuntimeAdapter implements RuntimeAdapter {
       // ignore
     }
   };
+
 }
 
 function randomMicroverseToken(): string {

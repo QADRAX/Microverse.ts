@@ -5,13 +5,19 @@ import {
   luaGlobalHookName,
   type HostSurface,
   type HostSurfaceCore,
-  type HostWorkflowHooksSpec,
+  type HostComponentHooksSpec,
 } from '@microverse.ts/host-surface';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   createLuaEnvSlotKey,
+  createScriptInstanceContext,
   fixedTimeout,
+  mergeScriptPropertyBags,
+  resolveLuaScriptSource,
+  type LuaScriptDefinition,
   type MicroverseRuntime,
+  type ScriptAuditEvent,
+  type ScriptPropertyBag,
   type TimeoutPolicy,
 } from '@microverse.ts/runtime-core';
 import { createWasmMicroverseRuntime } from '@microverse.ts/runtime-wasm';
@@ -19,24 +25,21 @@ import { createWasmMicroverseRuntime } from '@microverse.ts/runtime-wasm';
 /** Phantom key: optional on the host **type** so {@link InferScriptHooksFromHost} can recover hook Zod map typing. Never set at runtime. */
 declare const SCRIPT_HOOKS_TYPE: unique symbol;
 
-/**
- * Intersects `TBase` with an optional phantom field carrying `THooks` for {@link LuaMicroverse} / {@link createLuaMicroverse} inference.
- */
 export type TaggedLuaMicroverseHost<
-  THooks extends HostWorkflowHooksSpec,
+  THooks extends HostComponentHooksSpec,
   TBase = unknown,
 > = TBase & { readonly [SCRIPT_HOOKS_TYPE]?: THooks };
 
 export type InferScriptHooksFromHost<THost> = THost extends TaggedLuaMicroverseHost<infer H, unknown>
-  ? H extends HostWorkflowHooksSpec
+  ? H extends HostComponentHooksSpec
     ? H
     : undefined
   : undefined;
 
 export type InferScriptHooksFromSurface<S extends HostSurfaceCore> =
-  S extends HostSurfaceCore<CapabilityId> & { readonly workflowHooks: infer H extends HostWorkflowHooksSpec }
+  S extends HostSurfaceCore<CapabilityId> & { readonly componentHooks: infer H extends HostComponentHooksSpec }
     ? H
-    : S extends HostSurface<infer H extends HostWorkflowHooksSpec, CapabilityId>
+    : S extends HostSurface<infer H extends HostComponentHooksSpec, CapabilityId>
       ? H
       : undefined;
 
@@ -54,30 +57,21 @@ type EffectiveScriptHooks<THost extends object, TSurface extends HostSurfaceCore
 
 export type LuaMicroverseConfig<
   THost extends object = object,
-  THooks extends HostWorkflowHooksSpec | undefined = InferScriptHooksFromHost<THost>,
+  THooks extends HostComponentHooksSpec | undefined = InferScriptHooksFromHost<THost>,
   TCapabilities extends CapabilityId = CapabilityId,
 > = {
   readonly host: THost;
-  /** From {@link defineHostSurface} / {@link defineHostSurfaceFor}; hooks live on `surface.workflowHooks` when present. */
   readonly surface: HostSurface<THooks, TCapabilities>;
-  /** Prefix for internal Lua env slot ids, default `script` (ids look like `script:my-id`). */
   readonly envSlotScope?: string | undefined;
-  /** Wall-clock limit per `runChunk` / hook invocation (Wasm adapter + session forwarding). */
   readonly defaultTimeout?: TimeoutPolicy | undefined;
-  /**
-   * Shorthand for {@link defaultTimeout} as `fixedTimeout(ms)`. Ignored when `defaultTimeout` is set.
-   */
   readonly defaultTimeoutMs?: number | undefined;
-  /**
-   * Lua sources run in **every** script slot after {@link HostScriptSession.openSession} and before that
-   * script's main chunk. Define shared helpers/libraries here once instead of per {@link registerScript}.
-   */
   readonly sharedLuaChunks?: readonly string[] | undefined;
+  readonly onScriptAudit?: ((event: ScriptAuditEvent) => void) | undefined;
 };
 
 function resolveDefaultTimeout<
   THost extends object,
-  THooks extends HostWorkflowHooksSpec | undefined,
+  THooks extends HostComponentHooksSpec | undefined,
   TCapabilities extends CapabilityId,
 >(config: LuaMicroverseConfig<THost, THooks, TCapabilities>): TimeoutPolicy | undefined {
   if (config.defaultTimeout !== undefined) {
@@ -89,27 +83,27 @@ function resolveDefaultTimeout<
   return undefined;
 }
 
-type EmitToAllScriptsFn<THooks extends HostWorkflowHooksSpec | undefined> = THooks extends HostWorkflowHooksSpec
+type EmitToAllInstancesFn<THooks extends HostComponentHooksSpec | undefined> = THooks extends HostComponentHooksSpec
   ? <const K extends keyof THooks & string>(kind: K, payload: Readonly<z.infer<THooks[K]>>) => Promise<void>
   : (
       kind: string,
       payload: Readonly<Record<string, string | number | boolean>>,
     ) => Promise<void>;
 
-/**
- * One **Lua microverse**: a shared built-in Wasm Lua VM, {@link HostScriptSession}s keyed by `scriptId`, and helpers to
- * register scripts and broadcast hook events. Capabilities per script come from the host surface
- * ({@link HostSurfaceCore.pickCapabilities} / {@link HostSurfaceCore.capabilities}). Created via {@link MicroverseLua.create}
- * or {@link createLuaMicroverse}.
- */
+type MountedInstance = {
+  readonly session: HostScriptSession<unknown, HostComponentHooksSpec | undefined>;
+};
+
 export class LuaMicroverse<
   THost extends object = object,
-  THooks extends HostWorkflowHooksSpec | undefined = InferScriptHooksFromHost<THost>,
+  THooks extends HostComponentHooksSpec | undefined = InferScriptHooksFromHost<THost>,
   TCapabilities extends CapabilityId = CapabilityId,
 > {
   private readonly runtime: MicroverseRuntime;
 
-  private readonly sessions = new Map<string, HostScriptSession<THost, THooks>>();
+  private readonly definitions = new Map<string, LuaScriptDefinition>();
+
+  private readonly instances = new Map<string, MountedInstance>();
 
   private readonly host: THost;
 
@@ -121,100 +115,203 @@ export class LuaMicroverse<
 
   private readonly sharedLuaChunks: readonly string[];
 
+  private readonly onScriptAudit: ((event: ScriptAuditEvent) => void) | undefined;
+
   constructor(private readonly config: LuaMicroverseConfig<THost, THooks, TCapabilities>) {
     this.host = config.host;
     this.surface = config.surface;
     this.defaultTimeout = resolveDefaultTimeout(config);
     this.sharedLuaChunks = config.sharedLuaChunks ?? [];
+    this.onScriptAudit = config.onScriptAudit;
     this.runtime = createWasmMicroverseRuntime(
       this.defaultTimeout !== undefined ? { defaultTimeout: this.defaultTimeout } : {},
     );
     this.envSlotScope = config.envSlotScope ?? 'script';
   }
 
-  /** Capability ids declared on the bound host surface. */
   readonly getSurfaceCapabilities = (): readonly TCapabilities[] => this.surface.capabilities;
 
-  /**
-   * Loads one Lua chunk in an isolated env slot; `scriptId` must be unique within this microverse.
-   *
-   * @param args.capabilities - Subset of {@link getSurfaceCapabilities}; use `surface.pickCapabilities(…)` at the call site.
-   */
-  readonly registerScript = async (args: {
+  readonly registerScriptDefinition = (def: LuaScriptDefinition): void => {
+    if (this.definitions.has(def.scriptId)) {
+      throw new Error(`script definition already registered: ${def.scriptId}`);
+    }
+    this.definitions.set(def.scriptId, def);
+  };
+
+  readonly hasScriptDefinition = (scriptId: string): boolean => this.definitions.has(scriptId);
+
+  readonly getScriptDefinition = (scriptId: string): LuaScriptDefinition | undefined =>
+    this.definitions.get(scriptId);
+
+  readonly mountScriptInstance = async (args: {
+    readonly instanceId: string;
     readonly scriptId: string;
-    readonly script: string;
+    readonly script?: string | undefined;
+    readonly props?: ScriptPropertyBag | undefined;
     readonly capabilities: readonly TCapabilities[];
+    readonly audit?: Readonly<Record<string, string | number | boolean>> | undefined;
     readonly injectLuaChunks?: readonly string[] | undefined;
   }): Promise<void> => {
-    const { scriptId, script, capabilities, injectLuaChunks } = args;
-    const preludeChunks = [...this.sharedLuaChunks, ...(injectLuaChunks ?? [])];
-    if (this.sessions.has(scriptId)) {
-      throw new Error(`script already registered: ${scriptId}`);
+    const { instanceId, scriptId, capabilities, audit, injectLuaChunks } = args;
+    if (this.instances.has(instanceId)) {
+      throw new Error(`script instance already mounted: ${instanceId}`);
     }
+
+    let def = this.definitions.get(scriptId);
+    if (def === undefined) {
+      if (args.script === undefined) {
+        throw new Error(`unknown scriptId "${scriptId}" and no inline script provided`);
+      }
+      def = {
+        scriptId,
+        source: args.script,
+      };
+      this.definitions.set(scriptId, def);
+    } else if (args.script !== undefined) {
+      def = { ...def, source: args.script };
+    }
+
+    const slotKey = createLuaEnvSlotKey(`${this.envSlotScope}:${instanceId}`);
+    const scriptContext = createScriptInstanceContext({
+      instanceId,
+      scriptId,
+      slotKey: String(slotKey),
+      audit,
+    });
+
     const session = new HostScriptSession<THost, THooks>({
       runtime: this.runtime,
       surface: this.surface,
       host: this.host,
-      slotKey: createLuaEnvSlotKey(`${this.envSlotScope}:${scriptId}`),
+      slotKey,
       allowedCapabilities: capabilities,
       defaultTimeout: this.defaultTimeout,
+      script: scriptContext,
+      propsSchema: def.propsSchema,
+      onScriptAudit: this.onScriptAudit,
     });
-    await session.openSession();
-    for (const [index, chunk] of preludeChunks.entries()) {
-      const injected = await session.runChunk(chunk);
-      if (injected._tag !== 'ok') {
-        await session.dispose();
-        const detail =
-          injected._tag === 'err' && injected.error._tag === 'AdapterError'
-            ? injected.error.message
-            : JSON.stringify(injected.error);
-        const which =
-          index < this.sharedLuaChunks.length
-            ? `shared Lua prelude [${index}]`
-            : `script injectLuaChunks [${index - this.sharedLuaChunks.length}]`;
-        throw new Error(`script "${scriptId}" failed injecting ${which}: ${detail}`);
+
+    try {
+      await session.openSession();
+      const preludeChunks = [
+        ...this.sharedLuaChunks,
+        ...(def.injectLuaChunks ?? []),
+        ...(injectLuaChunks ?? []),
+      ];
+      for (const [index, chunk] of preludeChunks.entries()) {
+        const injected = await session.runChunk(chunk);
+        if (injected._tag !== 'ok') {
+          throw new Error(formatRunError(instanceId, `prelude [${index}]`, injected));
+        }
       }
-    }
-    const loaded = await session.runChunk(script);
-    if (loaded._tag !== 'ok') {
+
+      const source = await resolveLuaScriptSource(def.source);
+      const loaded = await session.runChunk(source);
+      if (loaded._tag !== 'ok') {
+        throw new Error(formatRunError(instanceId, 'main chunk', loaded));
+      }
+
+      const mergedProps = mergeScriptPropertyBags(def.defaultProps ?? {}, args.props ?? {});
+      await session.setProps(mergedProps);
+      const initResult = await session.invokeComponentHook('init');
+      if (initResult._tag !== 'ok') {
+        throw new Error(formatRunError(instanceId, 'init hook', initResult));
+      }
+
+      this.instances.set(instanceId, { session });
+      this.onScriptAudit?.({ kind: 'mounted', context: scriptContext });
+    } catch (e) {
       await session.dispose();
-      const detail =
-        loaded._tag === 'err' && loaded.error._tag === 'AdapterError'
-          ? loaded.error.message
-          : JSON.stringify(loaded.error);
-      throw new Error(`script "${scriptId}" failed to load: ${detail}`);
+      const message = e instanceof Error ? e.message : String(e);
+      this.onScriptAudit?.({
+        kind: 'scriptError',
+        context: scriptContext,
+        phase: 'mount',
+        message,
+      });
+      throw e;
     }
-    this.sessions.set(scriptId, session);
   };
 
-  /** Invokes `on{Kind}` on every registered script with the same payload table (Lua literals only). */
-  readonly emitToAllScripts = (async (
+  readonly unmountScriptInstance = async (instanceId: string): Promise<void> => {
+    const mounted = this.instances.get(instanceId);
+    if (mounted === undefined) {
+      throw new Error(`script instance not mounted: ${instanceId}`);
+    }
+    const ctx = mounted.session.context;
+    await mounted.session.dispose();
+    this.instances.delete(instanceId);
+    this.onScriptAudit?.({ kind: 'unmounted', context: ctx });
+  };
+
+  readonly setInstanceProps = async (instanceId: string, bag: ScriptPropertyBag): Promise<void> => {
+    const session = this.requireInstance(instanceId);
+    await session.setProps(bag);
+  };
+
+  readonly patchInstanceProps = async (
+    instanceId: string,
+    partial: ScriptPropertyBag,
+  ): Promise<void> => {
+    const session = this.requireInstance(instanceId);
+    await session.patchProps(partial);
+  };
+
+  readonly getInstanceProps = (instanceId: string): Readonly<ScriptPropertyBag> => {
+    return this.requireInstance(instanceId).getProps();
+  };
+
+  readonly flushInstanceProps = async (instanceId: string): Promise<ScriptPropertyBag | null> => {
+    return this.requireInstance(instanceId).flushDirtyProps();
+  };
+
+  readonly getInstance = (instanceId: string): HostScriptSession<THost, THooks> | undefined => {
+    return this.instances.get(instanceId)?.session as HostScriptSession<THost, THooks> | undefined;
+  };
+
+  readonly emitToAllInstances = (async (
     kind: string,
     payload: Readonly<Record<string, string | number | boolean>>,
   ) => {
     const hook = luaGlobalHookName(kind);
-    for (const [id, session] of this.sessions) {
-      const r = await session.invokeGlobalHookIfPresent(hook, payload);
+    for (const [id, { session }] of this.instances) {
+      const r = await session.invokeComponentEventHook(hook, payload);
       if (r._tag !== 'ok') {
         const detail =
           r._tag === 'err' && r.error._tag === 'AdapterError' ? r.error.message : JSON.stringify(r.error);
-        throw new Error(`script "${id}" failed on emit: ${detail}`);
+        throw new Error(`instance "${id}" failed on emit: ${detail}`);
       }
     }
-  }) as EmitToAllScriptsFn<THooks>;
+  }) as EmitToAllInstancesFn<THooks>;
 
   readonly dispose = async (): Promise<void> => {
-    for (const s of this.sessions.values()) {
-      await s.dispose();
+    for (const id of [...this.instances.keys()]) {
+      await this.unmountScriptInstance(id);
     }
-    this.sessions.clear();
+    this.instances.clear();
   };
+
+  private requireInstance(instanceId: string): HostScriptSession<THost, THooks> {
+    const mounted = this.instances.get(instanceId);
+    if (mounted === undefined) {
+      throw new Error(`script instance not mounted: ${instanceId}`);
+    }
+    return mounted.session as HostScriptSession<THost, THooks>;
+  }
 }
 
-/**
- * Creates a {@link LuaMicroverse} with a **built-in** Wasm Lua VM (Wasmoon). Type `host` with
- * {@link TaggedLuaMicroverseHost} so hook emits narrow correctly.
- */
+function formatRunError(
+  instanceId: string,
+  phase: string,
+  result: { _tag: string; error?: { _tag?: string; message?: string } },
+): string {
+  const detail =
+    result._tag === 'err' && result.error?._tag === 'AdapterError'
+      ? result.error.message
+      : JSON.stringify(result.error);
+  return `instance "${instanceId}" failed ${phase}: ${detail}`;
+}
+
 export function createLuaMicroverse<
   THost extends object,
   const TSurface extends HostSurfaceCore<CapabilityId>,
@@ -225,6 +322,7 @@ export function createLuaMicroverse<
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   readonly defaultTimeoutMs?: number | undefined;
   readonly sharedLuaChunks?: readonly string[] | undefined;
+  readonly onScriptAudit?: ((event: ScriptAuditEvent) => void) | undefined;
 }): LuaMicroverse<THost, EffectiveScriptHooks<THost, TSurface>, InferSurfaceCapabilitiesFromSurface<TSurface>> {
   type H = EffectiveScriptHooks<THost, TSurface>;
   type C = InferSurfaceCapabilitiesFromSurface<TSurface>;
@@ -235,5 +333,6 @@ export function createLuaMicroverse<
     defaultTimeout: config.defaultTimeout,
     defaultTimeoutMs: config.defaultTimeoutMs,
     sharedLuaChunks: config.sharedLuaChunks,
+    onScriptAudit: config.onScriptAudit,
   });
 }

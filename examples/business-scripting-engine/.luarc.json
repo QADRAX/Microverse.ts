@@ -3,14 +3,5 @@
   "runtime.version": "LuaJIT",
   "workspace.checkThirdParty": false,
   "workspace.library": ["./generated"],
-  "diagnostics.globals": [
-    "orders",
-    "billing",
-    "notifications",
-    "audit",
-    "inventory",
-    "jobs",
-    "asyncio",
-    "workflow"
-  ]
+  "diagnostics.globals": ["component"]
 }

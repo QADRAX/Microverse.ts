@@ -1,6 +1,6 @@
-import { loadLuaDefinitionsDocumentFromManifestFile } from '../application/useCases/loadLuaDefinitionsDocumentFromManifestFile.js';
+import { loadLuaDefinitionsDocumentFromManifestFile } from '../application/useCases/loadLuaDefinitionsDocumentFromManifestFile';
 
-import { createDefaultLuaDefinitionsFromManifestFilePorts } from './defaultLuaDefinitionsPorts.js';
+import { createDefaultLuaDefinitionsFromManifestFilePorts } from './defaultLuaDefinitionsPorts';
 
 export type LoadLuaDefinitionsFromManifestFileOptions = {
   readonly cwd: string;

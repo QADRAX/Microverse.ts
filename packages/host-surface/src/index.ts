@@ -6,7 +6,7 @@
  */
 export {
   buildBridgeMergeEnvForHost,
-} from './infrastructure/builders/bridgeMergeEnv.js';
+} from './infrastructure/builders/bridgeMergeEnv';
 export {
   BridgeBuilder,
   defineHostSurface,
@@ -19,26 +19,34 @@ export {
   type HostSurfaceMethodEntry,
   type HostSurfaceSpec,
   type HostSurfaceSpecForHost,
-  type HostWorkflowHooksSpec,
+  type HostComponentHooksSpec,
   type LuaDefManifestGeneratorOpts,
   type SurfaceMethodDef,
-} from './infrastructure/builders/defineHostSurfaceFacade.js';
+} from './infrastructure/builders/defineHostSurfaceFacade';
 export {
   compileHostSurface,
   compileHostSurfaceFor,
-} from './application/useCases/compileHostSurface.js';
-export { createBridgeDeclarationsFromHostSurfaceSpec } from './application/useCases/compileBridgeDeclarationsFromHostSurfaceSpec.js';
-export type { SchemaValidationPort } from './application/ports/SchemaValidationPort.js';
+} from './application/useCases/compileHostSurface';
+export { createBridgeDeclarationsFromHostSurfaceSpec } from './application/useCases/compileBridgeDeclarationsFromHostSurfaceSpec';
+export type { SchemaValidationPort } from './application/ports/SchemaValidationPort';
 export {
   HostScriptSession,
   type HostScriptSessionOptions,
-  type WorkflowHookInvokeArgs,
-} from './infrastructure/components/hostScriptSession.js';
-export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook.js';
-export { luaType } from './domain/zodLuaType.js';
-export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef.js';
-export { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from './domain/capabilityRegistrySymbol.js';
-export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry.js';
-export type { InferSurfaceCapabilities } from './domain/surfaceCapabilities.js';
-export type { SurfaceCapabilityString } from './domain/surfaceCapabilityString.js';
-export { collectCapabilitiesFromHostSurfaceSpec, pickSurfaceCapabilities } from './domain/surfaceCapabilities.js';
+  type ComponentEventHookInvokeArgs,
+} from './infrastructure/components/hostScriptSession';
+export { luaGlobalHookName, type LuaGlobalHookName } from './domain/luaGlobalHook';
+export { luaType } from './domain/zodLuaType';
+export { zodToLuaTypeRef, type ZodToLuaTypeRefOptions } from './domain/zodToLuaTypeRef';
+export { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from './domain/capabilityRegistrySymbol';
+export { augmentHostWithCapabilityRegistry } from './infrastructure/adapters/augmentHostWithCapabilityRegistry';
+export { augmentHostWithScriptContext } from './infrastructure/adapters/augmentHostWithScriptContext';
+export { MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE } from './domain/componentSlotPrelude';
+export {
+  mergeEnvSinkToScriptPropertyBag,
+  scriptPropertyBagToMergeEnv,
+  scriptPropertyValueToPlain,
+} from './domain/scriptPropertyMergeEnv';
+export { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from './domain/scriptContextSymbol';
+export type { InferSurfaceCapabilities } from './domain/surfaceCapabilities';
+export type { SurfaceCapabilityString } from './domain/surfaceCapabilityString';
+export { collectCapabilitiesFromHostSurfaceSpec, pickSurfaceCapabilities } from './domain/surfaceCapabilities';

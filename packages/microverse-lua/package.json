@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
-  "description": "Plug-and-play Lua microverse facade: Wasm VM, MicroverseLua, and re-exports for host surfaces and bridges.",
+  "description": "Main entry for Microverse Lua: MicroverseLua.create (Wasm sandbox, mounts, events) and defineHostSurfaceFor—re-exports the stack.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QADRAX/Microverse.ts.git",

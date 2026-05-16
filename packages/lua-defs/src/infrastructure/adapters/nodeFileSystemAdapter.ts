@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
-import type { FileSystemPort } from '../../application/ports/FileSystemPort.js';
+import type { FileSystemPort } from '../../application/ports/FileSystemPort';
 
 export function createNodeFileSystemPort(): FileSystemPort {
   return {
