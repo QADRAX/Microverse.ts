@@ -1,6 +1,6 @@
 {
   "name": "@microverse.ts/lua-defs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "license": "MIT",
   "description": "Generate LuaCATS (.d.lua) stubs for LuaLS from a LuaDefManifest—the IDE contract aligned with your host surface.",

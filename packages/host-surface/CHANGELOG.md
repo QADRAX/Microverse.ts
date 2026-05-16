@@ -1,5 +1,18 @@
 # @microverse/host-surface
 
+## 0.2.0
+
+### Patch Changes
+
+- 19c44a7: class base components
+- Updated dependencies [19c44a7]
+  - @microverse.ts/runtime-bridge@0.2.0
+  - @microverse.ts/runtime-capabilities@0.2.0
+  - @microverse.ts/runtime-core@0.2.0
+  - @microverse.ts/runtime-zod@0.2.0
+  - @microverse.ts/lua-defs@0.2.0
+  - @microverse.ts/shared@0.2.0
+
 ## Unreleased
 
 ### Minor Changes

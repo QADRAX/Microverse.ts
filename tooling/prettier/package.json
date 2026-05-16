@@ -1,8 +1,10 @@
 {
   "name": "@microverse.ts/prettier-config",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "main": "index.js",
-  "files": ["index.js"]
+  "files": [
+    "index.js"
+  ]
 }
