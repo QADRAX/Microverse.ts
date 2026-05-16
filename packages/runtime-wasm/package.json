@@ -1,5 +1,5 @@
 {
-  "name": "@microverse/runtime-wasm",
+  "name": "@microverse.ts/runtime-wasm",
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
@@ -31,9 +31,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/runtime-core": "workspace:*",
-    "@microverse/runtime-lua": "workspace:*",
-    "@microverse/shared": "workspace:*",
+    "@microverse.ts/runtime-core": "workspace:*",
+    "@microverse.ts/runtime-lua": "workspace:*",
+    "@microverse.ts/shared": "workspace:*",
     "wasmoon": "^1.15.0"
   },
   "devDependencies": {

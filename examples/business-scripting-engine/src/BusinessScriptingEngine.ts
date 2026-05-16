@@ -1,4 +1,4 @@
-import { MicroverseLua, type LuaMicroverse, type TimeoutPolicy } from '@microverse/microverse-lua';
+import { MicroverseLua, type LuaMicroverse, type TimeoutPolicy } from '@microverse.ts/microverse-lua';
 
 import surface from './businessSurface.js';
 import type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js';
@@ -12,7 +12,7 @@ export type { BusinessDomainEvent } from './domain/events/businessDomainEvent.js
 export type BusinessSurfaceCapabilities = (typeof surface.capabilities)[number];
 
 export type BusinessScriptingEngineOptions = {
-  /** Per-chunk wall-clock limit in milliseconds (default 30_000). Combine with Wasm instruction budget in `@microverse/runtime-wasm`. */
+  /** Per-chunk wall-clock limit in milliseconds (default 30_000). Combine with Wasm instruction budget in `@microverse.ts/runtime-wasm`. */
   readonly defaultTimeoutMs?: number | undefined;
   /** Advanced: custom timeout policy (overrides `defaultTimeoutMs` when set). */
   readonly defaultTimeout?: TimeoutPolicy | undefined;

@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/host-surface/*": ["./src/*"]
+      "@microverse.ts/host-surface/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

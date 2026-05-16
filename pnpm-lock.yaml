@@ -24,10 +24,10 @@ importers:
       '@eslint/js':
         specifier: ^9.27.0
         version: 9.39.4
-      '@microverse/eslint-config':
+      '@microverse.ts/eslint-config':
         specifier: workspace:*
         version: link:tooling/eslint
-      '@microverse/prettier-config':
+      '@microverse.ts/prettier-config':
         specifier: workspace:*
         version: link:tooling/prettier
       eslint:
@@ -66,14 +66,14 @@ importers:
 
   examples/business-scripting-engine:
     dependencies:
-      '@microverse/microverse-lua':
+      '@microverse.ts/microverse-lua':
         specifier: workspace:*
         version: link:../../packages/microverse-lua
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
-      '@microverse/cli':
+      '@microverse.ts/cli':
         specifier: workspace:*
         version: link:../../packages/cli
       typescript:
@@ -85,7 +85,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@microverse/lua-defs':
+      '@microverse.ts/lua-defs':
         specifier: workspace:*
         version: link:../lua-defs
       tsx:
@@ -101,22 +101,22 @@ importers:
 
   packages/host-surface:
     dependencies:
-      '@microverse/lua-defs':
+      '@microverse.ts/lua-defs':
         specifier: workspace:*
         version: link:../lua-defs
-      '@microverse/runtime-bridge':
+      '@microverse.ts/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@microverse/runtime-capabilities':
+      '@microverse.ts/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@microverse/runtime-core':
+      '@microverse.ts/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@microverse/runtime-zod':
+      '@microverse.ts/runtime-zod':
         specifier: workspace:*
         version: link:../runtime-zod
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -138,7 +138,7 @@ importers:
 
   packages/lua-defs:
     dependencies:
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -154,28 +154,28 @@ importers:
 
   packages/microverse-lua:
     dependencies:
-      '@microverse/host-surface':
+      '@microverse.ts/host-surface':
         specifier: workspace:*
         version: link:../host-surface
-      '@microverse/runtime-bridge':
+      '@microverse.ts/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@microverse/runtime-capabilities':
+      '@microverse.ts/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@microverse/runtime-core':
+      '@microverse.ts/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@microverse/runtime-lua':
+      '@microverse.ts/runtime-lua':
         specifier: workspace:*
         version: link:../runtime-lua
-      '@microverse/runtime-wasm':
+      '@microverse.ts/runtime-wasm':
         specifier: workspace:*
         version: link:../runtime-wasm
-      '@microverse/runtime-zod':
+      '@microverse.ts/runtime-zod':
         specifier: workspace:*
         version: link:../runtime-zod
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -197,13 +197,13 @@ importers:
 
   packages/runtime-bridge:
     dependencies:
-      '@microverse/runtime-capabilities':
+      '@microverse.ts/runtime-capabilities':
         specifier: workspace:*
         version: link:../runtime-capabilities
-      '@microverse/runtime-core':
+      '@microverse.ts/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -222,7 +222,7 @@ importers:
 
   packages/runtime-capabilities:
     dependencies:
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -241,7 +241,7 @@ importers:
 
   packages/runtime-core:
     dependencies:
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -260,7 +260,7 @@ importers:
 
   packages/runtime-lua:
     dependencies:
-      '@microverse/runtime-core':
+      '@microverse.ts/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
     devDependencies:
@@ -279,13 +279,13 @@ importers:
 
   packages/runtime-wasm:
     dependencies:
-      '@microverse/runtime-core':
+      '@microverse.ts/runtime-core':
         specifier: workspace:*
         version: link:../runtime-core
-      '@microverse/runtime-lua':
+      '@microverse.ts/runtime-lua':
         specifier: workspace:*
         version: link:../runtime-lua
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
       wasmoon:
@@ -307,10 +307,10 @@ importers:
 
   packages/runtime-zod:
     dependencies:
-      '@microverse/runtime-bridge':
+      '@microverse.ts/runtime-bridge':
         specifier: workspace:*
         version: link:../runtime-bridge
-      '@microverse/shared':
+      '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:

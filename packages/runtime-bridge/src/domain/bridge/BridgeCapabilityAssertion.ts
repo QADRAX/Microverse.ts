@@ -1,4 +1,4 @@
-import type { CapabilityId } from '@microverse/runtime-capabilities';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
 export type BridgeCapabilityAssertion = {
   readonly assertAllowed: (id: CapabilityId) => Promise<void>;

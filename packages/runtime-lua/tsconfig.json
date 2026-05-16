@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/runtime-lua/*": ["./src/*"]
+      "@microverse.ts/runtime-lua/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

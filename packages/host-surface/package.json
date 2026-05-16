@@ -1,5 +1,5 @@
 {
-  "name": "@microverse/host-surface",
+  "name": "@microverse.ts/host-surface",
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
@@ -32,12 +32,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/lua-defs": "workspace:*",
-    "@microverse/runtime-bridge": "workspace:*",
-    "@microverse/runtime-capabilities": "workspace:*",
-    "@microverse/runtime-core": "workspace:*",
-    "@microverse/runtime-zod": "workspace:*",
-    "@microverse/shared": "workspace:*",
+    "@microverse.ts/lua-defs": "workspace:*",
+    "@microverse.ts/runtime-bridge": "workspace:*",
+    "@microverse.ts/runtime-capabilities": "workspace:*",
+    "@microverse.ts/runtime-core": "workspace:*",
+    "@microverse.ts/runtime-zod": "workspace:*",
+    "@microverse.ts/shared": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

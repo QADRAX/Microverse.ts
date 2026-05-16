@@ -1,5 +1,5 @@
-import type { AsyncUseCase } from '@microverse/shared';
-import { err, ok, type Result } from '@microverse/shared';
+import type { AsyncUseCase } from '@microverse.ts/shared';
+import { err, ok, type Result } from '@microverse.ts/shared';
 
 import type { CapabilityRegistryPort } from '../ports/CapabilityRegistryPort';
 import type { CapabilityId } from '../../domain/capabilities/CapabilityId';

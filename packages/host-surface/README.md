@@ -1,18 +1,18 @@
-# `@microverse/host-surface`
+# `@microverse.ts/host-surface`
 
 Declare a **host surface** in TypeScript: Zod schemas, capabilities, and handlers that compile into:
 
 1. **Runtime bridge tables** for `mergeEnv` (what Lua calls at execution time).
-2. A **`LuaDefManifest`** for `@microverse/lua-defs` (`.d.lua` stubs for LuaLS).
+2. A **`LuaDefManifest`** for `@microverse.ts/lua-defs` (`.d.lua` stubs for LuaLS).
 
-Most applications import **`defineHostSurfaceFor`** from **`@microverse/microverse-lua`** instead of this package directly. Use `@microverse/host-surface` when you need `HostScriptSession` or custom runtime wiring.
+Most applications import **`defineHostSurfaceFor`** from **`@microverse.ts/microverse-lua`** instead of this package directly. Use `@microverse.ts/host-surface` when you need `HostScriptSession` or custom runtime wiring.
 
-Monorepo overview: [root README](../../README.md). Lua microverse lifecycle: [`@microverse/microverse-lua`](../microverse-lua/README.md).
+Monorepo overview: [root README](../../README.md). Lua microverse lifecycle: [`@microverse.ts/microverse-lua`](../microverse-lua/README.md).
 
 ## Defining a surface
 
 ```ts
-import { defineHostSurfaceFor } from '@microverse/microverse-lua';
+import { defineHostSurfaceFor } from '@microverse.ts/microverse-lua';
 import { z } from 'zod';
 
 export default defineHostSurfaceFor<MyHost>()
@@ -68,7 +68,7 @@ await session.openSession();
 await session.runChunk(luaSource);
 ```
 
-`MicroverseLua` in `@microverse/microverse-lua` wraps this for the common case (shared VM, `registerScript`, broadcast hooks).
+`MicroverseLua` in `@microverse.ts/microverse-lua` wraps this for the common case (shared VM, `registerScript`, broadcast hooks).
 
 ## Generating `.d.lua`
 
@@ -76,7 +76,7 @@ await session.runChunk(luaSource);
 microverse generate-lua-defs --surface src/mySurface.ts
 ```
 
-Requires `export default` of the compiled surface (`.build()` result). See [`@microverse/cli`](../cli/README.md) and [`@microverse/lua-defs`](../lua-defs/README.md).
+Requires `export default` of the compiled surface (`.build()` result). See [`@microverse.ts/cli`](../cli/README.md) and [`@microverse.ts/lua-defs`](../lua-defs/README.md).
 
 Optional **Lua type names** on Zod schemas (`luaType('OrderDto', z.object({ … }))`) improve stub names—see `examples/business-scripting-engine/src/schemas/surface/bridgePayloads.ts`.
 

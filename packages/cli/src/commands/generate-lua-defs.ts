@@ -5,7 +5,7 @@ import {
   generateDefs,
   writeLuaDefinitionsFromManifest,
   type LuaDefManifest,
-} from '@microverse/lua-defs';
+} from '@microverse.ts/lua-defs';
 
 export const GENERATE_LUA_DEFS_COMMAND = 'generate-lua-defs' as const;
 

@@ -1,3 +1,3 @@
-import { microverseEslintConfig } from '@microverse/eslint-config';
+import { microverseEslintConfig } from '@microverse.ts/eslint-config';
 
 export default microverseEslintConfig;

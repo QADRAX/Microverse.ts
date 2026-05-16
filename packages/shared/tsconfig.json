@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@microverse/shared/*": ["./src/*"]
+      "@microverse.ts/shared/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

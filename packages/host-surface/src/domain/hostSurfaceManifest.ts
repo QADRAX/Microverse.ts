@@ -5,7 +5,7 @@ import type {
   ManifestClassField,
   ManifestMethod,
   ManifestParam,
-} from '@microverse/lua-defs';
+} from '@microverse.ts/lua-defs';
 import { z } from 'zod';
 
 import type { HostSurfaceSpec, HostWorkflowHooksSpec } from './hostSurfaceTypes.js';

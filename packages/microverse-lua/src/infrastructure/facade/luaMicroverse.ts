@@ -6,15 +6,15 @@ import {
   type HostSurface,
   type HostSurfaceCore,
   type HostWorkflowHooksSpec,
-} from '@microverse/host-surface';
-import type { CapabilityId } from '@microverse/runtime-capabilities';
+} from '@microverse.ts/host-surface';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   createLuaEnvSlotKey,
   fixedTimeout,
   type MicroverseRuntime,
   type TimeoutPolicy,
-} from '@microverse/runtime-core';
-import { createWasmMicroverseRuntime } from '@microverse/runtime-wasm';
+} from '@microverse.ts/runtime-core';
+import { createWasmMicroverseRuntime } from '@microverse.ts/runtime-wasm';
 
 /** Phantom key: optional on the host **type** so {@link InferScriptHooksFromHost} can recover hook Zod map typing. Never set at runtime. */
 declare const SCRIPT_HOOKS_TYPE: unique symbol;

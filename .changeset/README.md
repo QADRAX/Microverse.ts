@@ -1,6 +1,6 @@
 # Changesets
 
-This monorepo uses [Changesets](https://github.com/changesets/changesets) to version and publish the `@microverse/*` packages that ship with `@microverse/microverse-lua`.
+This monorepo uses [Changesets](https://github.com/changesets/changesets) to version and publish the `@microverse.ts/*` packages that ship with `@microverse.ts/microverse-lua`.
 
 When you change publishable packages, run:
 

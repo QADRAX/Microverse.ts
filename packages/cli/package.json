@@ -1,5 +1,5 @@
 {
-  "name": "@microverse/cli",
+  "name": "@microverse.ts/cli",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/lua-defs": "workspace:*",
+    "@microverse.ts/lua-defs": "workspace:*",
     "tsx": "^4.19.4"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 {
-  "name": "@microverse/runtime-bridge",
+  "name": "@microverse.ts/runtime-bridge",
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
@@ -31,9 +31,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse/runtime-capabilities": "workspace:*",
-    "@microverse/runtime-core": "workspace:*",
-    "@microverse/shared": "workspace:*"
+    "@microverse.ts/runtime-capabilities": "workspace:*",
+    "@microverse.ts/runtime-core": "workspace:*",
+    "@microverse.ts/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -1,5 +1,5 @@
 {
-  "name": "@microverse/tsconfig",
+  "name": "@microverse.ts/tsconfig",
   "private": true,
   "version": "0.0.0",
   "files": ["*.json"]

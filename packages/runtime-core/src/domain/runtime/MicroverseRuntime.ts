@@ -1,4 +1,4 @@
-import type { Result } from '@microverse/shared';
+import type { Result } from '@microverse.ts/shared';
 
 import type { MicroverseId } from '../microverse/MicroverseId';
 import type { ExecutionFailure } from './ExecutionFailure';
@@ -22,7 +22,7 @@ export type MicroverseSlot = {
 };
 
 /**
- * One runtime owns **one** Wasmoon/Lua VM (when using `@microverse/runtime-wasm`).
+ * One runtime owns **one** Wasmoon/Lua VM (when using `@microverse.ts/runtime-wasm`).
  * Call {@link MicroverseRuntime.createMicroverse} multiple times to register **many slots** in that VM.
  */
 export type MicroverseRuntime = {

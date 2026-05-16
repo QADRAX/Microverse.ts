@@ -1,4 +1,4 @@
-import { createAllowlist, createCapabilityId, InMemoryCapabilityRegistry } from '@microverse/runtime-capabilities';
+import { createAllowlist, createCapabilityId, InMemoryCapabilityRegistry } from '@microverse.ts/runtime-capabilities';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

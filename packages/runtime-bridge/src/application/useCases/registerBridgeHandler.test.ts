@@ -4,7 +4,7 @@ import {
   createAllowlist,
   createCapabilityId,
   InMemoryCapabilityRegistry,
-} from '@microverse/runtime-capabilities';
+} from '@microverse.ts/runtime-capabilities';
 
 import { registerBridgeHandler } from './registerBridgeHandler';
 import { createBridgeChannelId } from '../../domain/bridge/BridgeChannelId';

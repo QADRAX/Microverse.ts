@@ -1,5 +1,5 @@
 /**
- * **@microverse/microverse-lua** — Lua microverse entry for consuming applications.
+ * **@microverse.ts/microverse-lua** — Lua microverse entry for consuming applications.
  *
  * Plug-and-play Lua scripting: **{@link MicroverseLua.create}** (built-in Wasm VM) and the fluent
  * **{@link defineHostSurfaceFor}** builder (`bridge` → `method` → `build`).
@@ -39,14 +39,14 @@ export {
   type WithMicroverseCapabilityRegistry,
   type WorkflowHookInvokeArgs,
   type ZodToLuaTypeRefOptions,
-} from '@microverse/host-surface';
-export * from '@microverse/shared';
-export * from '@microverse/runtime-core';
-export * from '@microverse/runtime-lua';
-export * from '@microverse/runtime-wasm';
-export * from '@microverse/runtime-bridge';
-export * from '@microverse/runtime-capabilities';
-export * from '@microverse/runtime-zod';
+} from '@microverse.ts/host-surface';
+export * from '@microverse.ts/shared';
+export * from '@microverse.ts/runtime-core';
+export * from '@microverse.ts/runtime-lua';
+export * from '@microverse.ts/runtime-wasm';
+export * from '@microverse.ts/runtime-bridge';
+export * from '@microverse.ts/runtime-capabilities';
+export * from '@microverse.ts/runtime-zod';
 
 export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace.js';
 export {

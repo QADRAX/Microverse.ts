@@ -7,7 +7,7 @@
     "moduleResolution": "NodeNext",
     "types": ["node"],
     "paths": {
-      "@microverse/lua-defs/*": ["./src/*"]
+      "@microverse.ts/lua-defs/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"]

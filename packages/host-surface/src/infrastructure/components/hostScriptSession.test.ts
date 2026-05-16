@@ -1,10 +1,10 @@
-import type { CapabilityId } from '@microverse/runtime-capabilities';
+import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
   createStubMicroverseRuntime,
   StubRuntimeAdapter,
-} from '@microverse/runtime-core';
+} from '@microverse.ts/runtime-core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

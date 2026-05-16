@@ -1,13 +1,13 @@
-# `@microverse/cli`
+# `@microverse.ts/cli`
 
 CLI for **build-time** tasks in Microverse consumer projects. Commands are grouped by runtime (Lua today; other microverse types can add their own subcommands later).
 
-Generation logic for Lua stubs lives in **`@microverse/lua-defs`** — use that package from TypeScript plugins or scripts when you do not need the binary.
+Generation logic for Lua stubs lives in **`@microverse.ts/lua-defs`** — use that package from TypeScript plugins or scripts when you do not need the binary.
 
 ## Installation
 
 ```bash
-pnpm add -D @microverse/cli
+pnpm add -D @microverse.ts/cli
 ```
 
 The binary is `microverse` (`pnpm exec microverse`, or `npx microverse` when published).
@@ -47,7 +47,7 @@ microverse generate-lua-defs --surface src/mySurface.ts [--out <path>] [--header
 microverse generate-lua-defs --manifest ./lua/microverse.def.json [--out <path>]
 ```
 
-Hand-authored or CI-exported `LuaDefManifest` — see [`@microverse/lua-defs`](../lua-defs/README.md).
+Hand-authored or CI-exported `LuaDefManifest` — see [`@microverse.ts/lua-defs`](../lua-defs/README.md).
 
 ### `package.json` script
 
@@ -62,7 +62,7 @@ Hand-authored or CI-exported `LuaDefManifest` — see [`@microverse/lua-defs`](.
 ### Programmatic (no CLI)
 
 ```ts
-import { generateDefs } from '@microverse/lua-defs';
+import { generateDefs } from '@microverse.ts/lua-defs';
 
 await generateDefs({ cwd: process.cwd(), manifestPath: './lua/microverse.def.json' });
 ```

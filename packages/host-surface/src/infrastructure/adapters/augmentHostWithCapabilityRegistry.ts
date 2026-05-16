@@ -1,4 +1,4 @@
-import type { CapabilityRegistryPort } from '@microverse/runtime-capabilities';
+import type { CapabilityRegistryPort } from '@microverse.ts/runtime-capabilities';
 
 import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol.js';
 
@@ -7,7 +7,7 @@ import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry }
  * Bridge handlers read the registry to enforce per-session capability allowlists.
  *
  * @param host - Your engine / service context passed into `buildDeclarativeBridgeTable`.
- * @param registry - Typically an {@link InMemoryCapabilityRegistry} from `@microverse/runtime-capabilities`.
+ * @param registry - Typically an {@link InMemoryCapabilityRegistry} from `@microverse.ts/runtime-capabilities`.
  */
 export function augmentHostWithCapabilityRegistry<THost>(
   host: THost,

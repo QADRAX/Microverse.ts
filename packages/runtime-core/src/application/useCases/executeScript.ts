@@ -1,5 +1,5 @@
-import type { AsyncUseCase } from '@microverse/shared';
-import { err, type Result } from '@microverse/shared';
+import type { AsyncUseCase } from '@microverse.ts/shared';
+import { err, type Result } from '@microverse.ts/shared';
 
 import type { LoggerPort } from '../ports/LoggerPort';
 import type { RuntimeAdapterPort } from '../ports/RuntimeAdapterPort';

@@ -1,4 +1,4 @@
-import type { Result } from '@microverse/shared';
+import type { Result } from '@microverse.ts/shared';
 
 import { registerBridgeHandler } from '../../application/useCases/registerBridgeHandler';
 import type { BridgeCapabilityAssertion } from '../../domain/bridge/BridgeCapabilityAssertion';
