@@ -3,8 +3,10 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname);
 const nodeEmpty = resolve(root, 'src/shims/node-empty.ts');
+const base = process.env.VITE_BASE ?? '/';
 
 export default defineConfig({
+  base,
   root,
   server: { open: true },
   optimizeDeps: {
