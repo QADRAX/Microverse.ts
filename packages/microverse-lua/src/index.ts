@@ -7,7 +7,7 @@
 export {
   augmentHostWithCapabilityRegistry,
   BridgeBuilder,
-  buildBridgeMergeEnvForHost,
+  buildBridgeMergeEnvForProfile,
   collectCapabilitiesFromHostSurfaceSpec,
   compileHostSurface,
   compileHostSurfaceFor,
@@ -39,9 +39,20 @@ export {
   type WithMicroverseCapabilityRegistry,
   type ComponentEventHookInvokeArgs,
   type ZodToLuaTypeRefOptions,
+  buildScriptCatalogLuaDefManifest,
+  scriptCatalogComponentAlias,
 } from '@microverse.ts/host-surface';
 export * from '@microverse.ts/shared';
 export * from '@microverse.ts/runtime-core';
+/** Commonly used script/catalog types (also available via `export *` from runtime-core). */
+export type {
+  LuaScriptDefinition,
+  LuaScriptSource,
+  ScriptInstanceContext,
+  ScriptInstanceId,
+  ScriptProfileDefInput,
+} from '@microverse.ts/runtime-core';
+export { formatExecutionFailure } from '@microverse.ts/runtime-core';
 export * from '@microverse.ts/runtime-lua';
 export * from '@microverse.ts/runtime-wasm';
 export * from '@microverse.ts/runtime-bridge';

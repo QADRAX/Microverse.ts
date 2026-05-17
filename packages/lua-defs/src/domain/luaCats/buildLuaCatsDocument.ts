@@ -138,7 +138,11 @@ function emitClass(c: ManifestClass): string {
   if (c.description !== undefined && c.description.length > 0) {
     parts.push(`---${escComment(c.description)}`);
   }
-  parts.push(`---@class ${c.name}`);
+  parts.push(
+    c.extendsClass !== undefined && c.extendsClass.length > 0
+      ? `---@class ${c.name} : ${c.extendsClass}`
+      : `---@class ${c.name}`,
+  );
   for (const f of c.fields ?? []) {
     const d = f.description !== undefined && f.description.length > 0 ? ` ${escComment(f.description)}` : '';
     parts.push(`---@field ${f.name} ${f.luaType}${d}`);

@@ -1,8 +1,3 @@
-import {
-  createAllowlist,
-  type CapabilityId,
-  InMemoryCapabilityRegistry,
-} from '@microverse.ts/runtime-capabilities';
 import type { Result } from '@microverse.ts/shared';
 import type { z } from 'zod';
 import {
@@ -12,29 +7,41 @@ import {
   createMicroverseScript,
   diffScriptProperties,
   type ExecutionFailure,
-  type MutableScriptPropertyBag,
   type RunScriptResult,
   type MicroverseSlot,
   type MicroverseId,
   type MicroverseRuntime,
   type ScriptAuditEvent,
   type ScriptInstanceContext,
+  type MutableScriptPropertyBag,
   type ScriptPropertyBag,
   type ScriptPropertyValue,
   type TimeoutPolicy,
 } from '@microverse.ts/runtime-core';
 
-import { MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE } from '../../domain/componentSlotPrelude';
+import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
+import { createZodSchemaValidationPort } from '../adapters/zodSchemaValidationAdapter';
+import type { ScriptReferenceFieldDef } from '@microverse.ts/runtime-core';
+import type { ScriptReferenceResolverPort } from '../../application/ports/ScriptReferenceResolverPort';
+import {
+  MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE,
+  buildApplyHostScriptProfileChunkLua,
+  buildComponentTypeBridgeNamesPreludeLua,
+  buildComponentTypeSingletonsPreludeLua,
+  profileBridgeSlotKey,
+} from '../../domain/componentSlotPrelude';
+import type { ResolvedScriptProfile } from '../../domain/scriptProfileSpec';
 import {
   plainToScriptPropertyValue,
   scriptPropertyBagToMergeEnv,
 } from '../../domain/scriptPropertyMergeEnv';
-import { augmentHostWithCapabilityRegistry } from '../adapters/augmentHostWithCapabilityRegistry';
 import { augmentHostWithScriptContext } from '../adapters/augmentHostWithScriptContext';
-import { bridgeNamesFromSurface, buildBridgeMergeEnvForHost } from '../builders/bridgeMergeEnv';
+import { buildBridgeMergeEnvForProfile } from '../builders/bridgeMergeEnv';
 import type { HostSurface, HostComponentHooksSpec } from '../../domain/hostSurfaceTypes';
 import type { LuaGlobalHookName } from '../../domain/luaGlobalHook';
 import { luaGlobalHookName } from '../../domain/luaGlobalHook';
+
+const defaultSchemaValidation: SchemaValidationPort = createZodSchemaValidationPort();
 
 export type ComponentEventHookInvokeArgs<TH extends HostComponentHooksSpec> = {
   [K in keyof TH & string]: readonly [hook: LuaGlobalHookName<K>, payload: Readonly<z.infer<TH[K]>>];
@@ -55,11 +62,17 @@ export type HostScriptSessionOptions<
   readonly surface: HostSurface<THooks>;
   readonly host: THost;
   readonly slotKey: MicroverseId;
-  readonly allowedCapabilities: readonly CapabilityId[];
   readonly defaultTimeout?: TimeoutPolicy | undefined;
   readonly script: ScriptInstanceContext;
+  /** Host-selected script profile (surface component type name). Applied at openSession before the main chunk. */
+  readonly profileId?: string | undefined;
+  /** When set, used instead of {@link HostSurfaceCore.getComponentType} (inline catalog profiles). */
+  readonly resolvedProfile?: ResolvedScriptProfile | undefined;
+  /** Lua singleton global for `Type:extend()` (e.g. `SortingAlgorithm`). Defaults to `profileId`. */
+  readonly profileSingleton?: string | undefined;
   readonly enableComponentRuntime?: boolean | undefined;
-  readonly propsSchema?: z.ZodObject<z.ZodRawShape> | undefined;
+  readonly schemaValidation?: SchemaValidationPort | undefined;
+  readonly referenceResolver?: ScriptReferenceResolverPort | undefined;
   readonly onScriptAudit?: ((event: ScriptAuditEvent) => void) | undefined;
 };
 
@@ -71,13 +84,22 @@ export class HostScriptSession<
 
   private readonly hostProps: MutableScriptPropertyBag = {};
 
-  private readonly registry: InMemoryCapabilityRegistry;
+  private readonly schemaValidation: SchemaValidationPort;
+
+  private activeComponentType: string | undefined;
+
+  private hostProfileApplied = false;
 
   readonly context: ScriptInstanceContext;
 
   constructor(private readonly opts: HostScriptSessionOptions<THost, THooks>) {
-    this.registry = new InMemoryCapabilityRegistry(createAllowlist([...opts.allowedCapabilities]));
+    this.schemaValidation = opts.schemaValidation ?? defaultSchemaValidation;
     this.context = opts.script;
+    if (opts.resolvedProfile !== undefined) {
+      this.activeComponentType = opts.resolvedProfile.name;
+    } else if (opts.profileId !== undefined) {
+      this.activeComponentType = opts.profileId;
+    }
   }
 
   readonly openSession = async (): Promise<void> => {
@@ -89,11 +111,33 @@ export class HostScriptSession<
         mergeEnv: this.mergeEnv(),
         timeout: this.opts.defaultTimeout,
       });
-      await sb.run({
-        script: createMicroverseScript(buildBridgeNamesPreludeLua(bridgeNamesFromSurface(this.opts.surface))),
-        mergeEnv: this.mergeEnv(),
-        timeout: this.opts.defaultTimeout,
-      });
+      const activeProfile = this.tryGetActiveProfile();
+      const singletonName = this.profileSingletonName();
+      const typeNames = this.singletonTypeNames();
+      if (typeNames.length > 0) {
+        const bridgeRegistry =
+          activeProfile !== undefined
+            ? { [activeProfile.name]: activeProfile }
+            : this.opts.surface.componentTypes;
+        await sb.run({
+          script: createMicroverseScript(
+            [
+              buildComponentTypeBridgeNamesPreludeLua(bridgeRegistry),
+              buildComponentTypeSingletonsPreludeLua(typeNames),
+            ].join('\n'),
+          ),
+          mergeEnv: this.mergeEnv(),
+          timeout: this.opts.defaultTimeout,
+        });
+        if (singletonName !== undefined) {
+          await sb.run({
+            script: createMicroverseScript(buildApplyHostScriptProfileChunkLua(singletonName)),
+            mergeEnv: this.mergeEnv(),
+            timeout: this.opts.defaultTimeout,
+          });
+          this.hostProfileApplied = true;
+        }
+      }
       const hooks = readComponentHooks(this.opts.surface);
       if (hooks !== undefined) {
         const prelude = buildComponentEventStubPreludeLua(hooks);
@@ -106,8 +150,6 @@ export class HostScriptSession<
     }
   };
 
-  readonly getCapabilityRegistry = (): InMemoryCapabilityRegistry => this.registry;
-
   private requireMicroverseSlot(): MicroverseSlot {
     if (this.sandbox === undefined) {
       throw new Error('HostScriptSession: openSession() was not called');
@@ -115,24 +157,129 @@ export class HostScriptSession<
     return this.sandbox;
   }
 
-  private mergeEnv() {
-    const withCaps = augmentHostWithCapabilityRegistry(this.opts.host, this.registry);
-    const host = augmentHostWithScriptContext(withCaps, this.opts.script);
-    return buildBridgeMergeEnvForHost(host, String(this.opts.slotKey), this.opts.surface);
+  private mergeEnv(): Record<string, unknown> {
+    const host = augmentHostWithScriptContext(this.opts.host, this.opts.script);
+    const spec = this.opts.surface.getHostSurfaceSpec();
+    const env: Record<string, unknown> = {
+      __microverse_lua_extend_component: (typeName: string): void => {
+        if (this.opts.resolvedProfile !== undefined && typeName === this.profileSingletonName()) {
+          this.activeComponentType = this.opts.resolvedProfile.name;
+          return;
+        }
+        this.opts.surface.getComponentType(typeName);
+        this.activeComponentType = typeName;
+      },
+    };
+    const activeProfile = this.tryGetActiveProfile();
+    const typeNames =
+      activeProfile !== undefined
+        ? [activeProfile.name]
+        : Object.keys(this.opts.surface.componentTypes);
+    for (const typeName of typeNames) {
+      const profile =
+        activeProfile !== undefined && typeName === activeProfile.name
+          ? activeProfile
+          : this.opts.surface.getComponentType(typeName);
+      const bridgeTable = buildBridgeMergeEnvForProfile(
+        this.schemaValidation,
+        host,
+        String(this.opts.slotKey),
+        spec,
+        profile.capabilities,
+      );
+      for (const bridgeName of profile.bridgeNames) {
+        env[profileBridgeSlotKey(typeName, bridgeName)] = bridgeTable[bridgeName];
+      }
+    }
+
+    const profileForRefs = this.tryGetActiveProfile();
+    if (profileForRefs?.references !== undefined && this.opts.referenceResolver !== undefined) {
+      const profile = profileForRefs;
+      env.__microverse_reference_wrap = (field: string, raw: unknown) =>
+        this.wrapReference(field, raw, profile);
+    }
+
+    return env;
+  }
+
+  private wrapReference(
+    field: string,
+    raw: unknown,
+    profile: ResolvedScriptProfile,
+  ): unknown {
+    const resolver = this.opts.referenceResolver;
+    const refs = profile.references;
+    if (resolver === undefined || refs === undefined) {
+      return raw;
+    }
+    const def = refs[field];
+    if (def === undefined) {
+      return raw;
+    }
+    const rawId =
+      raw === null || raw === undefined
+        ? null
+        : typeof raw === 'string'
+          ? raw
+          : typeof raw === 'number' || typeof raw === 'boolean'
+            ? String(raw)
+            : null;
+    return resolver.wrap({
+      slotKey: String(this.opts.slotKey),
+      field,
+      raw: rawId,
+      kind: def.kind,
+      componentType: referenceComponentType(def),
+    });
   }
 
   private emitAudit(event: ScriptAuditEvent): void {
     this.opts.onScriptAudit?.(event);
   }
 
-  private validatePropsBag(bag: ScriptPropertyBag): ScriptPropertyBag {
-    if (this.opts.propsSchema !== undefined) {
-      const parsed = this.opts.propsSchema.parse(bag);
-      assertValidScriptPropertyBag(parsed);
-      return parsed;
+  private getActiveProfileName(): string | undefined {
+    return this.activeComponentType ?? this.opts.profileId;
+  }
+
+  private profileSingletonName(): string | undefined {
+    return this.opts.profileSingleton ?? this.opts.profileId ?? this.opts.resolvedProfile?.name;
+  }
+
+  private singletonTypeNames(): string[] {
+    const singleton = this.profileSingletonName();
+    const fromSurface = Object.keys(this.opts.surface.componentTypes);
+    const names = new Set<string>(fromSurface);
+    if (singleton !== undefined) {
+      names.add(singleton);
     }
-    assertValidScriptPropertyBag(bag);
-    return bag;
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }
+
+  private tryGetActiveProfile(): ResolvedScriptProfile | undefined {
+    if (this.opts.resolvedProfile !== undefined) {
+      return this.opts.resolvedProfile;
+    }
+    const name = this.getActiveProfileName();
+    if (name === undefined) {
+      return undefined;
+    }
+    try {
+      return this.opts.surface.getComponentType(name);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private validatePropsBag(bag: ScriptPropertyBag): ScriptPropertyBag {
+    const profile = this.tryGetActiveProfile();
+    if (profile === undefined) {
+      throw new Error(
+        'HostScriptSession: set profileId or resolvedProfile before props or host sync',
+      );
+    }
+    const parsed = profile.props.parse(bag);
+    assertValidScriptPropertyBag(parsed);
+    return parsed;
   }
 
   readonly getProps = (): Readonly<ScriptPropertyBag> => ({ ...this.hostProps });
@@ -225,8 +372,6 @@ export class HostScriptSession<
     const src = [
       `local impl = rawget(_ENV, "__microverse_lua_ComponentImpl")`,
       `if type(impl) == "table" then`,
-      `  local attach = rawget(_ENV, "__microverse_lua_attach_bridges")`,
-      `  if type(attach) == "function" then attach(impl) end`,
       `  local m = rawget(impl, ${JSON.stringify(hookName)})`,
       `  if type(m) == "function" then`,
       argLiterals.length > 0 ? `    m(impl, ${argLiterals})` : `    m(impl)`,
@@ -285,6 +430,15 @@ export class HostScriptSession<
     }
     Object.assign(this.hostProps, cloned);
   };
+
+  readonly getHostProfileApplied = (): boolean => this.hostProfileApplied;
+}
+
+function referenceComponentType(def: ScriptReferenceFieldDef): string | undefined {
+  if (def.kind === 'entityComponentRef' || def.kind === 'entityComponentRefArray') {
+    return def.componentType;
+  }
+  return undefined;
 }
 
 function assertSafeLuaGlobalName(name: string): void {
@@ -300,11 +454,6 @@ function readComponentHooks(
     return undefined;
   }
   return (surface as HostSurface<HostComponentHooksSpec>).componentHooks;
-}
-
-function buildBridgeNamesPreludeLua(bridgeNames: readonly string[]): string {
-  const entries = bridgeNames.map((n) => JSON.stringify(n)).join(', ');
-  return `rawset(_ENV, "__microverse_bridge_names", { ${entries} })`;
 }
 
 function buildComponentEventStubPreludeLua(hooks: HostComponentHooksSpec): string {

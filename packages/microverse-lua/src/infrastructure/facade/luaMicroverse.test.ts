@@ -12,6 +12,12 @@ describe('createLuaMicroverse', () => {
     type Host = TaggedLuaMicroverseHost<typeof hooks, H>;
 
     const surface = defineHostSurfaceFor<H>()
+      .componentType('Demo', {
+        capabilities: ['demo:tick'],
+        props: z.object({}),
+        state: z.object({}),
+        hooks: ['Ping'],
+      })
       .bridge('demo')
       .method('tick', {
         requires: 'demo:tick',
@@ -27,11 +33,13 @@ describe('createLuaMicroverse', () => {
       surface,
     });
 
-    microverse.registerScriptDefinition({ scriptId: 's1', source: '-- stub' });
+    microverse.registerScriptDefinition({
+      scriptId: 's1',
+      source: 'local C = Demo:extend()\nfunction C:onPing() end\n',
+    });
     await microverse.mountScriptInstance({
       instanceId: 's1',
       scriptId: 's1',
-      capabilities: surface.pickCapabilities('demo:tick'),
     });
 
     await microverse.emitToAllInstances('Ping', { x: 1 });

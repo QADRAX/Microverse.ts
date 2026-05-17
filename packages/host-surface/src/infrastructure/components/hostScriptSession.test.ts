@@ -1,4 +1,3 @@
-import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 import {
   ConsoleLogger,
   createMicroverseId,
@@ -14,9 +13,17 @@ import { HostScriptSession } from './hostScriptSession';
 
 type H = { readonly tag: string };
 
+const emptyProps = z.object({});
+const emptyState = z.object({});
+
 describe('HostScriptSession', () => {
   it('openSession then dispose does not throw (stub runtime)', async () => {
     const surface = defineHostSurfaceFor<H>()
+      .componentType('Demo', {
+        capabilities: ['demo:ping'],
+        props: emptyProps,
+        state: emptyState,
+      })
       .bridge('ping')
       .method('go', {
         requires: 'demo:ping',
@@ -34,7 +41,6 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-1'),
-      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
       script: createScriptInstanceContext({
         instanceId: 'sess-1',
         scriptId: 'test',
@@ -54,6 +60,12 @@ describe('HostScriptSession', () => {
     } as const;
 
     const surface = defineHostSurfaceFor<H>()
+      .componentType('Demo', {
+        capabilities: ['demo:ping'],
+        props: emptyProps,
+        state: emptyState,
+        hooks: ['OrderPlaced'],
+      })
       .bridge('ping')
       .method('go', {
         requires: 'demo:ping',
@@ -72,7 +84,6 @@ describe('HostScriptSession', () => {
       surface,
       host: { tag: 'ok' },
       slotKey: createMicroverseId('sess-hooks'),
-      allowedCapabilities: surface.pickCapabilities('demo:ping') as readonly CapabilityId[],
       script: createScriptInstanceContext({
         instanceId: 'sess-hooks',
         scriptId: 'test',
@@ -81,12 +92,51 @@ describe('HostScriptSession', () => {
     });
 
     await session.openSession();
-    await session.runChunk('local C = component:extend()\nfunction C:onOrderPlaced() end\n');
+    await session.runChunk('local C = Demo:extend()\nfunction C:onOrderPlaced() end\n');
     const ok = await session.invokeComponentEventHook('onOrderPlaced', {
       orderId: 'o-1',
       amountCents: 10,
     });
     expect(ok._tag).toBe('ok');
+    await session.dispose();
+  });
+
+  it('profileId at openSession allows setProps without Lua extend()', async () => {
+    const surface = defineHostSurfaceFor<H>()
+      .componentType('Demo', {
+        capabilities: ['demo:ping'],
+        props: emptyProps,
+        state: emptyState,
+      })
+      .bridge('ping')
+      .method('go', {
+        requires: 'demo:ping',
+        input: z.object({}),
+        output: z.string(),
+        handler: ({ host }) => host.tag,
+      })
+      .build();
+
+    const session = new HostScriptSession({
+      runtime: createStubMicroverseRuntime({
+        adapter: new StubRuntimeAdapter(),
+        logger: new ConsoleLogger(),
+      }),
+      surface,
+      host: { tag: 'ok' },
+      slotKey: createMicroverseId('sess-profile'),
+      profileId: 'Demo',
+      script: createScriptInstanceContext({
+        instanceId: 'sess-profile',
+        scriptId: 'test',
+        slotKey: 'sess-profile',
+      }),
+    });
+
+    await session.openSession();
+    expect(session.getHostProfileApplied()).toBe(true);
+    await session.runChunk('-- host-first: no Type:extend() in chunk');
+    await session.setProps({});
     await session.dispose();
   });
 });

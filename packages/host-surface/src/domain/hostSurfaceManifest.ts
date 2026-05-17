@@ -8,7 +8,15 @@ import type {
 } from '@microverse.ts/lua-defs';
 import { z } from 'zod';
 
-import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes';
+import {
+  scriptProfileBridgesClassName,
+  scriptProfileComponentClassName,
+  scriptProfilePropsAlias,
+  scriptProfileStateAlias,
+  type ResolvedScriptProfile,
+  type ResolvedScriptProfileRegistry,
+} from './scriptProfileSpec';
+import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceSpecTypes';
 import { luaGlobalHookName } from './luaGlobalHook';
 import { isLuaTypeAtom } from './luaTypeAtoms';
 import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType';
@@ -24,23 +32,9 @@ function bridgeLuaClassName(bridgeTableName: string): string {
   return bridgeTableName.charAt(0).toUpperCase() + bridgeTableName.slice(1);
 }
 
-function pushMicroverseBridgesClass(bridgeNames: readonly string[], classes: ManifestClass[]): void {
-  if (bridgeNames.length === 0) {
-    return;
-  }
-  classes.push({
-    name: 'MicroverseBridges',
-    description: 'Capability-scoped host bridges for this component (`self.bridges` after `component:extend()`).',
-    fields: bridgeNames.map((name) => ({
-      name,
-      luaType: bridgeLuaClassName(name),
-    })),
-    emitSingleton: false,
-  });
-}
-
 function buildComponentEventManifestFields(
   kinds: readonly string[],
+  componentClassName: string,
   componentHooks: HostComponentHooksSpec,
 ): ManifestClassField[] {
   const out: ManifestClassField[] = [];
@@ -54,7 +48,7 @@ function buildComponentEventManifestFields(
     out.push({
       name: hookName,
       description: `Host invokes when \`${kind}\` is emitted. Payload: \`${payloadName}\`.`,
-      luaType: `fun(self: Component, evt: ${payloadName})`,
+      luaType: `fun(self: ${componentClassName}, evt: ${payloadName})`,
     });
   }
   return out;
@@ -84,9 +78,122 @@ function pushComponentEventPayloadClasses(
   }
 }
 
+function pushBaseComponentClass(classes: ManifestClass[]): void {
+  classes.push({
+    name: 'Component',
+    description: 'Base component lifecycle (extended by typed component profiles).',
+    fields: [
+      {
+        name: 'init',
+        luaType: 'fun(self: Component)',
+        description: 'Called once after mount and initial props are applied.',
+      },
+      {
+        name: 'onPropsChanged',
+        luaType: 'fun(self: Component, key: string, newValue: any)',
+        description: 'Called when the host patches a property key.',
+      },
+      {
+        name: 'onDestroy',
+        luaType: 'fun(self: Component)',
+        description: 'Called before the script instance slot is disposed.',
+      },
+    ],
+    emitSingleton: false,
+  });
+}
+
+function pushProfileBridgesClass(typeName: string, bridgeNames: readonly string[], classes: ManifestClass[]): void {
+  if (bridgeNames.length === 0) {
+    return;
+  }
+  const bridgesName = scriptProfileBridgesClassName(typeName);
+  classes.push({
+    name: bridgesName,
+    description: `Host bridges for \`${typeName}\` components (\`self.bridges\` after \`${typeName}:extend()\`).`,
+    fields: bridgeNames.map((name) => ({
+      name,
+      luaType: bridgeLuaClassName(name),
+    })),
+    emitSingleton: false,
+  });
+}
+
+function pushComponentTypeManifest(
+  classes: ManifestClass[],
+  aliases: Map<string, string>,
+  typeName: string,
+  profile: ResolvedScriptProfile,
+  componentHooks: HostComponentHooksSpec | undefined,
+): void {
+  const propsAlias = scriptProfilePropsAlias(typeName);
+  const stateAlias = scriptProfileStateAlias(typeName);
+  aliases.set(propsAlias, zodToLuaTypeRef(profile.props));
+  aliases.set(stateAlias, zodToLuaTypeRef(profile.state));
+
+  pushProfileBridgesClass(typeName, profile.bridgeNames, classes);
+
+  const componentClass = scriptProfileComponentClassName(typeName);
+  const bridgesClass = profile.bridgeNames.length > 0 ? scriptProfileBridgesClassName(typeName) : 'table';
+  const extendsClass =
+    profile.extends !== undefined ? scriptProfileComponentClassName(profile.extends) : 'Component';
+
+  const fields: ManifestClassField[] = [
+    { name: 'properties', luaType: propsAlias, description: 'Host-synced props (proxy).' },
+    { name: 'state', luaType: stateAlias, description: 'Lua-local state.' },
+    {
+      name: 'bridges',
+      luaType: bridgesClass,
+      description: 'Host bridges allowed for this component type.',
+    },
+    {
+      name: 'init',
+      luaType: `fun(self: ${componentClass})`,
+      description: 'Called once after mount and initial props are applied.',
+    },
+    {
+      name: 'onPropsChanged',
+      luaType: `fun(self: ${componentClass}, key: string, newValue: any)`,
+      description: 'Called when the host patches a property key.',
+    },
+    {
+      name: 'onDestroy',
+      luaType: `fun(self: ${componentClass})`,
+      description: 'Called before the script instance slot is disposed.',
+    },
+  ];
+
+  if (componentHooks !== undefined && profile.hooks.length > 0) {
+    fields.push(...buildComponentEventManifestFields(profile.hooks, componentClass, componentHooks));
+  }
+
+  classes.push({
+    name: componentClass,
+    extendsClass,
+    description: `Component instance from \`local C = ${typeName}:extend()\`.`,
+    fields,
+    emitSingleton: false,
+  });
+
+  classes.push({
+    name: typeName,
+    description: `Factory for \`${componentClass}\` in this slot.`,
+    methods: [
+      {
+        name: 'extend',
+        description: 'Creates the active component with profile-scoped bridges.',
+        params: [],
+        returns: componentClass,
+      },
+    ],
+    emitSingleton: true,
+  });
+}
+
 function pushComponentManifestClasses(
   classes: ManifestClass[],
-  bridgeNames: readonly string[],
+  aliases: Map<string, string>,
+  componentTypes: ResolvedScriptProfileRegistry,
   componentHooks?: HostComponentHooksSpec,
 ): void {
   const eventKinds =
@@ -96,52 +203,11 @@ function pushComponentManifestClasses(
   if (componentHooks !== undefined) {
     pushComponentEventPayloadClasses(eventKinds, componentHooks, classes);
   }
-  const lifecycleFields: ManifestClassField[] = [
-    { name: 'properties', luaType: 'table', description: 'Host-synced props (proxy).' },
-    { name: 'state', luaType: 'table', description: 'Lua-local state.' },
-    {
-      name: 'bridges',
-      luaType: bridgeNames.length > 0 ? 'MicroverseBridges' : 'table',
-      description: 'Host bridges allowed for this instance (not global in the slot).',
-    },
-    {
-      name: 'init',
-      luaType: 'fun(self: Component)',
-      description: 'Called once after mount and initial props are applied.',
-    },
-    {
-      name: 'onPropsChanged',
-      luaType: 'fun(self: Component, key: string, newValue: any)',
-      description: 'Called when the host patches a property key.',
-    },
-    {
-      name: 'onDestroy',
-      luaType: 'fun(self: Component)',
-      description: 'Called before the script instance slot is disposed.',
-    },
-  ];
-  if (componentHooks !== undefined) {
-    lifecycleFields.push(...buildComponentEventManifestFields(eventKinds, componentHooks));
+  pushBaseComponentClass(classes);
+  const typeNames = Object.keys(componentTypes).sort((a, b) => a.localeCompare(b));
+  for (const typeName of typeNames) {
+    pushComponentTypeManifest(classes, aliases, typeName, componentTypes[typeName]!, componentHooks);
   }
-  classes.push({
-    name: 'Component',
-    description:
-      'Component instance from `local C = component:extend()`. Use `self.bridges` for host APIs; define `on*` methods for domain events.',
-    fields: lifecycleFields,
-    emitSingleton: false,
-  });
-  classes.push({
-    name: 'component',
-    description: 'Per-slot helper injected by the host. Use `component:extend()` to create the active component.',
-    methods: [
-      {
-        name: 'extend',
-        description: 'Returns the component table with `properties`, `state`, and `bridges` wired for this slot.',
-        params: [],
-        returns: 'Component',
-      },
-    ],
-  });
 }
 
 export function buildLuaDefManifestFromHostSurfaceSpec(
@@ -152,6 +218,7 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   },
   componentHooks?: HostComponentHooksSpec,
+  componentTypes?: ResolvedScriptProfileRegistry,
 ): LuaDefManifest {
   const classes: ManifestClass[] = [];
   const bridgeNames = Object.keys(spec).sort((a, b) => a.localeCompare(b));
@@ -195,7 +262,6 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
       emitSingleton: false,
     });
   }
-  pushMicroverseBridgesClass(bridgeNames, classes);
   const fromLuaType = collectLuaTypeAliasesFromHostSpec(spec);
   const fromOverrides = inferLuaTypeAliasesFromHostSpec(spec);
   const merged = new Map<string, string>([
@@ -208,7 +274,9 @@ export function buildLuaDefManifestFromHostSurfaceSpec(
     }
   }
 
-  pushComponentManifestClasses(classes, bridgeNames, componentHooks);
+  if (componentTypes !== undefined) {
+    pushComponentManifestClasses(classes, merged, componentTypes, componentHooks);
+  }
 
   const aliases =
     merged.size === 0

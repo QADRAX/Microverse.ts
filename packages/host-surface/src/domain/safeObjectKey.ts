@@ -4,7 +4,7 @@ const FORBIDDEN_OBJECT_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 /**
  * Rejects bridge/method names that could trigger prototype pollution when used as object keys.
  */
-export function assertSafeObjectKey(kind: 'bridge' | 'method', name: string): void {
+export function assertSafeObjectKey(kind: 'bridge' | 'method' | 'componentType', name: string): void {
   if (FORBIDDEN_OBJECT_KEYS.has(name)) {
     throw new Error(`Invalid surface ${kind} name "${name}": reserved key`);
   }

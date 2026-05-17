@@ -21,6 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:circular": "madge --circular --extensions ts --exclude dist packages",
+    "build:pages": "node scripts/build-github-pages.mjs",
     "ci:microverse-lua": "turbo run build lint typecheck test --filter=@microverse.ts/microverse-lua...",
     "changeset": "changeset",
     "version-packages": "changeset version",

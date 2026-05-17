@@ -1,9 +1,9 @@
-import { createAllowlist, createCapabilityId, InMemoryCapabilityRegistry } from '@microverse.ts/runtime-capabilities';
+import { createScriptInstanceContext } from '@microverse.ts/runtime-core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { normalizeMethodDef } from '../../domain/surfaceMethodDef';
-import { augmentHostWithCapabilityRegistry } from '../../infrastructure/adapters/augmentHostWithCapabilityRegistry';
+import { augmentHostWithScriptContext } from '../../infrastructure/adapters/augmentHostWithScriptContext';
 import { createZodSchemaValidationPort } from '../../infrastructure/adapters/zodSchemaValidationAdapter';
 import { createBridgeDeclarationsFromHostSurfaceSpec } from './compileBridgeDeclarationsFromHostSurfaceSpec';
 
@@ -20,9 +20,14 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
         }),
       },
     });
-    const capId = createCapabilityId('demo:bump');
-    const registry = new InMemoryCapabilityRegistry(createAllowlist([capId]));
-    const host = augmentHostWithCapabilityRegistry({ n: 0 }, registry);
+    const host = augmentHostWithScriptContext(
+      { n: 0 },
+      createScriptInstanceContext({
+        instanceId: 'i',
+        scriptId: 's',
+        slotKey: 'slot-a',
+      }),
+    );
     const api = decls[0]!.createApi(host, 'slot-a') as { bump: (payload: { x: number }) => Promise<{ y: number }> };
     const out = api.bump({ x: 41 });
     expect(out).toBeInstanceOf(Promise);
@@ -41,9 +46,14 @@ describe('createBridgeDeclarationsFromHostSurfaceSpec', () => {
         }),
       },
     });
-    const capId = createCapabilityId('demo:bad');
-    const registry = new InMemoryCapabilityRegistry(createAllowlist([capId]));
-    const host = augmentHostWithCapabilityRegistry({}, registry);
+    const host = augmentHostWithScriptContext(
+      {},
+      createScriptInstanceContext({
+        instanceId: 'i',
+        scriptId: 's',
+        slotKey: 'slot-b',
+      }),
+    );
     const api = decls[0]!.createApi(host, 'slot-b') as { bad: (payload: Record<string, never>) => Promise<{ y: number }> };
     const out = api.bad({});
     await expect(out).rejects.toThrow();

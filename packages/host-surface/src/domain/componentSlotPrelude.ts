@@ -1,3 +1,5 @@
+import type { ResolvedScriptProfileRegistry } from './scriptProfileSpec';
+
 /** @see MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE */
 export const MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE = `
 rawset(_ENV, "__microverse_component_rawProps", {})
@@ -22,43 +24,35 @@ local PropertiesMT = {
   end,
 }
 
-function __microverse_lua_attach_bridges(impl)
-  if type(impl) ~= "table" then
-    return
-  end
-  impl.bridges = impl.bridges or {}
-  local names = rawget(_ENV, "__microverse_bridge_names")
-  if type(names) ~= "table" then
-    return
-  end
-  for _, name in ipairs(names) do
-    if type(name) == "string" then
-      local g = rawget(_ENV, name)
-      if type(g) == "table" then
-        impl.bridges[name] = g
-        rawset(_ENV, name, nil)
-      end
+local ReferencesMT = {
+  __index = function(t, k)
+    local wrap = rawget(_ENV, "__microverse_reference_wrap")
+    local raw = rawget(t, "__raw")
+    local val = raw[k]
+    if type(wrap) == "function" then
+      return wrap(k, val)
     end
+    return val
+  end,
+}
+
+function __microverse_lua_build_component_impl(bridges)
+  local impl = { state = {}, bridges = type(bridges) == "table" and bridges or {} }
+  local proxy = { __raw = rawProps() }
+  setmetatable(proxy, PropertiesMT)
+  impl.properties = proxy
+  local refProxy = { __raw = rawProps() }
+  setmetatable(refProxy, ReferencesMT)
+  impl.references = refProxy
+  local base = rawget(_ENV, "__microverse_component_hook_base")
+  if type(base) == "table" then
+    setmetatable(impl, { __index = base })
   end
+  rawset(_ENV, "__microverse_lua_ComponentImpl", impl)
+  return impl
 end
 
-rawset(_ENV, "__microverse_lua_attach_bridges", __microverse_lua_attach_bridges)
-
-rawset(_ENV, "component", {
-  extend = function()
-    local impl = { state = {}, bridges = {} }
-    local proxy = { __raw = rawProps() }
-    setmetatable(proxy, PropertiesMT)
-    impl.properties = proxy
-    local base = rawget(_ENV, "__microverse_component_hook_base")
-    if type(base) == "table" then
-      setmetatable(impl, { __index = base })
-    end
-    __microverse_lua_attach_bridges(impl)
-    rawset(_ENV, "__microverse_lua_ComponentImpl", impl)
-    return impl
-  end,
-})
+rawset(_ENV, "__microverse_lua_build_component_impl", __microverse_lua_build_component_impl)
 
 rawset(_ENV, "__microverse_lua_component_apply_incoming", function()
   local incoming = rawget(_ENV, "__microverseIncomingProps")
@@ -89,3 +83,83 @@ rawset(_ENV, "__microverse_lua_component_flush_to_sink", function()
   end
 end)
 `.trim();
+
+/** Lua prelude that registers `TypeName:extend()` singletons for each component type. */
+export function profileBridgeSlotKey(typeName: string, bridgeName: string): string {
+  return `__mv_${typeName}_${bridgeName}`;
+}
+
+export function profileBridgeNamesMergeEnvKey(typeName: string): string {
+  return `__microverse_profile_bridge_names_${typeName}`;
+}
+
+export function buildComponentTypeBridgeNamesPreludeLua(
+  componentTypes: ResolvedScriptProfileRegistry,
+): string {
+  const lines: string[] = [];
+  for (const typeName of Object.keys(componentTypes).sort((a, b) => a.localeCompare(b))) {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(typeName)) {
+      throw new Error(`unsafe component type name for bridge names prelude: ${typeName}`);
+    }
+    const names = componentTypes[typeName]!.bridgeNames;
+    const entries = names.map((n) => JSON.stringify(n)).join(', ');
+    lines.push(
+      `rawset(_ENV, ${JSON.stringify(profileBridgeNamesMergeEnvKey(typeName))}, { ${entries} })`,
+    );
+  }
+  return lines.join('\n');
+}
+
+export function buildComponentTypeSingletonsPreludeLua(typeNames: readonly string[]): string {
+  const lines: string[] = [
+    'local function __microverse_collect_profile_bridges(typeName)',
+    '  local names = rawget(_ENV, "__microverse_profile_bridge_names_" .. typeName)',
+    '  local bridges = {}',
+    '  if type(names) ~= "table" then',
+    '    return bridges',
+    '  end',
+    '  for _, name in ipairs(names) do',
+    '    if type(name) == "string" then',
+    '      local b = rawget(_ENV, "__mv_" .. typeName .. "_" .. name)',
+    '      if type(b) == "table" then',
+    '        bridges[name] = b',
+    '      end',
+    '    end',
+    '  end',
+    '  return bridges',
+    'end',
+    'local function __microverse_make_type_extend(typeName)',
+    '  return function(self)',
+    '    local ext = rawget(_ENV, "__microverse_lua_extend_component")',
+    '    if type(ext) == "function" then',
+    '      ext(typeName)',
+    '    end',
+    '    local build = rawget(_ENV, "__microverse_lua_build_component_impl")',
+    '    if type(build) ~= "function" then',
+    '      error("component type extend: build impl missing")',
+    '    end',
+    '    return build(__microverse_collect_profile_bridges(typeName))',
+    '  end',
+    'end',
+  ];
+  for (const name of typeNames) {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+      throw new Error(`unsafe component type name for Lua singleton: ${name}`);
+    }
+    lines.push(`rawset(_ENV, ${JSON.stringify(name)}, { extend = __microverse_make_type_extend(${JSON.stringify(name)}) })`);
+  }
+  return lines.join('\n');
+}
+
+/** Applies host-selected profile (same as `Type:extend()` without requiring Lua to call it). */
+export function buildApplyHostScriptProfileChunkLua(profileName: string): string {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(profileName)) {
+    throw new Error(`unsafe script profile name: ${profileName}`);
+  }
+  return [
+    `local T = ${profileName}`,
+    'if type(T) == "table" and type(T.extend) == "function" then',
+    '  T:extend()',
+    'end',
+  ].join('\n');
+}

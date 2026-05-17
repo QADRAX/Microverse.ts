@@ -61,6 +61,26 @@ flowchart TB
 4. The host emits domain events → Lua `on*` methods on every mounted component that implements them.
 5. At build time, the same surface produces **`.d.lua`** stubs for LuaLS.
 
+## Live examples (GitHub Pages)
+
+After each push to `main`, CI builds every Vite app under [`examples/`](examples/) and publishes them together:
+
+| Demo | Live | Source |
+|------|------|--------|
+| **Sorting Lab** — compare two Lua sort algorithms step-by-step | [Open demo](https://qadrax.github.io/Microverse.ts/sorting-lab/) | [`examples/sorting-lab`](examples/sorting-lab) |
+| **Chess Lab** — two Lua chess engines duel on one board | [Open demo](https://qadrax.github.io/Microverse.ts/chess-lab/) | [`examples/chess-lab`](examples/chess-lab) |
+
+Index of all published demos: **[https://qadrax.github.io/Microverse.ts/](https://qadrax.github.io/Microverse.ts/)**
+
+Build locally (output in `.github-pages/`):
+
+```bash
+pnpm install
+pnpm run build:pages
+```
+
+To enable Pages on a fork: **Settings → Pages → Build and deployment → GitHub Actions** (workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml)).
+
 ## Documentation
 
 Install, API, Lua authoring, integration, and the reference example: **[`packages/microverse-lua/README.md`](packages/microverse-lua/README.md)**.

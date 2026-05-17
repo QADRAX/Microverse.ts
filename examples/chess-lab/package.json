@@ -1,0 +1,32 @@
+{
+  "name": "@microverse.ts/chess-lab",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser chess engine duel: two Lua ChessEngine scripts compete on one board via Microverse Wasm.",
+  "scripts": {
+    "generate:lua-defs": "microverse generate-lua-defs --surface src/engine/chessSurface.ts --header-note \"LuaLS stubs for lua/*.lua — use ChessEngine:extend() and self.bridges.*.\" && tsx src/generateScriptCatalogDefs.ts",
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "pretest": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run generate:lua-defs",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@microverse.ts/microverse-lua": "workspace:*",
+    "chess.js": "^1.0.0",
+    "wasmoon": "^1.15.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@microverse.ts/cli": "workspace:*",
+    "@microverse.ts/lua-defs": "workspace:*",
+    "@types/chess.js": "^0.13.6",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "catalog:",
+    "vitest": "^3.1.4"
+  }
+}

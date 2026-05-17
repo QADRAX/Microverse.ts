@@ -1,13 +1,11 @@
 import { type DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge';
 import type { z } from 'zod';
 
-import { MICROVERSE_CAPABILITY_REGISTRY, type WithMicroverseCapabilityRegistry } from '../../domain/capabilityRegistrySymbol';
 import { createScriptInstanceContext } from '@microverse.ts/runtime-core';
 
 import { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
-import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
-import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceSpecTypes';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort';
 
 function isThenable(value: unknown): value is Promise<unknown> {
@@ -27,38 +25,32 @@ function isThenable(value: unknown): value is Promise<unknown> {
 export function createBridgeDeclarationsFromHostSurfaceSpec<TSpec extends HostSurfaceSpec>(
   schemaValidation: SchemaValidationPort,
   spec: TSpec,
-): ReadonlyArray<DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>> {
-  const out: DeclarativeBridgeDeclaration<WithMicroverseCapabilityRegistry, string>[] = [];
+): ReadonlyArray<DeclarativeBridgeDeclaration<WithMicroverseScriptContext, string>> {
+  const out: DeclarativeBridgeDeclaration<WithMicroverseScriptContext, string>[] = [];
   for (const bridgeName of Object.keys(spec)) {
     const methods = spec[bridgeName]!;
     out.push({
       name: bridgeName,
       perEntity: true,
       createApi: (host, slotKey) => {
-        const hostWithScript = host as WithMicroverseCapabilityRegistry & WithMicroverseScriptContext;
         const api: Record<string, (payload: unknown) => unknown> = {};
         for (const methodName of Object.keys(methods)) {
           const entry = methods[methodName]! as AnyHostSurfaceMethod;
           api[methodName] = (...args: unknown[]) => {
             const payload = args.length >= 2 ? args[1] : args[0];
-            const registry = hostWithScript[MICROVERSE_CAPABILITY_REGISTRY];
-            const capability: CapabilityId = entry.capability;
-            if (!registry.isAllowed(capability)) {
-              throw new Error(`capability denied: ${String(capability)}`);
-            }
             const parsedIn = schemaValidation.validateWithZodSchema(entry.input as z.ZodType<unknown>, payload);
             if (parsedIn._tag === 'err') {
               throw new Error(parsedIn.error);
             }
             const script =
-              hostWithScript[MICROVERSE_SCRIPT_CONTEXT] ??
+              host[MICROVERSE_SCRIPT_CONTEXT] ??
               createScriptInstanceContext({
                 instanceId: String(slotKey),
                 scriptId: 'unknown',
                 slotKey: String(slotKey),
               });
             const raw: unknown = entry.handler(
-              { host: hostWithScript as never, slotKey: String(slotKey), script },
+              { host: host as never, slotKey: String(slotKey), script },
               parsedIn.value,
             );
             if (isThenable(raw)) {
