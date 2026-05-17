@@ -105,10 +105,10 @@ fillEngineSelects();
 
 void applyConfiguration().catch((err: unknown) => {
   const message = err instanceof Error ? err.message : String(err);
-  document.body.insertAdjacentHTML(
-    'beforeend',
-    `<p class="boot-error">Failed to start Wasm Lua: ${message}</p>`,
-  );
+  const bootError = document.createElement('p');
+  bootError.className = 'boot-error';
+  bootError.textContent = `Failed to start Wasm Lua: ${message}`;
+  document.body.appendChild(bootError);
 });
 
 playDelayInput.addEventListener('change', syncPlayDelayFromUi);
