@@ -5,7 +5,7 @@ import { createScriptInstanceContext } from '@microverse.ts/runtime-core';
 
 import { MICROVERSE_SCRIPT_CONTEXT, type WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
 
-import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { AnyHostSurfaceMethod, HostSurfaceSpec } from '../../domain/hostSurfaceSpecTypes';
 import type { SchemaValidationPort } from '../ports/SchemaValidationPort';
 
 function isThenable(value: unknown): value is Promise<unknown> {

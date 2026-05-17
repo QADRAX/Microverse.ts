@@ -2,7 +2,7 @@ import { createCapabilityId } from '@microverse.ts/runtime-capabilities';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { HostSurfaceSpec } from './hostSurfaceTypes';
+import type { HostSurfaceSpec } from './hostSurfaceSpecTypes';
 import {
   buildResolvedScriptProfileRegistry,
   resolveScriptProfile,

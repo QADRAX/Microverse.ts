@@ -1,7 +1,7 @@
 import type { DeclarativeBridgeDeclaration } from '@microverse.ts/runtime-bridge';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
-import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { HostSurfaceSpec } from '../../domain/hostSurfaceSpecTypes';
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
 import { createBridgeDeclarationsFromHostSurfaceSpec } from '../../application/useCases/compileBridgeDeclarationsFromHostSurfaceSpec';
 

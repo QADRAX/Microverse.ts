@@ -1,7 +1,7 @@
 import type { ScriptProfileDefInput } from '@microverse.ts/runtime-core';
 import type { z } from 'zod';
 
-import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceTypes';
+import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceSpecTypes';
 import {
   validateScriptProfileRegistry,
   type ScriptProfileDefRegistry,

@@ -2,7 +2,7 @@ import { createCapabilityId, type CapabilityId } from '@microverse.ts/runtime-ca
 import type { ScriptProfileDefInput } from '@microverse.ts/runtime-core';
 import { z } from 'zod';
 
-import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceTypes';
+import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceSpecTypes';
 import { assertSafeObjectKey } from './safeObjectKey';
 import { collectCapabilitiesFromHostSurfaceSpec } from './surfaceCapabilities';
 

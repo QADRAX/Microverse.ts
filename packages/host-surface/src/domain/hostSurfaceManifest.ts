@@ -16,7 +16,7 @@ import {
   type ResolvedScriptProfile,
   type ResolvedScriptProfileRegistry,
 } from './scriptProfileSpec';
-import type { HostSurfaceSpec, HostComponentHooksSpec } from './hostSurfaceTypes';
+import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceSpecTypes';
 import { luaGlobalHookName } from './luaGlobalHook';
 import { isLuaTypeAtom } from './luaTypeAtoms';
 import { getLuaTypeRegistrationRoot, getRegisteredLuaTypeName } from './zodLuaType';

@@ -2,7 +2,7 @@ import { buildDeclarativeBridgeTable } from '@microverse.ts/runtime-bridge';
 import type { CapabilityId } from '@microverse.ts/runtime-capabilities';
 
 import type { WithMicroverseScriptContext } from '../../domain/scriptContextSymbol';
-import type { HostSurfaceSpec } from '../../domain/hostSurfaceTypes';
+import type { HostSurfaceSpec } from '../../domain/hostSurfaceSpecTypes';
 import type { SchemaValidationPort } from '../../application/ports/SchemaValidationPort';
 import { createFilteredBridgeDeclarations } from './filterBridgeDeclarations';
 
