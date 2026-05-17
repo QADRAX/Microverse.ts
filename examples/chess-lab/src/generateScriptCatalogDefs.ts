@@ -5,13 +5,20 @@ import { fileURLToPath } from 'node:url';
 import { buildLuaCatsDocument } from '@microverse.ts/lua-defs';
 import { buildScriptCatalogLuaDefManifest } from '@microverse.ts/microverse-lua';
 
-import { CHESS_PROFILE_ID, chessScriptIds } from './engine/chessScriptCatalog';
+import { CHESS_PROFILE_ID, chessScriptCatalog, chessScriptIds } from './engine/chessScriptCatalog';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outPath = join(root, 'generated', 'chessScriptCatalog.d.lua');
 
 const manifest = buildScriptCatalogLuaDefManifest(
-  chessScriptIds.map((scriptId) => ({ scriptId, profileId: CHESS_PROFILE_ID })),
+  chessScriptIds.map((scriptId) => {
+    const entry = chessScriptCatalog[scriptId];
+    return {
+      scriptId,
+      profileId: CHESS_PROFILE_ID,
+      ...(entry.localComponentClass === true ? { localComponentClass: true as const } : {}),
+    };
+  }),
 );
 const body = buildLuaCatsDocument({
   ...manifest,

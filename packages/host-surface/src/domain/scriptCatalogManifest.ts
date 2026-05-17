@@ -5,6 +5,11 @@ import { scriptProfileComponentClassName } from './scriptProfileSpec';
 export type ScriptCatalogEntry = {
   readonly scriptId: string;
   readonly profileId: string;
+  /**
+   * When true, the script's `.lua` file defines `---@class …ScriptComponent` (e.g. script-local methods).
+   * Omit the catalog `---@alias` so LuaLS does not report duplicate-doc-alias.
+   */
+  readonly localComponentClass?: boolean | undefined;
 };
 
 /** LuaCATS aliases per catalog scriptId → resolved component class (for `---@type` in `.lua` files). */
@@ -12,6 +17,7 @@ export function buildScriptCatalogLuaDefManifest(
   entries: readonly ScriptCatalogEntry[],
 ): LuaDefManifest {
   const aliases: ManifestAlias[] = entries
+    .filter((entry) => entry.localComponentClass !== true)
     .slice()
     .sort((a, b) => a.scriptId.localeCompare(b.scriptId))
     .map((entry) => {

@@ -8,6 +8,7 @@ export const chessScriptCatalog = {
     description:
       'Chooses a legal move using a deterministic index from the ply (Wasm-safe pseudo-random). Good baseline opponent.',
     profile: CHESS_ENGINE_PROFILE,
+    localComponentClass: true,
   },
   first_legal: {
     label: 'First legal move',

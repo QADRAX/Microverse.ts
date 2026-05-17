@@ -28,5 +28,3 @@
 
 ---@alias prefer_checksScriptComponent ChessEngineComponent
 
----@alias random_moveScriptComponent ChessEngineComponent
-
