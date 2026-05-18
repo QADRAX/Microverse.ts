@@ -4,8 +4,8 @@
   "capabilities": [
     "array:read",
     "array:write",
-    "viz:emit",
-    "sort:control"
+    "sort:control",
+    "viz:emit"
   ],
   "bridges": {
     "array": {

@@ -19,8 +19,8 @@
 
 ## Day-to-day flow
 
-1. Make changes under `packages/` (publishable graph).
-2. Run `pnpm changeset` and commit the generated `.changeset/*.md` file in your PR.
+1. Make changes under `implementations/typescript-lua/packages/` (publishable graph).
+2. From `implementations/typescript-lua/`, run `pnpm changeset` and commit the generated `.changeset/*.md` file in your PR.
 3. Merge to `main`.
 4. The **Release** workflow either:
    - opens a **Version Packages** PR (bumps versions + changelog), or
@@ -34,7 +34,7 @@ pnpm init
 pnpm add @microverse.ts/microverse-lua @microverse.ts/surface-spec zod
 ```
 
-Run a minimal script from [`packages/microverse-lua/README.md`](../packages/microverse-lua/README.md).
+Run a minimal script from [`packages/microverse-lua/README.md`](../implementations/typescript-lua/packages/microverse-lua/README.md).
 
 ## Troubleshooting
 

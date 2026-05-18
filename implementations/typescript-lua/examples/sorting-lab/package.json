@@ -1,0 +1,30 @@
+{
+  "name": "@microverse.ts/sorting-lab",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser sorting algorithm lab: compare two Lua sorts step-by-step via Microverse Wasm.",
+  "scripts": {
+    "codegen": "microverse codegen --surface src/engine/sortingSurface.ts --header-note \"LuaLS stubs for lua/*.lua — use SortingAlgorithm:extend() and self.bridges.*.\" && tsx src/generateScriptCatalogDefs.ts",
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "pretest": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run codegen",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@microverse.ts/microverse-lua": "workspace:*",
+    "wasmoon": "^1.15.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@microverse.ts/cli": "workspace:*",
+    "@microverse.ts/lua-defs": "workspace:*",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "catalog:",
+    "vitest": "^3.1.4"
+  }
+}

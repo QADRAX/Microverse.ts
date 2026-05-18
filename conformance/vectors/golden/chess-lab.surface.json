@@ -3,9 +3,9 @@
   "scriptProfile": "lua@1",
   "capabilities": [
     "board:read",
+    "game:read",
     "play:move",
-    "viz:emit",
-    "game:read"
+    "viz:emit"
   ],
   "bridges": {
     "board": {

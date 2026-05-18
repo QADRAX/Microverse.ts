@@ -6,12 +6,10 @@ This repository hosts the **reference implementation** (`lua@1`, TypeScript) and
 
 | Path | Role | Future repo |
 |------|------|-------------|
-| [`packages/surface-spec/`](packages/surface-spec/README.md) | Protocol npm package + JSON Schema | `microverse-spec` |
-| [`spec/`](spec/README.md) | Protocol docs (points to package schema) | `microverse-spec` |
+| [`spec/`](spec/README.md) | Protocol docs (schema lives in implementation package) | `microverse-spec` |
 | [`conformance/`](conformance/README.md) | Vectors + validation | `microverse-conformance` |
-| [`packages/`](packages/) | npm packages (`@microverse.ts/*`) | — |
-| [`examples/`](examples/) | Live demos | — |
-| [`implementations/typescript-lua/`](implementations/typescript-lua/README.md) | Docs for this implementation | `Microverse.ts` (this repo) |
+| [`implementations/typescript-lua/`](implementations/typescript-lua/README.md) | pnpm monorepo: `packages/`, `examples/`, CLI | `Microverse.ts` |
+| [`implementations/typescript-lua/packages/surface-spec/`](implementations/typescript-lua/packages/surface-spec/README.md) | Protocol npm package + JSON Schema | `microverse-spec` (npm) |
 
 ## Git submodules
 
@@ -23,7 +21,11 @@ git submodule update --init --recursive
 
 ## Commands
 
+From [`implementations/typescript-lua/`](implementations/typescript-lua/README.md):
+
 ```bash
+cd implementations/typescript-lua
+pnpm install
 pnpm run conformance:export   # golden SurfaceSpec from examples
 pnpm run conformance          # validate vectors + snapshots
 ```

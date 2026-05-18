@@ -13,6 +13,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: implementations/typescript-lua
+
 jobs:
   validate:
     name: microverse-lua graph
@@ -23,12 +27,15 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: implementations/typescript-lua/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: implementations/typescript-lua/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

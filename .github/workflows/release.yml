@@ -13,6 +13,10 @@ permissions:
   pull-requests: write
   id-token: write
 
+defaults:
+  run:
+    working-directory: implementations/typescript-lua
+
 jobs:
   release:
     name: Version and publish
@@ -26,12 +30,15 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: implementations/typescript-lua/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: implementations/typescript-lua/pnpm-lock.yaml
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -43,6 +50,7 @@ jobs:
       - name: Create release pull request or publish
         uses: changesets/action@v1
         with:
+          cwd: implementations/typescript-lua
           version: pnpm changeset version
           publish: pnpm changeset publish
           commit: 'chore: version packages'

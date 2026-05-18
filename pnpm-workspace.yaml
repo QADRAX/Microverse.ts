@@ -1,9 +1,0 @@
-packages:
-  - "apps/*"
-  - "packages/*"
-  - "examples/*"
-  - "tooling/*"
-
-catalog:
-  vite: ^8.0.0
-  vite-plugin-dts: ^4.5.4
