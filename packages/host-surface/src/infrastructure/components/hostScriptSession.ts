@@ -29,7 +29,7 @@ import {
   buildComponentTypeBridgeNamesPreludeLua,
   buildComponentTypeSingletonsPreludeLua,
   profileBridgeSlotKey,
-} from '../../domain/componentSlotPrelude';
+} from '../../domain/lua/componentSlotPrelude';
 import type { ResolvedScriptProfile } from '../../domain/scriptProfileSpec';
 import {
   plainToScriptPropertyValue,
@@ -38,8 +38,8 @@ import {
 import { augmentHostWithScriptContext } from '../adapters/augmentHostWithScriptContext';
 import { buildBridgeMergeEnvForProfile } from '../builders/bridgeMergeEnv';
 import type { HostSurface, HostComponentHooksSpec } from '../../domain/hostSurfaceTypes';
-import type { LuaGlobalHookName } from '../../domain/luaGlobalHook';
-import { luaGlobalHookName } from '../../domain/luaGlobalHook';
+import type { LuaGlobalHookName } from '../../domain/lua/luaGlobalHook';
+import { luaGlobalHookName } from '../../domain/lua/luaGlobalHook';
 
 const defaultSchemaValidation: SchemaValidationPort = createZodSchemaValidationPort();
 

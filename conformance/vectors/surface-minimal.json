@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "scriptProfile": "lua@1",
+  "capabilities": ["demo:ping"],
+  "bridges": {
+    "demo": {
+      "methods": {
+        "ping": {
+          "requires": "demo:ping",
+          "input": { "type": "object", "properties": {}, "additionalProperties": false },
+          "output": { "type": "string" }
+        }
+      }
+    }
+  },
+  "componentTypes": {
+    "Minimal": {
+      "capabilities": ["demo:ping"],
+      "hooks": [],
+      "bridgeNames": ["demo"],
+      "props": { "type": "object", "properties": {}, "additionalProperties": false },
+      "state": { "type": "object", "properties": {}, "additionalProperties": false }
+    }
+  }
+}

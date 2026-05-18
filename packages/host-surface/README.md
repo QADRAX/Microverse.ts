@@ -3,11 +3,22 @@
 Declare a **host surface** in TypeScript: Zod schemas, capabilities, component types, and handlers that compile into:
 
 1. **Runtime bridge tables** for `mergeEnv` (what Lua calls at execution time).
-2. A **`LuaDefManifest`** for `@microverse.ts/lua-defs` (`.d.lua` stubs for LuaLS).
+2. A **`LuaDefManifest`** for `@microverse.ts/lua-defs` (`.d.lua` stubs for LuaLS) — **profile `lua@1`**.
+3. A **`SurfaceSpec`** JSON document via `toProtocolJson()` for [protocol conformance](../../spec/README.md).
 
 Most applications import **`defineHostSurfaceFor`** from **`@microverse.ts/microverse-lua`** instead of this package directly. Use `@microverse.ts/host-surface` when you need `HostScriptSession` or custom runtime wiring.
 
 Monorepo overview: [root README](../../README.md). Lua microverse lifecycle: [`@microverse.ts/microverse-lua`](../microverse-lua/README.md).
+
+## Protocol export
+
+```ts
+const spec = mySurface.toProtocolJson(); // scriptProfile defaults to lua@1
+```
+
+Handlers are omitted; bridge methods include JSON Schema for `input` / `output`. See [`spec/surface-spec.schema.json`](../../spec/surface-spec.schema.json) and [`spec/mapping.md`](../../spec/mapping.md).
+
+Source layout: `src/domain/protocol/` (contract), `src/domain/lua/` (LuaCATS manifest builders).
 
 ## Defining a surface
 
@@ -97,7 +108,7 @@ await session.setProps({ … }); // validated against active type’s props sche
 ## Generating `.d.lua`
 
 ```bash
-microverse generate-lua-defs --surface src/mySurface.ts
+microverse codegen --surface src/mySurface.ts
 ```
 
 Requires `export default` of the compiled surface (`.build()` result). The manifest emits, per component type:

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://microverse.dev/schemas/surface-spec/v1.json",
+  "title": "Microverse SurfaceSpec",
+  "description": "Declarative host surface contract for Microverse protocol v0.1 (schemaVersion 1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "capabilities", "bridges", "componentTypes"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "scriptProfile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional script runtime profile label (e.g. lua@1)."
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/capabilityId" },
+      "uniqueItems": true
+    },
+    "bridges": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/bridge" },
+      "propertyNames": { "type": "string", "minLength": 1 }
+    },
+    "componentTypes": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/componentType" },
+      "propertyNames": { "type": "string", "minLength": 1 }
+    },
+    "componentHooks": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/jsonSchema" },
+      "propertyNames": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*$"
+    },
+    "jsonSchema": {
+      "type": "object"
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requires", "input", "output"],
+      "properties": {
+        "requires": { "$ref": "#/$defs/capabilityId" },
+        "input": { "$ref": "#/$defs/jsonSchema" },
+        "output": { "$ref": "#/$defs/jsonSchema" },
+        "async": { "type": "boolean" },
+        "description": { "type": "string" }
+      }
+    },
+    "bridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["methods"],
+      "properties": {
+        "methods": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/method" },
+          "propertyNames": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "componentType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilities", "hooks", "bridgeNames", "props", "state"],
+      "properties": {
+        "extends": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capabilityId" }
+        },
+        "hooks": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "bridgeNames": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "props": { "$ref": "#/$defs/jsonSchema" },
+        "state": { "$ref": "#/$defs/jsonSchema" }
+      }
+    }
+  }
+}

@@ -4,14 +4,17 @@
 
 Microverse is a project under active development. The goal is a **protocol** that lets applications host **microverses**—isolated sandboxes where user or domain logic runs against a **host-defined API** (your DSL), not arbitrary OS or network access. Product teams can model rules, promotions, plugins, and workflows in a scripting language while TypeScript (or another host) keeps databases, billing, auth, and IO.
 
-**Microverse Lua** is the first concrete profile: Lua scripts, declarative **bridges** into your services, **capability** allowlists per script instance, and optional **component hooks** (`onOrderPlaced`, …) for host → script events.
+**Microverse Lua** (`lua@1`) is the first concrete **script profile**: Lua scripts, declarative **bridges** into your services, **capability** allowlists per script instance, and optional **component hooks** (`onOrderPlaced`, …) for host → script events.
+
+This repository is the **TypeScript + Lua reference implementation**. The language-neutral contract lives under [`spec/`](spec/README.md); conformance vectors under [`conformance/`](conformance/README.md). See [META.md](META.md) for the planned meta-repo layout (git submodules).
 
 ## Today vs aspiration
 
 | | |
 |---|---|
+| **Protocol v0.1** | [`SurfaceSpec`](spec/surface-spec.schema.json) JSON export (`surface.toProtocolJson()`), [lifecycle](spec/lifecycle.md), CI conformance — see `pnpm run conformance`. |
 | **Implemented now** | **microverse.ts** — this pnpm monorepo. Consumer entry: [`@microverse.ts/microverse-lua`](packages/microverse-lua/README.md). Node ≥ 20 and browser, Wasmoon Lua VM, Zod at bridge boundaries, LuaCATS generation for LuaLS. |
-| **Aspiration** | A protocol abstract enough to support **other microverse kinds** (different runtimes or languages) while keeping the same ideas: host services, surface spec, isolated slots, capabilities, and typed host ↔ script events. |
+| **Aspiration** | Additional script profiles and host languages sharing the same `SurfaceSpec` contract. |
 
 ## Why Microverse?
 
@@ -81,6 +84,26 @@ pnpm run build:pages
 
 To enable Pages on a fork: **Settings → Pages → Build and deployment → GitHub Actions** (workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml)).
 
+## Protocol export
+
+After defining a host surface, export the declarative contract (no handlers):
+
+```ts
+const json = mySurface.toProtocolJson(); // default scriptProfile: lua@1
+```
+
+Validate against the schema and golden examples:
+
+```bash
+pnpm exec microverse codegen --surface ./src/engine/mySurface.ts
+# or: pnpm run conformance:export && pnpm run conformance
+```
+
 ## Documentation
 
-Install, API, Lua authoring, integration, and the reference example: **[`packages/microverse-lua/README.md`](packages/microverse-lua/README.md)**.
+| Topic | Location |
+|-------|----------|
+| Install, API, Lua authoring | [`packages/microverse-lua/README.md`](packages/microverse-lua/README.md) |
+| Protocol schema + lifecycle | [`spec/README.md`](spec/README.md) |
+| Conformance vectors | [`conformance/README.md`](conformance/README.md) |
+| Meta-repo layout | [META.md](META.md) |

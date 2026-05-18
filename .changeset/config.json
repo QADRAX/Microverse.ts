@@ -5,6 +5,7 @@
   "fixed": [
     [
       "@microverse.ts/shared",
+      "@microverse.ts/surface-spec",
       "@microverse.ts/runtime-core",
       "@microverse.ts/runtime-lua",
       "@microverse.ts/lua-defs",

@@ -1,0 +1,46 @@
+{
+  "name": "@microverse.ts/surface-spec",
+  "version": "0.3.0",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "description": "Language-neutral Microverse host surface contract (SurfaceSpec JSON schema, validation, and type operators).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QADRAX/Microverse.ts.git",
+    "directory": "packages/surface-spec"
+  },
+  "bugs": "https://github.com/QADRAX/Microverse.ts/issues",
+  "homepage": "https://github.com/QADRAX/Microverse.ts/tree/main/packages/surface-spec",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": "./schemas/surface-spec.schema.json"
+  },
+  "files": [
+    "dist",
+    "schemas"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@microverse.ts/runtime-capabilities": "workspace:*",
+    "@microverse.ts/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "^3.1.4"
+  }
+}

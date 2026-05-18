@@ -58,6 +58,19 @@ export * from '@microverse.ts/runtime-wasm';
 export * from '@microverse.ts/runtime-bridge';
 export * from '@microverse.ts/runtime-capabilities';
 export * from '@microverse.ts/runtime-zod';
+export type {
+  SurfaceSpecDocument,
+  SurfaceSpecBridge,
+  SurfaceSpecComponentType,
+  SurfaceSpecMethod,
+  InferHookPayload,
+} from '@microverse.ts/surface-spec';
+export {
+  SURFACE_SPEC_SCHEMA_VERSION,
+  MICROVERSE_SCRIPT_PROFILE_LUA_1,
+  parseSurfaceSpecJson,
+  validateSurfaceSpecDocument,
+} from '@microverse.ts/surface-spec';
 
 export { MicroverseLua } from './infrastructure/facade/microverseLuaNamespace';
 export {

@@ -33,7 +33,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@microverse.ts/shared": "workspace:*"
+    "@microverse.ts/shared": "workspace:*",
+    "@microverse.ts/surface-spec": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",

@@ -36,5 +36,10 @@ jobs:
       - name: Build, lint, typecheck, test
         run: pnpm run ci:microverse-lua
 
+      - name: Protocol conformance (SurfaceSpec)
+        run: |
+          pnpm run conformance:export
+          pnpm run conformance
+
       - name: Circular dependency check
         run: pnpm run check:circular

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "scriptProfile": "lua@1",
+  "capabilities": ["orders:read", "audit:record"],
+  "bridges": {
+    "orders": {
+      "methods": {
+        "get": {
+          "requires": "orders:read",
+          "input": {
+            "type": "object",
+            "properties": { "orderId": { "type": "string" } },
+            "required": ["orderId"],
+            "additionalProperties": false
+          },
+          "output": { "type": "object", "additionalProperties": true }
+        }
+      }
+    },
+    "audit": {
+      "methods": {
+        "record": {
+          "requires": "audit:record",
+          "input": {
+            "type": "object",
+            "properties": { "message": { "type": "string" } },
+            "required": ["message"],
+            "additionalProperties": false
+          },
+          "output": {}
+        }
+      }
+    }
+  },
+  "componentTypes": {
+    "AuditOnly": {
+      "capabilities": ["audit:record"],
+      "hooks": ["OrderPlaced"],
+      "bridgeNames": ["audit"],
+      "props": { "type": "object", "properties": {}, "additionalProperties": false },
+      "state": { "type": "object", "properties": {}, "additionalProperties": false }
+    },
+    "OrderEcho": {
+      "extends": "AuditOnly",
+      "capabilities": ["orders:read", "audit:record"],
+      "hooks": ["OrderPlaced"],
+      "bridgeNames": ["audit", "orders"],
+      "props": {
+        "type": "object",
+        "properties": { "label": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "state": { "type": "object", "properties": {}, "additionalProperties": false }
+    }
+  },
+  "componentHooks": {
+    "OrderPlaced": {
+      "type": "object",
+      "properties": { "orderId": { "type": "string" } },
+      "required": ["orderId"],
+      "additionalProperties": false
+    }
+  }
+}

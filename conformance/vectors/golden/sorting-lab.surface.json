@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 1,
+  "scriptProfile": "lua@1",
+  "capabilities": [
+    "array:read",
+    "array:write",
+    "viz:emit",
+    "sort:control"
+  ],
+  "bridges": {
+    "array": {
+      "methods": {
+        "compare": {
+          "requires": "array:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "b": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "integer",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "Returns -1, 0, or 1 comparing values at indices a and b."
+        },
+        "get": {
+          "requires": "array:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "index"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "integer",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "length": {
+          "requires": "array:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "integer",
+            "minimum": 0,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "set": {
+          "requires": "array:write",
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "index",
+              "value"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "swap": {
+          "requires": "array:write",
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "b": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    },
+    "sort": {
+      "methods": {
+        "markDone": {
+          "requires": "sort:control",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    },
+    "viz": {
+      "methods": {
+        "highlight": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "indices": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "required": [
+              "indices"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "markComparing": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "b": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "markSortedPrefix": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "count"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "note": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    }
+  },
+  "componentTypes": {
+    "SortingAlgorithm": {
+      "capabilities": [
+        "array:read",
+        "array:write",
+        "viz:emit",
+        "sort:control"
+      ],
+      "hooks": [
+        "Reset",
+        "Tick"
+      ],
+      "bridgeNames": [
+        "array",
+        "sort",
+        "viz"
+      ],
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "slotSide": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "slotSide"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "state": {
+        "type": "object",
+        "properties": {
+          "i": {
+            "type": "integer"
+          },
+          "j": {
+            "type": "integer"
+          },
+          "minJ": {
+            "type": "integer"
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "low": {
+            "type": "integer"
+          },
+          "high": {
+            "type": "integer"
+          },
+          "pivot": {
+            "type": "integer"
+          },
+          "pIndex": {
+            "type": "integer"
+          },
+          "stack": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "gap": {
+            "type": "integer"
+          },
+          "heapSize": {
+            "type": "integer"
+          },
+          "swapped": {
+            "type": "boolean"
+          },
+          "buf": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  },
+  "componentHooks": {
+    "Reset": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Tick": {
+      "type": "object",
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "step"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

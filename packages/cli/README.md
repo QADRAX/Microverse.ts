@@ -16,45 +16,35 @@ In this monorepo:
 
 ```bash
 pnpm exec microverse --help
-pnpm exec microverse generate-lua-defs --help
+pnpm exec microverse codegen --help
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `generate-lua-defs` | Emit a single LuaCATS `.d.lua` file for **Lua** microverse host surfaces or JSON manifests. |
+| `codegen` | Emit **`*.surface.json`** (protocol) + **`*.d.lua`** (LuaCATS) from a TypeScript host surface. |
 
-Future runtimes might add e.g. `generate-<runtime>-defs` without changing the top-level binary name.
-
-## `generate-lua-defs`
-
-Produces [LuaCATS](https://luals.github.io/wiki/annotations/) stubs for LuaLS / the IDE.
-
-### From a TypeScript host surface
+## `codegen`
 
 ```bash
-microverse generate-lua-defs --surface src/mySurface.ts [--out <path>] [--header-note <text>]
+microverse codegen --surface src/mySurface.ts [--out-dir generated]
 ```
 
-- Module must **`export default`** the value from `defineHostSurface` / `defineHostSurfaceFor`.
-- Default output: `generated/<surfaceBasename>.d.lua` (override with `--out`).
-- `.ts` surfaces load via `tsx` (bundled with this CLI).
+Writes `generated/<basename>.surface.json` and `generated/<basename>.d.lua` from the same `export default` surface module.
 
-### From a JSON manifest
+Regenerate `.d.lua` from existing protocol JSON:
 
 ```bash
-microverse generate-lua-defs --manifest ./lua/microverse.def.json [--out <path>]
+microverse codegen --spec ./generated/mySurface.surface.json
 ```
-
-Hand-authored or CI-exported `LuaDefManifest` — see [`@microverse.ts/lua-defs`](../lua-defs/README.md).
 
 ### `package.json` script
 
 ```json
 {
   "scripts": {
-    "lua:defs": "microverse generate-lua-defs --surface ./src/mySurface.ts"
+    "microverse:codegen": "microverse codegen --surface ./src/mySurface.ts"
   }
 }
 ```

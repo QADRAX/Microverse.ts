@@ -5,12 +5,12 @@
   "type": "module",
   "description": "Browser chess engine duel: two Lua ChessEngine scripts compete on one board via Microverse Wasm.",
   "scripts": {
-    "generate:lua-defs": "microverse generate-lua-defs --surface src/engine/chessSurface.ts --header-note \"LuaLS stubs for lua/*.lua — use ChessEngine:extend() and self.bridges.*.\" && tsx src/generateScriptCatalogDefs.ts",
+    "codegen": "microverse codegen --surface src/engine/chessSurface.ts --header-note \"LuaLS stubs for lua/*.lua — use ChessEngine:extend() and self.bridges.*.\" && tsx src/generateScriptCatalogDefs.ts",
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
     "lint": "eslint .",
-    "pretest": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run generate:lua-defs",
+    "pretest": "pnpm --filter @microverse.ts/host-surface run build && pnpm --filter @microverse.ts/runtime-wasm run build && pnpm --filter @microverse.ts/microverse-lua run build && pnpm run codegen",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

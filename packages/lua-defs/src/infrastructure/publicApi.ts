@@ -42,3 +42,15 @@ export {
   type WriteLuaDefinitionsFromManifestOptions,
 } from './writeLuaDefinitionsFromManifest';
 export { loadLuaDefinitionsFromManifestFile, type LoadLuaDefinitionsFromManifestFileOptions } from './loadLuaDefinitionsFromManifestFile';
+export {
+  surfaceSpecToLuaDefManifest,
+} from '../profile/lua1/surfaceSpecToLuaDefManifest';
+export type {
+  Lua1TypeOverlay,
+  SurfaceSpecToLuaDefManifestOptions,
+} from '../profile/lua1/Lua1TypeOverlay';
+export { writeSurfaceSpecFile, type WriteSurfaceSpecFileOptions } from './writeSurfaceSpecFile';
+export {
+  writeLuaDefinitionsFromSurfaceSpec,
+  type WriteLuaDefinitionsFromSurfaceSpecOptions,
+} from './writeLuaDefinitionsFromSurfaceSpec';

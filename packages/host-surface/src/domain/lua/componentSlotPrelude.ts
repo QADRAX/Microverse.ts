@@ -1,4 +1,4 @@
-import type { ResolvedScriptProfileRegistry } from './scriptProfileSpec';
+import type { ResolvedScriptProfileRegistry } from '../scriptProfileSpec';
 
 /** @see MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE */
 export const MICROVERSE_LUA_COMPONENT_SLOT_PRELUDE = `

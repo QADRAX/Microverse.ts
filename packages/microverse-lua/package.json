@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@microverse.ts/host-surface": "workspace:*",
+    "@microverse.ts/surface-spec": "workspace:*",
     "@microverse.ts/runtime-bridge": "workspace:*",
     "@microverse.ts/runtime-capabilities": "workspace:*",
     "@microverse.ts/runtime-core": "workspace:*",

@@ -1,9 +1,18 @@
 {
   "name": "@microverse.ts/cli",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.3.0",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QADRAX/Microverse.ts.git",
+    "directory": "packages/cli"
+  },
   "type": "module",
-  "description": "CLI for Microverse: per-runtime commands (e.g. generate-lua-defs for LuaCATS .d.lua).",
+  "description": "CLI for Microverse: build-time codegen (SurfaceSpec JSON + LuaCATS .d.lua).",
   "bin": {
     "microverse": "./dist/cli.js"
   },
@@ -18,6 +27,7 @@
   },
   "dependencies": {
     "@microverse.ts/lua-defs": "workspace:*",
+    "@microverse.ts/surface-spec": "workspace:*",
     "tsx": "^4.19.4"
   },
   "devDependencies": {

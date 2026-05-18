@@ -18,7 +18,7 @@ pnpm --filter @microverse.ts/chess-lab test
 ## Lua stubs
 
 ```bash
-pnpm --filter @microverse.ts/chess-lab run generate:lua-defs
+pnpm --filter @microverse.ts/chess-lab run codegen
 ```
 
 Open `lua/*.lua` with LuaLS using this package’s `.luarc.json` and `generated/`.

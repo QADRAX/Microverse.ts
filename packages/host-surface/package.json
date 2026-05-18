@@ -32,13 +32,15 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@microverse.ts/surface-spec": "workspace:*",
     "@microverse.ts/lua-defs": "workspace:*",
     "@microverse.ts/runtime-bridge": "workspace:*",
     "@microverse.ts/runtime-capabilities": "workspace:*",
     "@microverse.ts/runtime-core": "workspace:*",
     "@microverse.ts/runtime-zod": "workspace:*",
     "@microverse.ts/shared": "workspace:*",
-    "zod": "^3.24.0"
+    "zod": "^3.24.0",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@microverse.ts/runtime-wasm": "workspace:*",

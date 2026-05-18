@@ -1,0 +1,18 @@
+# Example git submodules for the Microverse meta-repo layout.
+# Copy to .gitmodules when creating the umbrella repository.
+#
+#   git submodule add https://github.com/QADRAX/microverse-spec.git spec
+#   git submodule add https://github.com/QADRAX/microverse-conformance.git conformance
+#   git submodule add https://github.com/QADRAX/Microverse.ts.git implementations/typescript-lua
+
+[submodule "spec"]
+	path = spec
+	url = https://github.com/QADRAX/microverse-spec.git
+
+[submodule "conformance"]
+	path = conformance
+	url = https://github.com/QADRAX/microverse-conformance.git
+
+[submodule "implementations/typescript-lua"]
+	path = implementations/typescript-lua
+	url = https://github.com/QADRAX/Microverse.ts.git

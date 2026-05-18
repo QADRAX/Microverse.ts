@@ -2,7 +2,9 @@
 
 **Lua microverse** facade for TypeScript applications: `MicroverseLua.create`, Wasm VM, script slots, and the fluent host surface builder.
 
-Monorepo overview (protocol vision): [root README](../../README.md).
+This package implements the **`lua@1`** script profile of the [Microverse protocol](../../spec/README.md). It is not the protocol itself — use `surface.toProtocolJson()` for the language-neutral `SurfaceSpec` export.
+
+Monorepo overview: [root README](../../README.md). Meta-repo layout: [META.md](../../META.md).
 
 ## What is a Lua microverse?
 
@@ -180,7 +182,7 @@ export default defineHostSurfaceFor<SortingLabHost>()
 - **`handler`** — Runs in TypeScript with `{ host, script }` context.
 - **`componentHooks`** — Map of event kind → Zod object; generates `onOrderPlaced`, `MicroverseEvt_OrderPlaced`, etc. in `.d.lua`.
 
-Default-export the built surface for `microverse generate-lua-defs --surface …`.
+Default-export the built surface for `microverse codegen --surface …`.
 
 ### 3. Wrap the engine (optional)
 
@@ -321,7 +323,7 @@ Generate stubs from the same surface module that drives runtime:
 
 ```bash
 pnpm add -D @microverse.ts/cli
-pnpm exec microverse generate-lua-defs --surface src/engine/sortingSurface.ts
+pnpm exec microverse codegen --surface src/engine/sortingSurface.ts
 ```
 
 The manifest emits **type-only** bridge classes (`---@class Orders` + `---@field get fun(…)`) so LuaLS does not treat `Orders` as a runtime global. Use:
@@ -377,7 +379,7 @@ Reference layout: [`examples/sorting-lab/src/engine/sortingScriptCatalog.ts`](..
 |---------|----------|
 | [`@microverse.ts/host-surface`](../host-surface/README.md) | Surface builder details, `HostScriptSession`, custom slot wiring. |
 | [`@microverse.ts/lua-defs`](../lua-defs/README.md) | Manifest → LuaCATS document (library use). |
-| [`@microverse.ts/cli`](../cli/README.md) | `microverse generate-lua-defs` in CI or locally. |
+| [`@microverse.ts/cli`](../cli/README.md) | `microverse codegen` in CI or locally. |
 | `runtime-wasm`, `runtime-bridge`, `runtime-capabilities` | Advanced runtime customization (usually via host-surface). |
 
 ## Reference example

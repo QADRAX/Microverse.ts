@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scriptProfile": "lua@1",
+  "capabilities": ["game:tick"],
+  "bridges": {
+    "game": {
+      "methods": {
+        "noop": {
+          "requires": "game:tick",
+          "input": { "type": "object", "properties": {}, "additionalProperties": false },
+          "output": { "type": "null" }
+        }
+      }
+    }
+  },
+  "componentTypes": {
+    "Listener": {
+      "capabilities": ["game:tick"],
+      "hooks": ["Tick", "Reset"],
+      "bridgeNames": ["game"],
+      "props": { "type": "object", "properties": {}, "additionalProperties": false },
+      "state": { "type": "object", "properties": {}, "additionalProperties": false }
+    },
+    "TickOnly": {
+      "capabilities": ["game:tick"],
+      "hooks": ["Tick"],
+      "bridgeNames": ["game"],
+      "props": { "type": "object", "properties": {}, "additionalProperties": false },
+      "state": { "type": "object", "properties": {}, "additionalProperties": false }
+    }
+  },
+  "componentHooks": {
+    "Tick": {
+      "type": "object",
+      "properties": { "step": { "type": "integer", "minimum": 0 } },
+      "required": ["step"],
+      "additionalProperties": false
+    },
+    "Reset": {
+      "type": "object",
+      "properties": {
+        "values": { "type": "array", "items": { "type": "integer" } }
+      },
+      "required": ["values"],
+      "additionalProperties": false
+    }
+  }
+}

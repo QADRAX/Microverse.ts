@@ -6,6 +6,10 @@ import type {
   ResolvedScriptProfile,
   ResolvedScriptProfileRegistry,
 } from './scriptProfileSpec';
+import type {
+  BuildSurfaceSpecDocumentOptions,
+  SurfaceSpecDocument,
+} from '@microverse.ts/surface-spec';
 import type { SurfaceCapabilityString } from './surfaceCapabilityString';
 import type { WithMicroverseScriptContext } from './scriptContextSymbol';
 
@@ -26,6 +30,8 @@ import type { HostComponentHooksSpec, HostSurfaceSpec } from './hostSurfaceSpecT
  * @typeParam TCapabilities - Union of capability ids declared on the surface spec (see {@link InferSurfaceCapabilities}).
  */
 export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> = {
+  /** Cached language-neutral protocol document (built at `.build()`). */
+  readonly document: SurfaceSpecDocument;
   /** Internal bridge/method tree (for profile filtering and manifest). */
   readonly getHostSurfaceSpec: () => HostSurfaceSpec;
   /**
@@ -53,6 +59,11 @@ export type HostSurfaceCore<TCapabilities extends CapabilityId = CapabilityId> =
      */
     readonly luaTypeAliases?: Readonly<Record<string, string>> | undefined;
   }) => LuaDefManifest;
+  /**
+   * Exports a language-neutral {@link SurfaceSpecDocument} for protocol conformance and cross-language tooling.
+   * Handlers are omitted; only declarative bridge metadata and JSON Schemas are included.
+   */
+  readonly toProtocolJson: (options?: BuildSurfaceSpecDocumentOptions) => SurfaceSpecDocument;
   /** Every capability id referenced by a method on this surface (deduplicated). */
   readonly capabilities: readonly TCapabilities[];
   /**

@@ -31,7 +31,7 @@
 ```bash
 mkdir /tmp/microverse-smoke && cd /tmp/microverse-smoke
 pnpm init
-pnpm add @microverse.ts/microverse-lua zod
+pnpm add @microverse.ts/microverse-lua @microverse.ts/surface-spec zod
 ```
 
 Run a minimal script from [`packages/microverse-lua/README.md`](../packages/microverse-lua/README.md).

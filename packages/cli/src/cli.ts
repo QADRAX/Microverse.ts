@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-import {
-  GENERATE_LUA_DEFS_COMMAND,
-  printGenerateLuaDefsHelp,
-  runGenerateLuaDefs,
-} from './commands/generate-lua-defs';
+import { CODEGEN_COMMAND, printCodegenHelp, runCodegen } from './commands/codegen';
 
 const BIN = 'microverse';
 
@@ -14,26 +10,23 @@ type CliCommand = {
   readonly printHelp: (bin: string) => void;
 };
 
-const COMMANDS: ReadonlyMap<string, CliCommand> = new Map([
-  [
-    GENERATE_LUA_DEFS_COMMAND,
-    {
-      name: GENERATE_LUA_DEFS_COMMAND,
-      description: 'Emit LuaCATS .d.lua for Lua microverse host surfaces',
-      run: runGenerateLuaDefs,
-      printHelp: printGenerateLuaDefsHelp,
-    },
-  ],
-]);
+const CODEGEN: CliCommand = {
+  name: CODEGEN_COMMAND,
+  description: 'Emit SurfaceSpec .json + LuaCATS .d.lua from a host surface',
+  run: (cwd, flags) => runCodegen(cwd, flags),
+  printHelp: printCodegenHelp,
+};
+
+const COMMANDS: ReadonlyMap<string, CliCommand> = new Map([[CODEGEN_COMMAND, CODEGEN]]);
 
 function printHelp(): void {
   const lines = [
     `${BIN} — tooling for Microverse (Lua and future runtimes)`,
     '',
     'Commands:',
-    ...[...COMMANDS.values()].map((c) => `  ${c.name.padEnd(22)} ${c.description}`),
+    `  ${CODEGEN_COMMAND.padEnd(22)} ${CODEGEN.description}`,
     '',
-    `Run \`${BIN} <command> --help\` for command-specific usage.`,
+    `Run \`${BIN} ${CODEGEN_COMMAND} --help\` for usage.`,
     '',
   ];
   process.stderr.write(`${lines.join('\n')}\n`);
@@ -70,10 +63,6 @@ function parseArgs(argv: readonly string[]): {
   return { command: positional[0], flags };
 }
 
-function resolveCommand(name: string): CliCommand | undefined {
-  return COMMANDS.get(name);
-}
-
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const { command, flags } = parseArgs(argv);
@@ -88,7 +77,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const cmd = resolveCommand(command);
+  const cmd = COMMANDS.get(command);
   if (cmd === undefined) {
     process.stderr.write(`Unknown command: ${command}\n\n`);
     printHelp();

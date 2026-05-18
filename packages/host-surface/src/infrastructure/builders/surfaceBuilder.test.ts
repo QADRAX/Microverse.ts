@@ -2,7 +2,7 @@ import { buildLuaCatsDocument } from '@microverse.ts/lua-defs';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { luaType } from '../../domain/zodLuaType';
+import { luaType } from '../../domain/lua/zodLuaType';
 import { defineHostSurfaceFor } from './defineHostSurfaceFacade';
 
 type ToyHost = {

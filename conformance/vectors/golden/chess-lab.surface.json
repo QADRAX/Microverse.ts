@@ -1,0 +1,648 @@
+{
+  "schemaVersion": 1,
+  "scriptProfile": "lua@1",
+  "capabilities": [
+    "board:read",
+    "play:move",
+    "viz:emit",
+    "game:read"
+  ],
+  "bridges": {
+    "board": {
+      "methods": {
+        "evaluate": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "number",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "Material balance from White perspective (positive = White ahead)."
+        },
+        "evaluateAfterMove": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "promotion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "Material score after move from the moving side perspective (simulated, does not apply)."
+        },
+        "evaluatePosition": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "number",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "Current position score from my perspective (material + check bonus)."
+        },
+        "fen": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "string",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "isCheck": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "boolean",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "isGameOver": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "boolean",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "isMoveSafe": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "promotion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "After the move, true if the moved piece is not attacked by the opponent (simulated)."
+        },
+        "isSquareAttacked": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "square": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              }
+            },
+            "required": [
+              "square"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "boolean",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "True if the square is attacked by the opponent of the side to move."
+        },
+        "legalMoves": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                },
+                "san": {
+                  "type": "string"
+                },
+                "promotion": {
+                  "type": "string"
+                },
+                "captured": {
+                  "type": "string"
+                },
+                "givesCheck": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "san",
+                "givesCheck"
+              ],
+              "additionalProperties": false
+            },
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "moveWouldThreefold": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "promotion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "boolean",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "True if this legal move would repeat the position a third time (draw by repetition)."
+        },
+        "pieceAt": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "square": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              }
+            },
+            "required": [
+              "square"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "w",
+                      "b"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "color"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "searchScore": {
+          "requires": "board:read",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "promotion": {
+                "type": "string"
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "depth"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "description": "Minimax score for a move at depth 1 or 2 (material + check bonus, simulated)."
+        }
+      }
+    },
+    "game": {
+      "methods": {
+        "isMyTurn": {
+          "requires": "game:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "boolean",
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "myColor": {
+          "requires": "game:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "string",
+            "enum": [
+              "white",
+              "black"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "opponentColor": {
+          "requires": "game:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "string",
+            "enum": [
+              "white",
+              "black"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "result": {
+          "requires": "game:read",
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    },
+    "play": {
+      "methods": {
+        "submitMove": {
+          "requires": "play:move",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "promotion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "san": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ok"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    },
+    "viz": {
+      "methods": {
+        "highlight": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "squares": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                }
+              }
+            },
+            "required": [
+              "squares"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "markLastMove": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "to": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        },
+        "note": {
+          "requires": "viz:emit",
+          "input": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ],
+            "additionalProperties": false,
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          },
+          "output": {
+            "not": {},
+            "$schema": "http://json-schema.org/draft-07/schema#"
+          }
+        }
+      }
+    }
+  },
+  "componentTypes": {
+    "ChessEngine": {
+      "capabilities": [
+        "board:read",
+        "play:move",
+        "viz:emit",
+        "game:read"
+      ],
+      "hooks": [
+        "PickMove",
+        "Reset"
+      ],
+      "bridgeNames": [
+        "board",
+        "game",
+        "play",
+        "viz"
+      ],
+      "props": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "white",
+              "black"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "color"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "state": {
+        "type": "object",
+        "properties": {
+          "i": {
+            "type": "integer"
+          },
+          "j": {
+            "type": "integer"
+          },
+          "bestScore": {
+            "type": "number"
+          },
+          "bestFrom": {
+            "type": "string"
+          },
+          "bestTo": {
+            "type": "string"
+          },
+          "bestPromotion": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "done": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  },
+  "componentHooks": {
+    "PickMove": {
+      "type": "object",
+      "properties": {
+        "ply": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "positionRepeats": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "lastFrom": {
+          "type": "string"
+        },
+        "lastTo": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ply",
+        "positionRepeats"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Reset": {
+      "type": "object",
+      "properties": {
+        "fen": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fen"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

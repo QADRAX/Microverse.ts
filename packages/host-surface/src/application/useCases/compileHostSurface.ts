@@ -1,4 +1,7 @@
-import { buildLuaDefManifestFromHostSurfaceSpec } from '../../domain/hostSurfaceManifest';
+import { surfaceSpecToLuaDefManifest } from '@microverse.ts/lua-defs';
+
+import { buildLua1TypeOverlay } from '../../domain/lua/buildLua1TypeOverlay';
+import { buildSurfaceSpecDocumentFromZod } from '../../infrastructure/zodToSurfaceSpec';
 import type { ComponentTypeDefRegistry } from '../../domain/componentTypeSpec';
 import {
   buildResolvedScriptProfileRegistry,
@@ -29,12 +32,17 @@ function buildHostSurfaceCore<const TSpec extends HostSurfaceSpec>(
   });
   const componentTypes = buildResolvedScriptProfileRegistry(componentTypeRegistry, spec);
   const capabilities = collectCapabilitiesFromHostSurfaceSpec(spec);
+  const document = buildSurfaceSpecDocumentFromZod(spec, componentTypes, componentHooks);
 
   return {
+    document,
     getHostSurfaceSpec: () => spec,
     toBridgeDeclarations: () => createBridgeDeclarationsFromHostSurfaceSpec(schemaValidation, spec),
-    toLuaDefManifest: (opts) =>
-      buildLuaDefManifestFromHostSurfaceSpec(spec, opts, componentHooks, componentTypes),
+    toLuaDefManifest: (opts) => {
+      const overlay = buildLua1TypeOverlay(spec, componentTypes, componentHooks);
+      return surfaceSpecToLuaDefManifest(document, { ...opts, luaTypeOverlay: overlay });
+    },
+    toProtocolJson: () => document,
     capabilities,
     componentTypes,
     getComponentType: (name: string) => {

@@ -30,6 +30,12 @@ importers:
       '@microverse.ts/prettier-config':
         specifier: workspace:*
         version: link:tooling/prettier
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      ajv-formats:
+        specifier: ^3.0.1
+        version: 3.0.1(ajv@8.20.0)
       eslint:
         specifier: ^9.27.0
         version: 9.39.4
@@ -45,6 +51,9 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.8.3
+      tsx:
+        specifier: ^4.22.0
+        version: 4.22.0
       turbo:
         specifier: ^2.5.4
         version: 2.9.12
@@ -137,6 +146,9 @@ importers:
       '@microverse.ts/lua-defs':
         specifier: workspace:*
         version: link:../lua-defs
+      '@microverse.ts/surface-spec':
+        specifier: workspace:*
+        version: link:../surface-spec
       tsx:
         specifier: ^4.19.4
         version: 4.22.0
@@ -174,9 +186,15 @@ importers:
       '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
+      '@microverse.ts/surface-spec':
+        specifier: workspace:*
+        version: link:../surface-spec
       zod:
         specifier: ^3.24.0
         version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.25.2
+        version: 3.25.2(zod@3.25.76)
     devDependencies:
       '@microverse.ts/runtime-wasm':
         specifier: workspace:*
@@ -199,6 +217,9 @@ importers:
       '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
+      '@microverse.ts/surface-spec':
+        specifier: workspace:*
+        version: link:../surface-spec
     devDependencies:
       '@types/node':
         specifier: ^22.15.21
@@ -242,6 +263,9 @@ importers:
       '@microverse.ts/shared':
         specifier: workspace:*
         version: link:../shared
+      '@microverse.ts/surface-spec':
+        specifier: workspace:*
+        version: link:../surface-spec
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -398,6 +422,28 @@ importers:
         version: 3.25.76
 
   packages/shared:
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.0.13
+        version: 8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@22.19.19)(rollup@4.60.3)(typescript@5.9.3)(vite@8.0.13(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0))
+      vitest:
+        specifier: ^3.1.4
+        version: 3.2.4(@types/node@22.19.19)(esbuild@0.28.0)(tsx@4.22.0)
+
+  packages/surface-spec:
+    dependencies:
+      '@microverse.ts/runtime-capabilities':
+        specifier: workspace:*
+        version: link:../runtime-capabilities
+      '@microverse.ts/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.8.3
@@ -1392,6 +1438,9 @@ packages:
 
   ajv@8.18.0:
     resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
+
+  ajv@8.20.0:
+    resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==}
 
   alien-signals@0.4.14:
     resolution: {integrity: sha512-itUAVzhczTmP2U5yX67xVpsbbOiquusbWVyA9N+sy6+r6YVbFkahXvNCeEPWEOMhwDYwbVbGHFkVL03N9I5g+Q==}
@@ -2792,6 +2841,11 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod-to-json-schema@3.25.2:
+    resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
+    peerDependencies:
+      zod: ^3.25.28 || ^4
+
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -3727,6 +3781,10 @@ snapshots:
     optionalDependencies:
       ajv: 8.18.0
 
+  ajv-formats@3.0.1(ajv@8.20.0):
+    optionalDependencies:
+      ajv: 8.20.0
+
   ajv@6.15.0:
     dependencies:
       fast-deep-equal: 3.1.3
@@ -3735,6 +3793,13 @@ snapshots:
       uri-js: 4.4.1
 
   ajv@8.18.0:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-uri: 3.1.2
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
+
+  ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-uri: 3.1.2
@@ -5139,5 +5204,9 @@ snapshots:
   wordwrap@1.0.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod-to-json-schema@3.25.2(zod@3.25.76):
+    dependencies:
+      zod: 3.25.76
 
   zod@3.25.76: {}

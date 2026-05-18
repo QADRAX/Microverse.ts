@@ -1,6 +1,6 @@
 import type { LuaDefManifest, ManifestAlias } from '@microverse.ts/lua-defs';
 
-import { scriptProfileComponentClassName } from './scriptProfileSpec';
+import { scriptProfileComponentClassName } from '../scriptProfileSpec';
 
 export type ScriptCatalogEntry = {
   readonly scriptId: string;
